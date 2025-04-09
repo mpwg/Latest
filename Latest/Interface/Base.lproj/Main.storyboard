@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaDFRPlugin" version="23010"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23504"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23727"/>
         <capability name="System colors introduced in macOS 10.14" minToolsVersion="10.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
         <capability name="the Touch Bar" minToolsVersion="8.1" minSystemVersion="10.12.2" requiredIntegratedClassName="NSTouchBar"/>
@@ -447,11 +447,9 @@
                                         </connections>
                                     </button>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="D9AB5F20-627A-43CB-BD49-21067730000F" label="Progress" paletteLabel="Progress" tag="-1" id="OLo-39-3Sm">
+                                <toolbarItem implicitItemIdentifier="61C82154-9A7F-4754-850C-BB9D8EF16208" label="Progress" paletteLabel="Progress" tag="-1" sizingBehavior="auto" id="2cr-nD-7M6">
                                     <nil key="toolTip"/>
-                                    <size key="minSize" width="16" height="16"/>
-                                    <size key="maxSize" width="30" height="16"/>
-                                    <progressIndicator key="view" wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" displayedWhenStopped="NO" bezeled="NO" controlSize="small" style="spinning" id="rtV-DA-Kd6">
+                                    <progressIndicator key="view" maxValue="100" doubleValue="65" controlSize="small" style="spinning" id="ZTZ-78-jVy">
                                         <rect key="frame" x="19" y="14" width="16" height="16"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     </progressIndicator>
@@ -473,7 +471,7 @@
                             </allowedToolbarItems>
                             <defaultToolbarItems>
                                 <toolbarItem reference="sgB-XA-UzA"/>
-                                <toolbarItem reference="OLo-39-3Sm"/>
+                                <toolbarItem reference="2cr-nD-7M6"/>
                                 <toolbarItem reference="ZWx-q6-TJz"/>
                                 <toolbarItem reference="qS5-vO-h2j"/>
                             </defaultToolbarItems>
@@ -520,7 +518,7 @@
                         </touchBarItems>
                     </touchBar>
                     <connections>
-                        <outlet property="progressIndicator" destination="rtV-DA-Kd6" id="70r-Sv-xjH"/>
+                        <outlet property="progressIndicator" destination="ZTZ-78-jVy" id="4xC-Xl-5nc"/>
                         <outlet property="reloadButton" destination="FM4-aR-lhK" id="eb4-jN-US4"/>
                         <outlet property="reloadTouchBarButton" destination="XDV-N5-XxD" id="tCc-NF-xZ1"/>
                         <outlet property="updateAllButton" destination="wmL-ks-XSr" id="zKx-P2-Mvw"/>
@@ -1648,15 +1646,15 @@
         </scene>
     </scenes>
     <resources>
-        <image name="NSAddTemplate" width="18" height="16"/>
+        <image name="NSAddTemplate" width="18" height="17"/>
         <image name="NSFolder" width="32" height="32"/>
-        <image name="NSRefreshTemplate" width="17" height="20"/>
-        <image name="NSRemoveTemplate" width="18" height="4"/>
+        <image name="NSRefreshTemplate" width="18" height="21"/>
+        <image name="NSRemoveTemplate" width="18" height="5"/>
         <image name="NSStatusAvailable" width="16" height="16"/>
-        <image name="NSTouchBarDownloadTemplate" width="19" height="19"/>
-        <image name="NSTouchBarRefreshTemplate" width="17" height="20"/>
-        <image name="NSTouchBarSearchTemplate" width="20" height="19"/>
-        <image name="externaldrive" catalog="system" width="19" height="13"/>
+        <image name="NSTouchBarDownloadTemplate" width="20" height="20"/>
+        <image name="NSTouchBarRefreshTemplate" width="18" height="21"/>
+        <image name="NSTouchBarSearchTemplate" width="20" height="20"/>
+        <image name="externaldrive" catalog="system" width="18" height="13"/>
         <image name="gearshape" catalog="system" width="16" height="16"/>
     </resources>
 </document>
