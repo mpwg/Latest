@@ -179,7 +179,6 @@ fileprivate extension String {
 		
 		while !scanner.isAtEnd {
 			var number: Int = 0
-			var string: NSString? = ""
 			
 			// Try to scan number
 			if scanner.scanInt(&number) {
@@ -187,7 +186,7 @@ fileprivate extension String {
 			}
 			
 			// Try to scan separator
-			else if scanner.scanCharacters(from: .separators, into: &string), let string {
+			else if let string = scanner.scanCharacters(from: .separators) {
 				components.append(.component(atoms: currentAtoms))
 				components.append(.separator(character: string as String))
 				
@@ -195,7 +194,7 @@ fileprivate extension String {
 			}
 			
 			// Try to scan anything else
-			else if scanner.scanCharacters(from: .letters, into: &string), let string {
+			else if let string = scanner.scanCharacters(from: .letters) {
 				currentAtoms.append(.string(value: string as String))
 			}
 			
