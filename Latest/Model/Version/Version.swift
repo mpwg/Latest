@@ -35,17 +35,15 @@ struct Version : Hashable, Comparable {
 	// MARK: - Comparisons
 	
 	static func ==(lhs: Version, rhs: Version) -> Bool {
-		lhs.versionNumber == rhs.versionNumber && lhs.buildNumber == rhs.buildNumber
+		compare(lhs, rhs) == .equal
 	}
 	
 	static func <(lhs: Version, rhs: Version) -> Bool {
-		let result = self._check(lhs, rhs)
-		return result == .older
+		compare(lhs, rhs) == .older
 	}
 	
 	static func >(lhs: Version, rhs: Version) -> Bool {
-		let result = self._check(lhs, rhs)
-		return result == .newer
+		compare(lhs, rhs) == .newer
 	}
 	
 	
@@ -65,7 +63,7 @@ struct Version : Hashable, Comparable {
 	}
 	
 	/// Performs the actual check. This version checker is adopted by the Sparkle Framework and slightly adapted.
-	private static func _check(_ lhs: Version, _ rhs: Version) -> CheckingResult {
+	private static func compare(_ lhs: Version, _ rhs: Version) -> CheckingResult {
 		var v1 : String?
 		var v2 : String?
 		
