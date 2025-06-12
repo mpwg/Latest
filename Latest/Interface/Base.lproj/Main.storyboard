@@ -451,7 +451,7 @@
                                     <nil key="toolTip"/>
                                     <progressIndicator key="view" maxValue="100" doubleValue="65" controlSize="small" style="spinning" id="ZTZ-78-jVy">
                                         <rect key="frame" x="19" y="14" width="16" height="16"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                        <autoresizingMask key="autoresizingMask"/>
                                     </progressIndicator>
                                 </toolbarItem>
                                 <toolbarItem implicitItemIdentifier="5B354B41-598E-4279-9FD9-F493AEA477C5" label="Update All" paletteLabel="Update All" image="NSTouchBarDownloadTemplate" sizingBehavior="auto" id="qS5-vO-h2j">
@@ -587,14 +587,14 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView identifier="MLMUpdateCellSectionIdentifier" misplaced="YES" id="ZtS-Z9-Cu9" customClass="UpdateGroupCellView" customModule="Latest" customModuleProvider="target">
-                                                            <rect key="frame" x="10" y="0.0" width="380" height="26"/>
+                                                            <rect key="frame" x="10" y="0.0" width="389" height="26"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <visualEffectView blendingMode="behindWindow" material="sidebar" state="followsWindowActiveState" translatesAutoresizingMaskIntoConstraints="NO" id="DVj-Eq-QBv">
-                                                                    <rect key="frame" x="-14" y="0.0" width="414" height="28"/>
+                                                                    <rect key="frame" x="0.0" y="0.0" width="389" height="28"/>
                                                                     <subviews>
                                                                         <textField wantsLayer="YES" focusRingType="none" horizontalHuggingPriority="20" verticalHuggingPriority="750" horizontalCompressionResistancePriority="20" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xhF-6m-YCA">
-                                                                            <rect key="frame" x="18" y="6" width="358" height="16"/>
+                                                                            <rect key="frame" x="18" y="6" width="333" height="16"/>
                                                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" title="&lt;dnl&gt;" allowsEditingTextAttributes="YES" id="NNm-bC-QYz">
                                                                                 <font key="font" metaFont="system"/>
                                                                                 <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
@@ -611,22 +611,21 @@
                                                                 </visualEffectView>
                                                             </subviews>
                                                             <constraints>
-                                                                <constraint firstAttribute="trailing" secondItem="DVj-Eq-QBv" secondAttribute="trailing" constant="-20" id="QhD-5H-yqc"/>
+                                                                <constraint firstAttribute="trailing" secondItem="DVj-Eq-QBv" secondAttribute="trailing" id="QhD-5H-yqc"/>
                                                                 <constraint firstAttribute="bottom" secondItem="DVj-Eq-QBv" secondAttribute="bottom" id="chm-Rk-jh3"/>
-                                                                <constraint firstItem="DVj-Eq-QBv" firstAttribute="leading" secondItem="ZtS-Z9-Cu9" secondAttribute="leading" constant="-14" id="ltP-EW-8at"/>
+                                                                <constraint firstItem="DVj-Eq-QBv" firstAttribute="leading" secondItem="ZtS-Z9-Cu9" secondAttribute="leading" id="ltP-EW-8at"/>
                                                                 <constraint firstItem="DVj-Eq-QBv" firstAttribute="top" secondItem="ZtS-Z9-Cu9" secondAttribute="top" id="zDi-if-AoH"/>
                                                             </constraints>
                                                             <connections>
-                                                                <outlet property="leadingConstraint" destination="WgZ-5m-bcs" id="tdq-6A-5uv"/>
                                                                 <outlet property="titleField" destination="xhF-6m-YCA" id="LiU-5J-UIh"/>
                                                             </connections>
                                                         </tableCellView>
                                                         <tableCellView identifier="MLMUpdateCellIdentifier" id="c4D-Nt-dk9" customClass="UpdateCell" customModule="Latest" customModuleProvider="target">
-                                                            <rect key="frame" x="10" y="26" width="380" height="65"/>
+                                                            <rect key="frame" x="10" y="26" width="389" height="65"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <stackView distribution="equalSpacing" orientation="vertical" alignment="trailing" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xEj-uF-Wqu">
-                                                                    <rect key="frame" x="325" y="6" width="55" height="61"/>
+                                                                    <rect key="frame" x="334" y="6" width="55" height="61"/>
                                                                     <subviews>
                                                                         <textField focusRingType="none" horizontalHuggingPriority="900" verticalHuggingPriority="900" translatesAutoresizingMaskIntoConstraints="NO" id="5eq-hm-UOt">
                                                                             <rect key="frame" x="20" y="43" width="37" height="18"/>
@@ -664,7 +663,7 @@
                                                                     </customSpacing>
                                                                 </stackView>
                                                                 <stackView distribution="fill" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aYW-KW-d10">
-                                                                    <rect key="frame" x="10" y="5" width="370" height="61"/>
+                                                                    <rect key="frame" x="10" y="5" width="379" height="61"/>
                                                                     <subviews>
                                                                         <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Oqi-sq-lFG">
                                                                             <rect key="frame" x="0.0" y="6" width="50" height="50"/>
@@ -675,7 +674,7 @@
                                                                             <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" id="mrm-RY-uqi"/>
                                                                         </imageView>
                                                                         <stackView orientation="vertical" alignment="leading" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" horizontalCompressionResistancePriority="1000" verticalCompressionResistancePriority="1000" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="g5b-Ys-0LZ">
-                                                                            <rect key="frame" x="58" y="6" width="312" height="50"/>
+                                                                            <rect key="frame" x="58" y="6" width="321" height="50"/>
                                                                             <middleViews>
                                                                                 <textField focusRingType="none" verticalHuggingPriority="900" horizontalCompressionResistancePriority="250" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="K1m-1T-h1l">
                                                                                     <rect key="frame" x="-2" y="31" width="41" height="16"/>
@@ -769,7 +768,7 @@
                                 </constraints>
                                 <edgeInsets key="contentInsets" left="0.0" right="0.0" top="0.0" bottom="0.0"/>
                                 <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="fLN-t4-yd2">
-                                    <rect key="frame" x="0.0" y="186" width="400" height="16"/>
+                                    <rect key="frame" x="0.0" y="178" width="400" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="bUy-LA-iEr">

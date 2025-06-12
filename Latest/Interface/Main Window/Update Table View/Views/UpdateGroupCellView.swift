@@ -13,20 +13,9 @@ class UpdateGroupCellView: NSTableCellView {
 
 	/// The label holding the sections title.
 	@IBOutlet private weak var titleField: NSTextField!
-	
-	/// The constraint defining the leading inset of the content.
-	@available(macOS, deprecated: 11.0) @IBOutlet private weak var leadingConstraint: NSLayoutConstraint!
 
 	/// The number formatter formatting the app counter
 	private static let numberFormatter = NumberFormatter()
-	
-	override func awakeFromNib() {
-		if #available(macOS 11.0, *) {
-			self.leadingConstraint.constant = 20;
-		} else {
-			self.leadingConstraint.constant = 40;
-		}
-	}
 
 	/// The section to be presented by this view.
 	var section: AppListSnapshot.Section? {
