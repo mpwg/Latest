@@ -55,11 +55,10 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
         super.windowDidLoad()
     
 		self.window?.titlebarAppearsTransparent = true
-		self.window?.setFrameAutosaveName("MainWindow")
+		self.window?.title = Bundle.main.localizedInfoDictionary?[kCFBundleNameKey as String] as! String
 
 		if #available(macOS 11.0, *) {
 			self.window?.toolbarStyle = .unified
-			self.window?.title = Bundle.main.localizedInfoDictionary?[kCFBundleNameKey as String] as! String
 		} else {
 			self.window?.titleVisibility = .hidden
 		}
@@ -71,7 +70,6 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
         
         self.window?.makeFirstResponder(self.listViewController)
         self.window?.delegate = self
-        self.setDefaultWindowPosition(for: self.window!)
         
         self.listViewController.checkForUpdates()
         self.listViewController.releaseNotesViewController = self.releaseNotesViewController
@@ -115,7 +113,7 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
 	}
     
     
-    // MARK: Menu Item ShowIgnoredUpdatesKeytion
+    // MARK: Menu Item
 
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         guard let action = menuItem.action else {
@@ -149,8 +147,6 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
                 menuItem.state = AppListSettings.shared.showInstalledUpdates ? .on : .off
 			case #selector(toggleShowIgnoredUpdates(_:)):
                 menuItem.state = AppListSettings.shared.showIgnoredUpdates ? .on : .off
-			case #selector(toggleShowUnsupportedUpdates(_:)):
-				menuItem.state = AppListSettings.shared.showUnsupportedUpdates ? .on : .off
             default:
                 ()
             }
@@ -204,22 +200,18 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
 	
 	// MARK: - Actions
 	
-	@IBAction func toggleShowInstalledUpdates(_ sender: NSMenuItem?) {
-		AppListSettings.shared.showInstalledUpdates = !AppListSettings.shared.showInstalledUpdates
-	}
-	
-	@IBAction func toggleShowIgnoredUpdates(_ sender: NSMenuItem?) {
-		AppListSettings.shared.showIgnoredUpdates = !AppListSettings.shared.showIgnoredUpdates
-	 }
-	
-	@IBAction func toggleShowUnsupportedUpdates(_ sender: NSMenuItem?) {
-		AppListSettings.shared.showUnsupportedUpdates = !AppListSettings.shared.showUnsupportedUpdates
-	}
-	
 	@IBAction func changeSortOrder(_ sender: NSMenuItem?) {
 		AppListSettings.shared.sortOrder = sender?.representedObject as! AppListSettings.SortOptions
 	}
+
+	@IBAction func toggleShowInstalledUpdates(_ sender: NSMenuItem?) {
+		AppListSettings.shared.showInstalledUpdates.toggle()
+	}
 	
+	@IBAction func toggleShowIgnoredUpdates(_ sender: NSMenuItem?) {
+		AppListSettings.shared.showIgnoredUpdates.toggle()
+	}
+
 	
 	// MARK: - Accessors
 	
@@ -253,28 +245,8 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
 }
 
 extension MainWindowController: NSWindowDelegate {
-    
-    private static let WindowSizeKey = "WindowSizeKey"
-
-    // This will be called before decodeRestorableState
-    func setDefaultWindowPosition(for window: NSWindow) {
-        guard let screen = window.screen?.frame else { return }
-        
-        var rect = NSRect(x: 0, y: 0, width: 360, height: 500)
-        rect.origin.x = screen.width / 2 - rect.width / 2
-        rect.origin.y = screen.height / 2 - rect.height / 2
-        
-        window.setFrame(rect, display: true)
-    }
-    
-    func window(_ window: NSWindow, willEncodeRestorableState state: NSCoder) {
-        state.encode(window.frame, forKey: MainWindowController.WindowSizeKey)
-    }
-    
-    func window(_ window: NSWindow, didDecodeRestorableState state: NSCoder) {
-        window.setFrame(state.decodeRect(forKey: MainWindowController.WindowSizeKey), display: true)
-    }
 	
+	@available(macOS, deprecated: 11.0)
 	func window(_ window: NSWindow, willPositionSheet sheet: NSWindow, using rect: NSRect) -> NSRect {
 		// Always position sheets at the top of the window, ignoring toolbar insets
 		return NSRect(x: rect.minX, y: window.frame.height, width: rect.width, height: rect.height)

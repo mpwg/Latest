@@ -13,7 +13,7 @@ class UpdateGroupCellView: NSTableCellView {
 
 	/// The label holding the sections title.
 	@IBOutlet private weak var titleField: NSTextField!
-	
+
 	/// The number formatter formatting the app counter
 	private static let numberFormatter = NumberFormatter()
 
@@ -34,6 +34,7 @@ class UpdateGroupCellView: NSTableCellView {
 					.characterEncoding: String.Encoding.utf8.rawValue
 				  ], documentAttributes: nil) else {
 				assertionFailure("Localized string could not be loaded.")
+				self.titleField.stringValue = section.title
 				return
 			}
 			

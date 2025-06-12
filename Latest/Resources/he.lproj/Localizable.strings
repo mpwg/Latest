@@ -79,7 +79,7 @@
 "WebSource" = "רשת";
 
 /* Current Version String */
-"LocalVersionFormat" = "גרסתך: %@";
+"LocalVersionFormat" = "גרסה נוכחית: %@";
 
 /* Error description when the attempt to update an app from the App Store failed because the user is not signed in with their App Store account. */
 "AppStoreNotSignedInError" = "לא מחובר לחשבון";
@@ -113,3 +113,14 @@
 
 /* Action to update a given app outside of Latest. The placeholder is filled with the name of the external updater. (App Store, App Name) */
 "ExternalUpdateAction" = "עדכן ב-%@";
+"SupportedLabel" = "Supported";
+"UnsupportedLabel" = "No support";
+"LimitedSupportLabel" = "Limited support";
+"NoSupportDescription" = "Update information is unavailable. Check the app or its website to manage updates.";
+"SupportedCompactLabel" = "Supported";
+"LimitedSupportCompactLabel" = "Limited";
+"UnsupportedCompactLabel" = "Unsupported";
+"SingleCombinedVersionFormat" = "Version: %@";
+"LimitedSupportDescription" = "Update information is generally available but may sometimes be outdated or inaccurate. Updates cannot be performed directly here.";
+"FullSupportDescription" = "Fully supported. Reliable version information is available, and updates can be managed directly within the app.\n\nIf the shown version information is inaccurate, feel free to write an issue report.";
+"CombinedVersionFormat" = "Version: %1$@ → %2$@";

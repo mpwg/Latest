@@ -1,8 +1,14 @@
-/* The title of a section divider in the app list. The first placeholder is the name of the section. The value in paranthesis describes how many apps are in that section, number of apps is inserted in the second placeholder. Use the HTML underline tag <u> to mark the deemphasized part of the text, which should be the count. Example: 'Installed Apps (42)' */
-"SectionTitle" = "%1$@ <u>(%2$@)</u>";
+/* The description of the app's source. e.g. 'Source: Mac App Store' */
+"AppSource" = "Source: %@";
 
-/* Title of alert stating that an error occurred during an app update. The placeholder %@ will be replaced with the name of the app. */
-"UpdateErrorAlertTitle" = "An error occurred while updating %@.";
+/* Error description when the attempt to update an app from the App Store failed because the user is not signed in with their App Store account. */
+"AppStoreNotSignedInError" = "Not Signed In";
+
+/* Error description when the attempt to update an app from the App Store failed because the user is not signed in with their App Store account. */
+"AppStoreNotSignedInErrorRecoverySuggestion" = "Sign in to the Mac App Store to update this app.";
+
+/* The source name of apps loaded from the App Store. */
+"AppStoreSource" = "Mac App Store";
 
 /* Touch Bar section title for available updates */
 "AvailableSection" = "Available";
@@ -15,6 +21,12 @@
 
 /* Update progress state of cancelling an update */
 "CancellingUpdateStatus" = "Cancelling";
+
+/* Text for the current version number with option to update to a newer one, e.g. "Version: 1.2.2 -> 1.2.3". Has two parameters, the first being the current version, the second being the next version. */
+"CombinedVersionFormat" = "Version: %1$@ → %2$@";
+
+/* Update date sorting option. Displayed in menu with title: 'Sort By' -> 'Date' */
+"DateSortOption" = "Date";
 
 /* Update progress state of downloading an update. The first %@ stands for the already downloaded bytes, the second one for the total amount of bytes. One expected output would be 'Downloading 3 MB of 21 MB' */
 "DownloadingUpdateStatus" = "Downloading %@ of %@";
@@ -31,32 +43,50 @@
 /* Update progress state of extracting the downloaded update */
 "ExtractingUpdateStatus" = "Extracting Update";
 
-/* Touch Bar section title for ignored apps */
-"IgnoredSection" = "Ignored";
+/* Description for apps with full support. */
+"FullSupportDescription" = "Fully supported. Reliable version information is available, and updates can be managed directly within the app.\n\nIf the shown version information is inaccurate, feel free to write an issue report.";
+
+/* The source name for apps checked via the Homebrew package manager. */
+"HomebrewSource" = "Homebrew";
 
 /* Table Section Header for ignored apps */
 "IgnoredAppsSection" = "Ignored Apps";
 
+/* Touch Bar section title for ignored apps */
+"IgnoredSection" = "Ignored";
+
 /* Update progress state of initializing an update */
 "InitializingUpdateStatus" = "Initializing";
-
-/* Touch Bar section title for installed apps */
-"InstalledSection" = "Installed";
 
 /* Table Section Header for already installed apps */
 "InstalledAppsSection" = "Installed Apps";
 
+/* Touch Bar section title for installed apps */
+"InstalledSection" = "Installed";
+
 /* Update progress state of installing an update */
 "InstallingUpdateStatus" = "Installing";
 
-/* The source name of apps loaded from the App Store. */
-"AppStoreSource" = "Mac App Store";
+/* Description for apps with limited support. */
+"LimitedSupportDescription" = "Update information is generally available but may sometimes be outdated or inaccurate. Updates cannot be performed directly here.";
 
-/* New Version String */
-"RemoteVersionFormat" = "New version: %@";
+/* Current Version String */
+"LocalVersionFormat" = "Your version: %@";
+
+/* Sorting option to list by app names alphabetically. Displayed in menu with title: 'Sort By' -> 'Name' */
+"NameSortOption" = "Name";
+
+/* Description of release notes empty state */
+"NoAppSelectedDescription" = "Select an app from the list to read its release notes.";
 
 /* Title of release notes empty state */
 "NoAppSelectedTitle" = "No App Selected";
+
+/* Description for apps without support. */
+"NoSupportDescription" = "Update information is unavailable. Check the app or its website to manage updates.";
+
+/* Action to open the app. */
+"OpenAction" = "Open";
 
 /* Short description of error that no release notes were found. */
 "ReleaseNotesUnavailableError" = "No Release Notes";
@@ -64,23 +94,26 @@
 /* Error message that no release notes were found. */
 "ReleaseNotesUnavailableErrorFailureReason" = "Release notes are not available for this app.";
 
+/* New Version String */
+"RemoteVersionFormat" = "New version: %@";
+
 /* Button to retry an update in an error dialogue */
 "RetryAction" = "Retry";
 
 /* Reveal in Finder Row action */
 "RevealAction" = "Reveal";
 
-/* Action to open the app. */
-"OpenAction" = "Open";
+/* The title of a section divider in the app list. The first placeholder is the name of the section. The value in paranthesis describes how many apps are in that section, number of apps is inserted in the second placeholder. Use the HTML underline tag <u> to mark the deemphasized part of the text, which should be the count. Example: 'Installed Apps (42)' */
+"SectionTitle" = "%1$@ <u>(%2$@)</u>";
 
-/* Description of release notes empty state */
-"NoAppSelectedDescription" = "Select an app from the list to read its release notes.";
-
-/* The description of the app's source. e.g. 'Source: Mac App Store' */
-"AppSource" = "Source: %@";
+/* Text for the given version number, e.g. "Version: 1.2.3" */
+"SingleCombinedVersionFormat" = "Version: %@";
 
 /* Update String */
 "UpdateAction" = "Update";
+
+/* Title of alert stating that an error occurred during an app update. The placeholder %@ will be replaced with the name of the app. */
+"UpdateErrorAlertTitle" = "An error occurred while updating %@.";
 
 /* Short description of error stating that update info could not be retrieved for a given app. */
 "UpdateInfoUnavailableError" = "Update Information Unavailable";
@@ -94,20 +127,20 @@
 /* The source name for apps loaded from third-party websites. */
 "WebSource" = "Web";
 
-/* Current Version String */
-"LocalVersionFormat" = "Your version: %@";
+/* A compact label used for apps which are partially supported by Latest. */
+"LimitedSupportCompactLabel" = "Limited";
 
-/* Error description when the attempt to update an app from the App Store failed because the user is not signed in with their App Store account. */
-"AppStoreNotSignedInError" = "Not Signed In";
+/* A label used for apps which are partially supported by Latest. */
+"LimitedSupportLabel" = "Limited support";
 
-/* Error description when the attempt to update an app from the App Store failed because the user is not signed in with their App Store account. */
-"AppStoreNotSignedInErrorRecoverySuggestion" = "Sign in to the Mac App Store to update this app.";
+/* A compact label used for apps which are fully supported by Latest. */
+"SupportedCompactLabel" = "Supported";
 
-/* Update date sorting option. Displayed in menu with title: 'Sort By' -> 'Date' */
-"DateSortOption" = "Date";
+/* A label used for apps which are fully supported by Latest. */
+"SupportedLabel" = "Supported";
 
-/* Sorting option to list by app names alphabetically. Displayed in menu with title: 'Sort By' -> 'Name' */
-"NameSortOption" = "Name";
+/* A compact label used for apps which are not supported by Latest. */
+"UnsupportedCompactLabel" = "Unsupported";
 
-/* The source name for apps checked via the Homebrew package manager. */
-"HomebrewSource" = "Homebrew";
+/* A label used for apps which are not supported by Latest. */
+"UnsupportedLabel" = "No support";

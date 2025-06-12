@@ -102,12 +102,11 @@ class ReleaseNotesViewController: NSViewController {
     
     @IBOutlet weak var appNameTextField: NSTextField!
     @IBOutlet weak var appDateTextField: NSTextField!
-    @IBOutlet weak var appCurrentVersionTextField: NSTextField!
-    @IBOutlet weak var appNewVersionTextField: NSTextField!
+    @IBOutlet weak var appVersionTextField: NSTextField!
     @IBOutlet weak var appIconImageView: NSImageView!
 	
-	/// The image view holding the source icon of the app.
-	@IBOutlet private weak var sourceIconImageView: NSImageView!
+	/// Button indicating the support state of a given app.
+	@IBOutlet private weak var supportStateButton: NSButton!
 	
 	private let releaseNotesProvider = ReleaseNotesProvider()
     
@@ -196,18 +195,17 @@ class ReleaseNotesViewController: NSViewController {
         
 		// Version Information
         if let versionInformation = app.localizedVersionInformation {
-			self.appCurrentVersionTextField.stringValue = versionInformation.current
-			self.appNewVersionTextField.stringValue = versionInformation.new ?? ""
+			self.appVersionTextField.stringValue = versionInformation.combined(includeNew: app.updateAvailable)
 		}
-        self.appNewVersionTextField.isHidden = !app.updateAvailable
 		
-		// Image
-		self.sourceIconImageView.image = app.source.sourceIcon
-		self.sourceIconImageView.toolTip = nil
-		if let sourceName = app.source.sourceName {
-			let format = NSLocalizedString("AppSource", comment: "The description of the app's source. e.g. 'Source: Mac App Store'")
-			self.sourceIconImageView.toolTip = String(format: format, sourceName)
+		// Support state
+		self.supportStateButton.isHidden = !(AppListSettings.shared.includeUnsupportedApps || AppListSettings.shared.includeAppsWithLimitedSupport)
+		if !self.supportStateButton.isHidden {
+			self.supportStateButton.title = app.source.supportState.compactLabel
+			self.supportStateButton.image = app.source.supportState.statusImage
 		}
+		
+		// Icon
 		IconCache.shared.icon(for: app) { (image) in
 			self.appIconImageView.image = image
 		}
@@ -286,10 +284,9 @@ class ReleaseNotesViewController: NSViewController {
         }
     }
     
-    /**
-     This method unwraps the data into a string, that is then formatted and displayed.
-     - parameter data: The data to be displayed. It has to be some text or HTML, other types of data will result in an error message displayed to the user
-     */
+    /// This method unwraps the data into a string, that is then formatted and displayed.
+	///
+	/// - parameter data: The data to be displayed. It has to be some text or HTML, other types of data will result in an error message displayed to the user
     private func update(with string: NSAttributedString) {
         self.loadContent(.text)
         self.content?.textController?.set(string)
@@ -307,5 +304,17 @@ class ReleaseNotesViewController: NSViewController {
         self.loadContent(.error)
         self.content?.errorController?.show(error)
     }
+	
+	// MARK: - Navigation
+	
+	override func prepare(for segue: NSStoryboardSegue, sender: Any?) {
+		switch segue.identifier {
+		case "presentSupportStateInfo":
+			guard let controller = segue.destinationController as? SupportStatusInfoViewController else { fatalError("Unknown controller for segue \(String(describing: segue.identifier))")}
+			controller.app = self.app
+		default:
+			break
+		}
+	}
 	    
 }
