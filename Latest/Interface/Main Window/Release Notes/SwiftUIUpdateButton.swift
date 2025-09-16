@@ -51,7 +51,7 @@ final class UpdateButtonViewModel {
         updateInitialState()
     }
     
-    private func updateInitialState() {
+    func updateInitialState() {
         if let app = self.app, self.showActionButton {
             self.state = app.updateAvailable ? .update : .open
         } else {
@@ -103,28 +103,28 @@ enum UpdateButtonState {
 struct SwiftUIUpdateButtonView: View {
     let app: App?
     let showActionButton: Bool
-    
+
     @State private var viewModel: UpdateButtonViewModel
     @State private var showingErrorAlert = false
-    
+
     init(app: App?, showActionButton: Bool = true) {
         self.app = app
         self.showActionButton = showActionButton
         self._viewModel = State(initialValue: UpdateButtonViewModel(app: app, showActionButton: showActionButton))
     }
-    
+
     var body: some View {
         Group {
-            switch viewModel.state {
+            switch currentButtonState {
             case .none:
                 EmptyView()
-                
+
             case .update, .open, .error:
                 actionButton
-                
+
             case .progress:
                 progressIndicator
-                
+
             case .indeterminate:
                 indeterminateIndicator
             }
@@ -146,6 +146,21 @@ struct SwiftUIUpdateButtonView: View {
                 Text(error.localizedDescription)
             }
         }
+    }
+
+    // Compute button state directly from app properties
+    private var currentButtonState: UpdateButtonState {
+        // If there's an active operation, use the view model state
+        if viewModel.state == .progress || viewModel.state == .indeterminate || viewModel.state == .error {
+            return viewModel.state
+        }
+
+        // Otherwise, compute state directly from app
+        guard let app = app, showActionButton else {
+            return .none
+        }
+
+        return app.updateAvailable ? .update : .open
     }
     
     @ViewBuilder
@@ -203,7 +218,7 @@ struct SwiftUIUpdateButtonView: View {
     
     private var buttonTitle: String {
         let title: String
-        switch viewModel.state {
+        switch currentButtonState {
         case .update:
             title = NSLocalizedString("UpdateAction", comment: "Action to update a given app.")
         case .open:
@@ -211,7 +226,7 @@ struct SwiftUIUpdateButtonView: View {
         default:
             title = ""
         }
-        
+
         // Beginning with macOS 14, the button text is no longer uppercase
         if #available(macOS 14.0, *) {
             return title
@@ -221,7 +236,7 @@ struct SwiftUIUpdateButtonView: View {
     }
     
     private var buttonSystemImage: String? {
-        switch viewModel.state {
+        switch currentButtonState {
         case .error:
             return "exclamationmark.triangle.fill"
         default:
@@ -234,7 +249,7 @@ struct SwiftUIUpdateButtonView: View {
     }
     
     private func performAction() {
-        switch viewModel.state {
+        switch currentButtonState {
         case .update:
             app?.performUpdate()
         case .open:
