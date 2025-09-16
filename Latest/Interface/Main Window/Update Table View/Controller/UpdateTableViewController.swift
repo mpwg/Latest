@@ -11,9 +11,7 @@ import Cocoa
 /**
  This is the class handling the update process and displaying its results
  */
-class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTableViewDataSource, NSTableViewDelegate, NSMenuDelegate, Observer {
-	
-	var id = UUID()
+class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTableViewDataSource, NSTableViewDelegate, NSMenuDelegate {
 	
     /// The array holding the apps that have an update available.
 	var snapshot: AppListSnapshot = AppListSnapshot(withApps: [], filterQuery: nil) {
@@ -21,13 +19,28 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
 			self.updatePlaceholderVisibility()
 		}
 	}
-	
+
 	/// Convenience for accessing apps that should be displayed in the table.
 	var apps: [AppListSnapshot.Entry] {
 		return self.snapshot.entries
 	}
-	        
-    /// The detail view controller that shows the release notes
+
+	/// Provides the backing data for the list independent from the view implementation.
+	var viewModel: AppListViewModel? {
+		didSet {
+			guard oldValue !== viewModel else { return }
+			oldValue?.onSnapshotChange = nil
+			oldValue?.onStatusChange = nil
+			if self.isViewLoaded {
+				self.bindViewModel()
+			}
+		}
+	}
+
+	/// The last status emitted by the view model.
+	private var currentStatus: AppListViewModel.Status?
+
+	/// The detail view controller that shows the release notes
     weak var releaseNotesViewController : ReleaseNotesViewController?
     
     /// The empty state label centered in the list view indicating that no updates are available
@@ -36,7 +49,7 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
 	/// The label indicating how many updates are available
     @IBOutlet weak var updatesLabel: NSTextField!
         
-    /// The menu displayed on secondary clicks on cells in the list
+	/// The menu displayed on secondary clicks on cells in the list
     @IBOutlet weak var tableViewMenu: NSMenu!
     
 	/// The currently selected app within the UI.
@@ -59,43 +72,39 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
 	
     
     // MARK: - View Lifecycle
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         if let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "MLMUpdateCellIdentifier"), owner: self) {
             self.tableView.rowHeight = cell.frame.height
         }
-                        
+
         self.tableViewMenu.delegate = self
         self.tableView.menu = self.tableViewMenu
 		
-		AppListSettings.shared.add(self, handler: self.updateSnapshot)
-        
-		UpdateCheckCoordinator.shared.appProvider.addObserver(self) { newValue in
-			self.scheduleTableViewUpdate(with: AppListSnapshot(withApps: newValue, filterQuery: self.snapshot.filterQuery), animated: true)
-			self.updateTitleAndBatch()
+		if self.viewModel == nil {
+			self.viewModel = AppListViewModel()
 		}
+		self.bindViewModel()
 		
 		if #available(macOS 11, *) {
 			self.updatesLabel.isHidden = true
 		}
     }
-    
+
     override func viewWillAppear() {
         super.viewWillAppear()
 		
 		// Setup title
-		self.updateTitleAndBatch()
+		if let status = self.currentStatus {
+			self.apply(status: status)
+		}
 		
 		// Setup search field
         NSLayoutConstraint(item: self.searchField!, attribute: .top, relatedBy: .equal, toItem: self.view.window?.contentLayoutGuide, attribute: .top, multiplier: 1.0, constant: 1).isActive = true
 		self.view.window?.makeFirstResponder(nil)
-	}
-	
-	deinit {
-		AppListSettings.shared.remove(self)
-	}
+    }
     
     
     // MARK: - TableView Stuff
@@ -103,12 +112,6 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
     /// The table view displaying the list
     @IBOutlet weak var tableView: NSTableView!
     
-	func updateSnapshot() {
-		self.scheduleTableViewUpdate(with: self.snapshot.updated(), animated: true)
-		self.updateTitleAndBatch()
-	}
-	
-	
     // MARK: Table View Delegate
 	
 	private func contentCell(for app: App) -> NSView? {
@@ -277,6 +280,7 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
 		
 		// Update selected app
 		self.ensureSelection()
+		self.reloadSupplementaryViews()
 	}
 	
 	@objc func updateTableViewAnimated() {
@@ -296,6 +300,7 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
 		
 		self.tableViewUpdateInProgress = false
 		self.updateTableViewAnimated()
+		self.reloadSupplementaryViews()
 	}
     
     
@@ -303,7 +308,7 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
     
     /// Triggers the update checking mechanism
     func checkForUpdates() {
-		UpdateCheckCoordinator.shared.run()
+		self.viewModel?.checkForUpdates()
 		self.view.window?.makeFirstResponder(self)
     }
 
@@ -413,34 +418,53 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
 	
 	/// The search field used for filtering apps
 	@IBOutlet weak var searchField: NSSearchField!
+
+	private func bindViewModel() {
+		guard let viewModel = self.viewModel else { return }
+		
+		viewModel.onSnapshotChange = { [weak self] snapshot, animated in
+			DispatchQueue.main.async {
+				self?.scheduleTableViewUpdate(with: snapshot, animated: animated)
+			}
+		}
+		
+		viewModel.onStatusChange = { [weak self] status in
+			DispatchQueue.main.async {
+				self?.apply(status: status)
+			}
+		}
+		
+		viewModel.start()
+		viewModel.deliverCurrentState()
+	}
 	
 	
 	// MARK: - Actions
 	
     /// Updates the app at the given index.
-    private func updateApp(atIndex index: Int) {
+	private func updateApp(atIndex index: Int) {
 		guard let app = self.app(at: index) else { return }
-		
-		// Delay update to improve animations
-        DispatchQueue.main.async {
-			app.performUpdate()
-        }
-    }
+		self.viewModel?.performUpdate(on: app)
+	}
 	
 	/// Sets the ignored state for the app at the given index
 	private func setIgnored(_ ignored: Bool, forAppAt index: Int) {
 		guard let app = self.app(at: index) else { return }
-		UpdateCheckCoordinator.shared.appProvider.setIgnoredState(ignored, for: app)
+		self.viewModel?.setIgnored(ignored, for: app)
 	}
     
 	/// Opens the app at a given index.
 	private func openApp(at index: Int) {
-		self.app(at: index)?.open()
+		if let app = self.app(at: index) {
+			self.viewModel?.open(app)
+		}
 	}
-	
+
     /// Reveals the app at a given index in Finder
     private func showAppInFinder(at index: Int) {
-		self.app(at: index)?.showInFinder()
+		if let app = self.app(at: index) {
+			self.viewModel?.revealInFinder(app)
+		}
     }
 	
 	/// Returns the app at the given index, if available.
@@ -470,26 +494,19 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
     }
     
     /// Updates the title in the toolbar ("No / n updates available") and the badge of the app icon
-    private func updateTitleAndBatch() {
-		let showExternalUpdates = AppListSettings.shared.includeAppsWithLimitedSupport
-		let count = UpdateCheckCoordinator.shared.appProvider.countOfAvailableUpdates(where: { showExternalUpdates || $0.usesBuiltInUpdater })
-		let statusText: String
-		
-		// Update dock badge
-		NSApplication.shared.dockTile.badgeLabel = count == 0 ? nil : NumberFormatter().string(from: count as NSNumber)
-		
-		let format = NSLocalizedString("NumberOfUpdatesAvailable", comment: "number of updates available")
-		statusText = String.localizedStringWithFormat(format, count)
-        
-		self.scrubber?.reloadData()
+	private func apply(status: AppListViewModel.Status) {
+		self.currentStatus = status
+		NSApplication.shared.dockTile.badgeLabel = status.badgeValue
 		
 		if #available(macOS 11, *) {
-			self.view.window?.subtitle = statusText
+			self.view.window?.subtitle = status.statusText
 		} else {
-			self.updatesLabel.stringValue = statusText
+			self.updatesLabel.stringValue = status.statusText
 		}
-    }
-	
+		
+		self.scrubber?.reloadData()
+	}
+
 	private func ensureSelection() {
 		self.selectApp(at: self.selectedAppIndex)
 	}
@@ -545,7 +562,7 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
 		
 		self.tableView.endUpdates()
 	}
-	
+
 	/// Returns an appropriate title for update actions for the given app.
 	private func updateTitle(for app: App) -> String {
 		if let externalUpdater = app.externalUpdaterName {
@@ -553,6 +570,10 @@ class UpdateTableViewController: NSViewController, NSMenuItemValidation, NSTable
 		} else {
 			NSLocalizedString("UpdateAction", comment: "Action to update a given app.")
 		}
+	}
+
+	private func reloadSupplementaryViews() {
+		self.scrubber?.reloadData()
 	}
     
 }

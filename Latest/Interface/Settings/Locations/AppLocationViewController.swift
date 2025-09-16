@@ -19,7 +19,7 @@ struct LocationsSettingsView: View {
             Text(localizedMain("ivV-VN-4CO.title"))
                 .font(.headline)
             
-            List(directoryStore.displayedURLs, id: \.self, selection: $selection) { url in
+            List(directoryStore.directoryList, id: \.self, selection: $selection) { url in
                 DirectoryRowView(url: url)
                     .tag(url)
             }
