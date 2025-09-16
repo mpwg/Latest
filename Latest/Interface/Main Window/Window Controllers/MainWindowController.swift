@@ -11,13 +11,17 @@ import Cocoa
 /**
  This class controls the main window of the app. It includes the list of apps that have an update available as well as the release notes for the specific update.
  */
-class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDelegate, UpdateCheckProgressReporting {
-    
+class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDelegate {
+
 	/// Encapsulates the main window items with their according tag identifiers
 	private enum MainMenuItem: Int {
 		case latest = 0, file, edit, view, window, help
 	}
-    
+
+	private let viewModel = MainWindowViewModel()
+	private var reloadEnabled = true
+	private var updateAllEnabled = false
+
     /// The list view holding the apps
     lazy var listViewController : UpdateTableViewController = {
 		let splitViewController = self.contentViewController as? NSSplitViewController
@@ -27,6 +31,7 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
 		
 		// Override sidebar collapsing behavior
 		firstItem.canCollapse = false
+		controller.viewModel = self.viewModel.appListViewModel
         
         return controller
     }()
@@ -66,13 +71,14 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
 		// Set ourselves as the view menu delegate
 		NSApplication.shared.mainMenu?.item(at: MainMenuItem.view.rawValue)?.submenu?.delegate = self
 		
-		UpdateCheckCoordinator.shared.progressDelegate = self
-        
+		self.listViewController.releaseNotesViewController = self.releaseNotesViewController
+		self.bindViewModel()
+		self.viewModel.start()
+		
         self.window?.makeFirstResponder(self.listViewController)
         self.window?.delegate = self
         
         self.listViewController.checkForUpdates()
-        self.listViewController.releaseNotesViewController = self.releaseNotesViewController
 
         if let splitViewController = self.contentViewController as? NSSplitViewController {
 			splitViewController.splitView.autosaveName = "MainSplitView"
@@ -89,15 +95,10 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
     @IBAction func reload(_ sender: Any?) {
         self.listViewController.checkForUpdates()
     }
-    
+
     /// Open all apps that have an update available. If apps from the Mac App Store are there as well, open the Mac App Store
     @IBAction func updateAll(_ sender: Any?) {
-		// Iterate all updatable apps and perform update
-		UpdateCheckCoordinator.shared.appProvider.updatableApps.forEach({ app in
-			if !app.isUpdating {
-				app.performUpdate()
-			}
-		})
+		self.viewModel.updateAll()
     }
     	
 	@IBAction func performFindPanelAction(_ sender: Any?) {
@@ -122,9 +123,9 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
         
         switch action {
         case #selector(updateAll(_:)):
-			return hasUpdatesAvailable
+			return self.updateAllEnabled
         case #selector(reload(_:)):
-            return self.reloadButton.isEnabled
+            return self.reloadEnabled
 		case #selector(performFindPanelAction(_:)):
 			// Only allow the find item
 			return menuItem.tag == 1
@@ -132,97 +133,107 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
             return true
         }
     }
-    
+
     func menuNeedsUpdate(_ menu: NSMenu) {
+        let menuState = self.viewModel.menuState
+
         menu.items.forEach { (menuItem) in
 			// Sort By menu constructed dynamically
 			if menuItem.identifier == NSUserInterfaceItemIdentifier(rawValue: "sortByMenu") {
-				menuItem.submenu?.items = sortByMenuItems
+				menuItem.submenu?.items = self.sortByMenuItems(using: menuState)
 			}
 
             guard let action = menuItem.action else { return }
             
             switch action {
 			case #selector(toggleShowInstalledUpdates(_:)):
-                menuItem.state = AppListSettings.shared.showInstalledUpdates ? .on : .off
+                menuItem.state = menuState.showInstalledUpdates ? .on : .off
 			case #selector(toggleShowIgnoredUpdates(_:)):
-                menuItem.state = AppListSettings.shared.showIgnoredUpdates ? .on : .off
+                menuItem.state = menuState.showIgnoredUpdates ? .on : .off
             default:
                 ()
             }
 		}
     }
 	
-	private var sortByMenuItems: [NSMenuItem] {
-		AppListSettings.SortOptions.allCases.map { order in
+	private func sortByMenuItems(using menuState: MainWindowViewModel.MenuState) -> [NSMenuItem] {
+		menuState.sortOptions.map { order in
 			let item = NSMenuItem(title: order.displayName, action: #selector(changeSortOrder), keyEquivalent: "")
 			item.representedObject = order
-			item.state = AppListSettings.shared.sortOrder == order ? .on : .off
+			item.state = menuState.sortOrder == order ? .on : .off
+			item.target = self
 			
 			return item
 		}
-	}
-    
-    
-    // MARK: - Update Checker Progress Delegate
-	
-	func updateCheckerDidStartScanningForApps(_ updateChecker: UpdateCheckCoordinator) {
-		// Disable UI
-        self.reloadButton.isEnabled = false
-        self.reloadTouchBarButton.isEnabled = false
-		
-		// Setup indeterminate progress indicator
-		self.progressIndicator.isIndeterminate = true
-        self.progressIndicator.isHidden = false
-		self.progressIndicator.startAnimation(updateChecker)
-	}
-    
-    /// This implementation activates the progress indicator, sets its max value and disables the reload button
-	func updateChecker(_ updateChecker: UpdateCheckCoordinator, didStartCheckingApps numberOfApps: Int) {
-		// Setup progress indicator
-		self.progressIndicator.isIndeterminate = false
-        self.progressIndicator.doubleValue = 0
-        self.progressIndicator.maxValue = Double(numberOfApps - 1)
-	}
-    
-    /// Update the progress indicator
-	func updateChecker(_ updateChecker: UpdateCheckCoordinator, didCheckApp: App) {
-		self.progressIndicator.increment(by: 1)
     }
-	
-	func updateCheckerDidFinishCheckingForUpdates(_ updateChecker: UpdateCheckCoordinator) {
-		self.reloadButton.isEnabled = true
-		self.reloadTouchBarButton.isEnabled = true
-		self.progressIndicator.isHidden = true
-        self.updateAllButton.isEnabled = hasUpdatesAvailable
-	}
-    
-	
+
+
 	// MARK: - Actions
 	
 	@IBAction func changeSortOrder(_ sender: NSMenuItem?) {
-		AppListSettings.shared.sortOrder = sender?.representedObject as! AppListSettings.SortOptions
+		guard let order = sender?.representedObject as? AppListSettings.SortOptions else { return }
+		self.viewModel.changeSortOrder(to: order)
 	}
 
 	@IBAction func toggleShowInstalledUpdates(_ sender: NSMenuItem?) {
-		AppListSettings.shared.showInstalledUpdates.toggle()
-	}
-	
-	@IBAction func toggleShowIgnoredUpdates(_ sender: NSMenuItem?) {
-		AppListSettings.shared.showIgnoredUpdates.toggle()
+		self.viewModel.toggleShowInstalledUpdates()
 	}
 
-	
-	// MARK: - Accessors
-	
-	/// Whether there are any updatable apps.
-	private var hasUpdatesAvailable: Bool {
-		!UpdateCheckCoordinator.shared.appProvider.updatableApps.isEmpty
+	@IBAction func toggleShowIgnoredUpdates(_ sender: NSMenuItem?) {
+		self.viewModel.toggleShowIgnoredUpdates()
 	}
 
     
     // MARK: - Private Methods
-    	
+	
+	private func bindViewModel() {
+		self.viewModel.onReloadAvailabilityChange = { [weak self] isEnabled in
+			DispatchQueue.main.async {
+				self?.reloadEnabled = isEnabled
+				self?.reloadButton.isEnabled = isEnabled
+				self?.reloadTouchBarButton.isEnabled = isEnabled
+			}
+		}
+
+		self.viewModel.onUpdateAllAvailabilityChange = { [weak self] isEnabled in
+			DispatchQueue.main.async {
+				self?.updateAllEnabled = isEnabled
+				self?.updateAllButton.isEnabled = isEnabled
+			}
+		}
+
+		self.viewModel.onProgressStateChange = { [weak self] state in
+			DispatchQueue.main.async {
+				self?.applyProgressState(state)
+			}
+		}
+
+		self.viewModel.onMenuStateChange = { _ in
+			DispatchQueue.main.async {
+				NSApplication.shared.mainMenu?.item(at: MainMenuItem.view.rawValue)?.submenu?.update()
+			}
+		}
+	}
+
+	private func applyProgressState(_ state: MainWindowViewModel.ProgressState) {
+		switch state {
+		case .hidden:
+			self.progressIndicator.stopAnimation(self)
+			self.progressIndicator.isHidden = true
+		case .indeterminate:
+			self.progressIndicator.isIndeterminate = true
+			self.progressIndicator.doubleValue = 0
+			self.progressIndicator.isHidden = false
+			self.progressIndicator.startAnimation(self)
+		case .determinate(let total, let completed):
+			self.progressIndicator.isIndeterminate = false
+			self.progressIndicator.isHidden = false
+			self.progressIndicator.stopAnimation(self)
+			self.progressIndicator.maxValue = Double(max(total, 0))
+			self.progressIndicator.doubleValue = Double(completed)
+		}
+	}
+
     private func showReleaseNotes(_ show: Bool, animated: Bool) {
         guard let splitViewController = self.contentViewController as? NSSplitViewController else {
             return

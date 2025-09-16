@@ -27,12 +27,6 @@ class UpdateCell: NSTableCellView {
 	/// The stack view holding the cells contents.
 	@IBOutlet private weak var contentStackView: NSStackView!
 	
-	/// The constraint defining the leading inset of the content.
-	@available(macOS, deprecated: 11.0) @IBOutlet private weak var leadingConstraint: NSLayoutConstraint!
-	
-	/// Constraint controlling the trailing inset of the cell.
-	@available(macOS, deprecated: 11.0) @IBOutlet private weak var trailingConstraint: NSLayoutConstraint!
-
 	/// Label displaying the last modified/update date for the app.
 	@IBOutlet private weak var dateTextField: NSTextField!
 	
@@ -45,13 +39,6 @@ class UpdateCell: NSTableCellView {
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		
-		if #available(macOS 11.0, *) {
-			self.leadingConstraint.constant = 0;
-			self.trailingConstraint.constant = 0;
-		} else {
-			self.leadingConstraint.constant = 20;
-			self.trailingConstraint.constant = 20;
-		}
 	}
 	
 	
@@ -135,3 +122,4 @@ class UpdateCell: NSTableCellView {
 		self.nameTextField.attributedStringValue = self.app?.highlightedName(for: self.filterQuery) ?? NSAttributedString()
 	}
 }
+

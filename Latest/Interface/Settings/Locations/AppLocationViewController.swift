@@ -6,95 +6,70 @@
 //  Copyright © 2024 Max Langer. All rights reserved.
 //
 
+import SwiftUI
 import AppKit
 
-/// View displaying a list of directories to be checked for apps with updates.
-class AppDirectoryViewController: SettingsTabItemViewController, NSTableViewDataSource, NSTableViewDelegate {
-	
-	// MARK: - View Lifecycle
-	
-	@IBOutlet private weak var tableView: NSTableView!
-	@IBOutlet private weak var actionControl: NSSegmentedControl!
-	
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		validateButtons()
-	}
-	
-	private lazy var directoryStore: AppDirectoryStore = {
-		AppDirectoryStore(updateHandler: { [weak self] in
-			self?.tableView.reloadData()
-			self?.validateButtons()
-		})
-	}()
-	
-	
-	// MARK: - Table
-	
-	func numberOfRows(in tableView: NSTableView) -> Int {
-		directoryStore.URLs.count
-	}
-
-	func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-		guard let view = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("directoryCellView"), owner: self) as? AppDirectoryCellView else { return nil }
-		view.url = directoryStore.URLs[row]
-		
-		return view
-	}
-	
-	func tableViewSelectionDidChange(_ notification: Notification) {
-		validateButtons()
-	}
-	
-	
-	// MARK: - Actions
-	
-	/// Possible actions on the segmented control.
-	private enum Action: Int {
-		/// Add a new directory to the list.
-		case add = 0
-		
-		/// Remove the selected directory from the list.
-		case delete = 1
-	}
-	
-	@IBAction func performAction(_ sender: NSSegmentedControl) {
-		switch Action(rawValue: sender.selectedSegment) {
-		case .add:
-			presentOpenPanel()
-		case .delete:
-			let selectedIndex = tableView.selectedRow
-			guard selectedIndex != -1 else { return }
-			let url = directoryStore.URLs[selectedIndex]
-			if directoryStore.canRemove(url) {
-				directoryStore.remove(url)
-			}
-		case .none:
-			()
-		}
-	}
-	
-	private func validateButtons() {
-		let selectedIndex = tableView.selectedRow
-		let enabled = if selectedIndex == -1 {
-			false
-		} else {
-			directoryStore.canRemove(directoryStore.URLs[selectedIndex])
-		}
-		
-		actionControl.setEnabled(enabled, forSegment: Action.delete.rawValue)
-	}
-	
-	private func presentOpenPanel() {
-		let panel = NSOpenPanel()
-		panel.canChooseFiles = false
-		panel.canChooseDirectories = true
-		
-		panel.beginSheetModal(for: self.view.window!) { response in
-			guard response == .OK else { return }
-			panel.urls.forEach { url in
-				self.directoryStore.add(url)
-			}
-		}
-	}
+/// SwiftUI backing for the locations settings tab.
+struct LocationsSettingsView: View {
+    @StateObject private var directoryStore = AppDirectoryStore()
+    @State private var selection: URL?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Locations")
+                .font(.headline)
+            
+            List(directoryStore.directoryList, id: \.self, selection: $selection) { url in
+                DirectoryRowView(url: url)
+                    .tag(url)
+            }
+            .frame(minHeight: 200)
+            .listStyle(.inset)
+            
+            HStack(spacing: 12) {
+                Button(action: presentOpenPanel) {
+                    Label("Add Location", systemImage: "plus")
+                }
+                
+                Button(action: removeSelected) {
+                    Label("Remove Location", systemImage: "minus")
+                }
+                .disabled(!canRemoveSelection)
+                
+                Spacer()
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+    
+    private var canRemoveSelection: Bool {
+        guard let selection else { return false }
+        return directoryStore.canRemove(selection)
+    }
+    
+    private func presentOpenPanel() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = true
+        
+        let completion: (NSApplication.ModalResponse) -> Void = { response in
+            guard response == .OK else { return }
+            panel.urls.forEach(directoryStore.add)
+            selection = panel.urls.last
+        }
+        
+        if let window = NSApp.keyWindow ?? NSApp.mainWindow {
+            panel.beginSheetModal(for: window, completionHandler: completion)
+        } else {
+            completion(panel.runModal())
+        }
+    }
+    
+    private func removeSelected() {
+        guard let selection, canRemoveSelection else { return }
+        directoryStore.remove(selection)
+        self.selection = nil
+    }
 }
