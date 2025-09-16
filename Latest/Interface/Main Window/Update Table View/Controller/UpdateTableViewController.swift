@@ -6,7 +6,6 @@
 //  Copyright © 2017 Max Langer. All rights reserved.
 //
 
-import Cocoa
 import SwiftUI
 import Combine
 import Foundation
@@ -210,7 +209,7 @@ struct UpdateListRowView: View {
                         .aspectRatio(contentMode: .fit)
                 } else {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.controlBackgroundColor))
+                        .fill(.regularMaterial)
                 }
             }
             .frame(width: 32, height: 32)
@@ -238,7 +237,7 @@ struct UpdateListRowView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Color(.controlBackgroundColor))
+                    .background(.regularMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 4))
             } else {
                 SwiftUIUpdateButtonView(app: rowModel.app, showActionButton: true)

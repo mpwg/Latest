@@ -6,7 +6,7 @@
 //  Copyright © 2022 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 
 /// The operation for checking for updates via Homebrew.
 class HomebrewCheckerOperation: StatefulOperation, UpdateCheckerOperation, @unchecked Sendable {

@@ -11,32 +11,53 @@ import SwiftUI
 /// SwiftUI backing for the General settings tab.
 struct GeneralSettingsView: View {
     @StateObject private var settings = AppListSettingsObserver()
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("General Settings")
-                .font(.headline)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Toggle("Include apps with limited support", isOn: settings.includeLimitedBinding)
-                Text("Update information is generally available but may sometimes be outdated or inaccurate. Updates cannot be performed directly here.")
-                    .font(.callout)
-                    .foregroundColor(.secondary)
-                    .padding(.leading, 20)
+        Form {
+            Section {
+                Text("General Settings")
+                    .font(.headline)
+                    .padding(.bottom, 8)
             }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                Toggle("Include unsupported apps", isOn: settings.includeUnsupportedBinding)
-                Text("Apps that can't be updated automatically by Latest, such as apps without integrated update mechanisms.")
-                    .font(.callout)
-                    .foregroundColor(.secondary)
-                    .padding(.leading, 20)
+
+            Section {
+                SettingsToggleRow(
+                    title: "Include apps with limited support",
+                    description: "Update information is generally available but may sometimes be outdated or inaccurate. Updates cannot be performed directly here.",
+                    isOn: settings.includeLimitedBinding
+                )
+
+                SettingsToggleRow(
+                    title: "Include unsupported apps",
+                    description: "Apps that can't be updated automatically by Latest, such as apps without integrated update mechanisms.",
+                    isOn: settings.includeUnsupportedBinding
+                )
             }
-            
-            Spacer()
         }
+        .formStyle(.grouped)
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+/// Reusable toggle row component for settings
+private struct SettingsToggleRow: View {
+    let title: String
+    let description: String
+    let isOn: Binding<Bool>
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(title, isOn: isOn)
+                .toggleStyle(.switch)
+
+            Text(description)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .padding(.leading, 20)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 4)
     }
 }
 

@@ -13,7 +13,7 @@ import SwiftUI
 struct LatestApp: SwiftUI.App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var mainViewModel = MainWindowViewModel()
-    
+
     var body: some Scene {
         WindowGroup("Latest") {
             MainWindowView(viewModel: mainViewModel)
@@ -25,10 +25,14 @@ struct LatestApp: SwiftUI.App {
         .commands {
             CommandGroup(replacing: .appSettings) {
                 Button("Settings...") {
-                    SettingsWindowController.shared.showWindow(nil)
+                    SettingsWindowManager.shared.openSettings()
                 }
                 .keyboardShortcut(",")
             }
+        }
+
+        Settings {
+            SettingsView()
         }
     }
 }
@@ -50,6 +54,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @IBAction func showSettings(_ sender: Any?) {
-        SettingsWindowController.shared.showWindow(sender)
+        SettingsWindowManager.shared.openSettings()
     }
 }

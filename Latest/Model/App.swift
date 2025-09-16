@@ -6,7 +6,8 @@
 //  Copyright © 2022 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import Foundation
+import AppKit
 
 /// The combined representation of an app bundle and its associated update information.
 class App {

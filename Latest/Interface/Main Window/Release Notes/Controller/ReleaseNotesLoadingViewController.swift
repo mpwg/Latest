@@ -6,7 +6,7 @@
 //  Copyright © 2018 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import AppKit
 
 /// The controller presenting a small activity indicator, showing the user that release notes are currently loading
 class ReleaseNotesLoadingViewController: NSViewController {

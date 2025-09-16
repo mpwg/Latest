@@ -6,7 +6,7 @@
 //  Copyright © 2018 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 
 /// The folder listener listens for changes in the given directory and then runs the update checker on changes
 class AppDirectory {

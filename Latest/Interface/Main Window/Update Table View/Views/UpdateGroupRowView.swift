@@ -6,7 +6,7 @@
 //  Copyright © 2018 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import AppKit
 
 /// The row view used by the group rows in the update tableView
 class UpdateGroupRowView: NSTableRowView {

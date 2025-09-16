@@ -6,7 +6,7 @@
 //  Copyright © 2019 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 import Sparkle
 
 /// The operation for checking for updates for a Sparkle app.

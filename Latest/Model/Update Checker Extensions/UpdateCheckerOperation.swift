@@ -6,7 +6,7 @@
 //  Copyright © 2019 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 
 /// A protocol that defines how a update checker operation should be structured
 protocol UpdateCheckerOperation: StatefulOperation {

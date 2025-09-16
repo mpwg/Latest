@@ -51,7 +51,7 @@ final class UpdateButtonViewModel {
         updateInitialState()
     }
     
-    private func updateInitialState() {
+    func updateInitialState() {
         if let app = self.app, self.showActionButton {
             self.state = app.updateAvailable ? .update : .open
         } else {
@@ -103,28 +103,28 @@ enum UpdateButtonState {
 struct SwiftUIUpdateButtonView: View {
     let app: App?
     let showActionButton: Bool
-    
+
     @State private var viewModel: UpdateButtonViewModel
     @State private var showingErrorAlert = false
-    
+
     init(app: App?, showActionButton: Bool = true) {
         self.app = app
         self.showActionButton = showActionButton
         self._viewModel = State(initialValue: UpdateButtonViewModel(app: app, showActionButton: showActionButton))
     }
-    
+
     var body: some View {
         Group {
-            switch viewModel.state {
+            switch currentButtonState {
             case .none:
                 EmptyView()
-                
+
             case .update, .open, .error:
                 actionButton
-                
+
             case .progress:
                 progressIndicator
-                
+
             case .indeterminate:
                 indeterminateIndicator
             }
@@ -147,13 +147,28 @@ struct SwiftUIUpdateButtonView: View {
             }
         }
     }
+
+    // Compute button state directly from app properties
+    private var currentButtonState: UpdateButtonState {
+        // If there's an active operation, use the view model state
+        if viewModel.state == .progress || viewModel.state == .indeterminate || viewModel.state == .error {
+            return viewModel.state
+        }
+
+        // Otherwise, compute state directly from app
+        guard let app = app, showActionButton else {
+            return .none
+        }
+
+        return app.updateAvailable ? .update : .open
+    }
     
     @ViewBuilder
     private var actionButton: some View {
         Button(action: performAction) {
             HStack(spacing: 4) {
-                if let image = buttonImage {
-                    Image(nsImage: image)
+                if let image = buttonSystemImage {
+                    Image(systemName: image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 13, height: 13)
@@ -161,7 +176,7 @@ struct SwiftUIUpdateButtonView: View {
                 
                 if !buttonTitle.isEmpty {
                     Text(buttonTitle)
-                        .font(.system(size: NSFont.systemFontSize - 1, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                 }
             }
         }
@@ -203,7 +218,7 @@ struct SwiftUIUpdateButtonView: View {
     
     private var buttonTitle: String {
         let title: String
-        switch viewModel.state {
+        switch currentButtonState {
         case .update:
             title = NSLocalizedString("UpdateAction", comment: "Action to update a given app.")
         case .open:
@@ -211,7 +226,7 @@ struct SwiftUIUpdateButtonView: View {
         default:
             title = ""
         }
-        
+
         // Beginning with macOS 14, the button text is no longer uppercase
         if #available(macOS 14.0, *) {
             return title
@@ -220,31 +235,21 @@ struct SwiftUIUpdateButtonView: View {
         }
     }
     
-    private var buttonImage: NSImage? {
-        switch viewModel.state {
+    private var buttonSystemImage: String? {
+        switch currentButtonState {
         case .error:
-            if #available(macOS 11.0, *) {
-                return NSImage(systemSymbolName: "exclamationmark.triangle.fill",
-                              accessibilityDescription: NSLocalizedString("ErrorButtonAccessibilityTitle",
-                                                                         comment: "Description of button that opens an error dialogue."))
-            } else {
-                return NSImage(named: "warning")
-            }
+            return "exclamationmark.triangle.fill"
         default:
             return nil
         }
     }
     
     private var tintColor: Color {
-        if #available(macOS 10.14, *) {
-            return Color(NSColor.controlAccentColor)
-        } else {
-            return Color(NSColor.systemBlue)
-        }
+        return .accentColor
     }
     
     private func performAction() {
-        switch viewModel.state {
+        switch currentButtonState {
         case .update:
             app?.performUpdate()
         case .open:
@@ -285,25 +290,6 @@ struct UpdateButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - NSViewRepresentable Wrapper for Legacy Code
+// MARK: - Pure SwiftUI Update Button Alias
 
-struct SwiftUIUpdateButton: NSViewRepresentable {
-    let app: App?
-    let showActionButton: Bool
-
-    init(app: App?, showActionButton: Bool = true) {
-        self.app = app
-        self.showActionButton = showActionButton
-    }
-
-    func makeNSView(context: Context) -> UpdateButton {
-        let button = UpdateButton()
-        button.showActionButton = showActionButton
-        return button
-    }
-
-    func updateNSView(_ nsView: UpdateButton, context: Context) {
-        nsView.app = app
-        nsView.showActionButton = showActionButton
-    }
-}
+typealias SwiftUIUpdateButton = SwiftUIUpdateButtonView

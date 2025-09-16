@@ -6,7 +6,7 @@
 //  Copyright © 2025 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import AppKit
 import SwiftUI
 
 /**

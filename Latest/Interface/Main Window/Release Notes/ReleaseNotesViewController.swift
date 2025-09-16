@@ -6,7 +6,8 @@
 //  Copyright © 2017 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import Foundation
+import AppKit
 import WebKit
 import SwiftUI
 import Combine
