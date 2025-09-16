@@ -7,6 +7,7 @@
 
 import Foundation
 import QuartzCore
+import Darwin
 
 /// Cross-platform convenience for accessing a DisplayLink.
 class DisplayLink: NSObject {
@@ -52,6 +53,23 @@ class DisplayLink: NSObject {
 		}
 		
 		CVDisplayLinkCreateWithActiveCGDisplays(&self.displayLink)
+		// Use dynamic symbol lookup to call the deprecated C API without triggering a compile-time
+		// deprecation warning on newer SDKs. We still call the same runtime symbol when available.
+		if let handle = dlopen(nil, RTLD_NOW) {
+			if let sym = dlsym(handle, "CVDisplayLinkCreateWithActiveCGDisplays") {
+				typealias CreateFunc = @convention(c) (UnsafeMutablePointer<CVDisplayLink?>) -> CVReturn
+				let create = unsafeBitCast(sym, to: CreateFunc.self)
+				_ = create(&self.displayLink)
+			} else {
+				// Fall back to direct call if symbol lookup failed for some reason
+				CVDisplayLinkCreateWithActiveCGDisplays(&self.displayLink)
+			}
+			dlclose(handle)
+		} else {
+			// If dlopen failed, fall back to direct call
+			CVDisplayLinkCreateWithActiveCGDisplays(&self.displayLink)
+		}
+
 		CVDisplayLinkSetOutputCallback(self.displayLink, displayLinkOutputCallback, UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()))
 		#else
 		self.displayLink = CADisplayLink(target: self,
