@@ -12,7 +12,7 @@ import Observation
 // MARK: - Main View
 
 struct ReleaseNotesView: View {
-    let viewModel: ReleaseNotesViewModel
+    @ObservedObject var viewModel: ReleaseNotesSwiftUIViewModel
 
     var body: some View {
         VStack(spacing: 0) {
