@@ -219,7 +219,7 @@ enum ReleaseNotesState {
 
 @MainActor
 final class ReleaseNotesSwiftUIViewModel: ObservableObject {
-    @Published var state: ReleaseNotesState = .loading
+    @Published var state: ReleaseNotesState = .empty
     @Published var app: App?
 
     private let releaseNotesProvider = ReleaseNotesProvider()
@@ -227,22 +227,15 @@ final class ReleaseNotesSwiftUIViewModel: ObservableObject {
 
     func loadReleaseNotes(for app: App?) {
         guard let app = app else {
-            // Show empty state error for no app selected
-            let error = LatestError.custom(
-                title: NSLocalizedString("NoAppSelectedTitle", comment: "Title of release notes empty state"),
-                description: NSLocalizedString("NoAppSelectedDescription", comment: "Description of release notes empty state")
-            )
-            self.state = .error(error)
+            self.state = .empty
             self.app = nil
             return
         }
 
         self.app = app
 
-        // Cancel any existing timer
         loadingTimer?.invalidate()
 
-        // Delay the loading screen to avoid flickering
         loadingTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 guard let self = self else { return }
@@ -256,7 +249,6 @@ final class ReleaseNotesSwiftUIViewModel: ObservableObject {
 
                 self.loadingTimer?.invalidate()
 
-                // Only update if this is still the current app
                 guard self.app == app else { return }
 
                 switch result {
@@ -276,6 +268,7 @@ final class ReleaseNotesSwiftUIViewModel: ObservableObject {
 
 // MARK: - App Info Header View
 
+
 struct AppInfoHeaderView: View {
     let app: App
     @State private var appIcon: NSImage?
@@ -287,6 +280,24 @@ struct AppInfoHeaderView: View {
         dateFormatter.timeStyle = .none
         return dateFormatter
     }()
+
+    var formattedUpdateDate: String? {
+        guard let date = app.latestUpdateDate else { return nil }
+        return Self.appDateFormatter.string(from: date)
+    }
+
+    var versionText: String? {
+        return app.localizedVersionInformation?.combined(includeNew: app.updateAvailable)
+    }
+
+    var shouldShowSupportStatus: Bool {
+        AppListSettings.shared.includeUnsupportedApps || AppListSettings.shared.includeAppsWithLimitedSupport
+    }
+
+    var externalUpdaterText: String? {
+        guard app.updateAvailable, let externalUpdaterName = app.externalUpdaterName else { return nil }
+        return "Update in \(externalUpdaterName)"
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -316,16 +327,16 @@ struct AppInfoHeaderView: View {
                         .lineLimit(1)
 
                     // Version Information
-                    if let versionInfo = app.localizedVersionInformation {
-                        Text(versionInfo.combined(includeNew: app.updateAvailable))
+                    if let versionText = versionText {
+                        Text(versionText)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
 
                     // Update Date
-                    if let date = app.latestUpdateDate {
-                        Text(Self.appDateFormatter.string(from: date))
+                    if let formattedDate = formattedUpdateDate {
+                        Text(formattedDate)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -334,7 +345,7 @@ struct AppInfoHeaderView: View {
                 Spacer()
 
                 VStack(spacing: 8) {
-                    // Update Button - Simplified placeholder for now
+                    // Update Button
                     Button("Update") {
                         app.performUpdate()
                     }
@@ -342,8 +353,8 @@ struct AppInfoHeaderView: View {
                     .controlSize(.small)
 
                     // External Update Label
-                    if app.updateAvailable, let externalUpdaterName = app.externalUpdaterName {
-                        Text("Update in \(externalUpdaterName)")
+                    if let externalUpdaterText = externalUpdaterText {
+                        Text(externalUpdaterText)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -387,10 +398,6 @@ struct AppInfoHeaderView: View {
         .sheet(isPresented: $showingSupportStatus) {
             SupportStatusInfoView(app: app)
         }
-    }
-
-    private var shouldShowSupportStatus: Bool {
-        AppListSettings.shared.includeUnsupportedApps || AppListSettings.shared.includeAppsWithLimitedSupport
     }
 
     private func loadAppIcon() {
