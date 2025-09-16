@@ -6,77 +6,80 @@
 //  Copyright © 2024 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import SwiftUI
+import AppKit
 
-/// View that holds a single location checked for updates.
-class AppDirectoryCellView: NSTableCellView {
-	
-	/// The label holding the path of the directory.
-	@IBOutlet private weak var titleLabel: NSTextField!
-	
-	/// The image view displaying the directories icon.
-	@IBOutlet private weak var iconImageView: NSImageView!
-	
-	/// The label holding the app count for this directory.
-	@IBOutlet private weak var appCountLabel: NSTextField!
-	
-	/// The activity indicator shown while the apps are being counted.
-	@IBOutlet private weak var activityIndicator: NSProgressIndicator!
-	
-	/// The URL to be displayed by the cell.
-	var url: URL? {
-		didSet {
-			guard url != oldValue else { return }
-			
-			isReachable = (try? url?.checkResourceIsReachable()) == true
-			setUpView()
-		}
-	}
-	
-	var isReachable: Bool = false
-	
-	private func setUpView() {
-		guard let url else {
-			titleLabel.stringValue = ""
-			iconImageView.image = nil
-			appCountLabel.isHidden = true
-			return
-		}
-		
-		// Title
-		titleLabel.stringValue = url.relativePath
-		titleLabel.textColor = tintColor
-		
-		// Image
-		iconImageView.image = icon
-		
-		// App Count
-		activityIndicator.startAnimation(nil)
-		appCountLabel.isHidden = true
-		DispatchQueue.global().async {
-			let count = BundleCollector.collectBundles(at: url).count
-			DispatchQueue.main.async {
-				self.appCountLabel.isHidden = false
-				self.activityIndicator.stopAnimation(nil)
-				self.appCountLabel.stringValue = NumberFormatter.localizedString(from: NSNumber(value: count), number: .none)
-			}
-		}
-	}
-	
-	private var tintColor: NSColor {
-		isReachable ? .labelColor : .secondaryLabelColor
-	}
-	
-	private var icon: NSImage {
-		if isReachable {
-			guard let url else { return NSImage() }
-			return NSWorkspace.shared.icon(forFile: url.relativePath)
-		}
-		
-		return if #available(macOS 11.0, *) {
-			NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: "")!
-		} else {
-			NSImage(named: .init("NSCaution"))!
-		}
-	}
+/// Row representing a directory that Latest scans for apps.
+struct DirectoryRowView: View {
+    let url: URL
+    
+    @State private var icon: NSImage = DirectoryRowView.defaultFolderIcon
+    @State private var appCountText: String?
+    @State private var isReachable = true
+    @State private var isLoading = false
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(nsImage: icon)
+                .resizable()
+                .frame(width: 20, height: 20)
+                .accessibilityHidden(true)
+            
+            Text(url.relativePath)
+                .font(.body)
+                .foregroundColor(isReachable ? .primary : .secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            
+            Spacer()
+            
+            if isLoading {
+                ProgressView()
+                    .controlSize(.small)
+            } else if let appCountText {
+                Text(appCountText)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .task(id: url) {
+            await refresh()
+        }
+    }
+    
+    @MainActor
+    private func refresh() async {
+        isLoading = true
+        let reachable = (try? url.checkResourceIsReachable()) == true
+        let icon = reachable ? NSWorkspace.shared.icon(forFile: url.path) : DirectoryRowView.warningIcon
+        var countText: String?
+        if reachable {
+            let count = await Task.detached(priority: .utility) { () -> Int in
+                BundleCollector.collectBundles(at: url).count
+            }.value
+            countText = NumberFormatter.localizedString(from: NSNumber(value: count), number: .none)
+        }
+        
+        withAnimation(.default) {
+            self.isReachable = reachable
+            self.icon = icon
+            self.appCountText = countText
+            self.isLoading = false
+        }
+    }
+    
+    private static var defaultFolderIcon: NSImage {
+        NSWorkspace.shared.icon(forFileType: NSFileTypeForHFSTypeCode(OSType(kGenericFolderIcon)))
+    }
+    
+    private static var warningIcon: NSImage {
+        if #available(macOS 11.0, *) {
+            return NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil) ?? defaultFolderIcon
+        } else {
+            return NSImage(named: NSImage.cautionName) ?? defaultFolderIcon
+        }
+    }
 }

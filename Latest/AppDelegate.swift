@@ -19,10 +19,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Insert code here to tear down your application
     }
 	
-	func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-		// Always terminate the app if the main window is closed
-		return true
-	}
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        // Always terminate the app if the main window is closed
+        return true
+    }
+    
+    @IBAction func showSettings(_ sender: Any?) {
+        SettingsWindowController.shared.showWindow(sender)
+    }
     
 }
-
