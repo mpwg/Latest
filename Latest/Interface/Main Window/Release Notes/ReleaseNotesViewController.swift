@@ -634,32 +634,3 @@ struct AttributedTextView: NSViewRepresentable {
 
 // MARK: - SwiftUI Update Button
 
-struct SwiftUIUpdateButtonView: View {
-    let app: App?
-    let showActionButton: Bool
-    
-    init(app: App?, showActionButton: Bool = true) {
-        self.app = app
-        self.showActionButton = showActionButton
-    }
-    
-    var body: some View {
-        Group {
-            if let app = app, showActionButton {
-                Button(action: {
-                    // Simple action - could be enhanced later
-                    print("Update button tapped for \(app.name)")
-                }) {
-                    Text("Update")
-                        .font(.system(size: 11))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-            } else {
-                EmptyView()
-            }
-        }
-    }
-}
