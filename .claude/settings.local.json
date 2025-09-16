@@ -9,7 +9,11 @@
       "Bash(xcodebuild:*)",
       "Bash(pkill:*)",
       "Bash(xargs:*)",
-      "Bash(xed:*)"
+      "Bash(xed:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(find:*)",
+      "Bash(swift:*)",
+      "Bash(open:*)"
     ],
     "deny": [],
     "ask": []
