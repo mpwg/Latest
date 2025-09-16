@@ -152,8 +152,8 @@ struct SwiftUIUpdateButtonView: View {
     private var actionButton: some View {
         Button(action: performAction) {
             HStack(spacing: 4) {
-                if let image = buttonImage {
-                    Image(nsImage: image)
+                if let image = buttonSystemImage {
+                    Image(systemName: image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 13, height: 13)
@@ -161,7 +161,7 @@ struct SwiftUIUpdateButtonView: View {
                 
                 if !buttonTitle.isEmpty {
                     Text(buttonTitle)
-                        .font(.system(size: NSFont.systemFontSize - 1, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                 }
             }
         }
@@ -220,27 +220,17 @@ struct SwiftUIUpdateButtonView: View {
         }
     }
     
-    private var buttonImage: NSImage? {
+    private var buttonSystemImage: String? {
         switch viewModel.state {
         case .error:
-            if #available(macOS 11.0, *) {
-                return NSImage(systemSymbolName: "exclamationmark.triangle.fill",
-                              accessibilityDescription: NSLocalizedString("ErrorButtonAccessibilityTitle",
-                                                                         comment: "Description of button that opens an error dialogue."))
-            } else {
-                return NSImage(named: "warning")
-            }
+            return "exclamationmark.triangle.fill"
         default:
             return nil
         }
     }
     
     private var tintColor: Color {
-        if #available(macOS 10.14, *) {
-            return Color(NSColor.controlAccentColor)
-        } else {
-            return Color(NSColor.systemBlue)
-        }
+        return .accentColor
     }
     
     private func performAction() {
@@ -285,25 +275,6 @@ struct UpdateButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - NSViewRepresentable Wrapper for Legacy Code
+// MARK: - Pure SwiftUI Update Button Alias
 
-struct SwiftUIUpdateButton: NSViewRepresentable {
-    let app: App?
-    let showActionButton: Bool
-
-    init(app: App?, showActionButton: Bool = true) {
-        self.app = app
-        self.showActionButton = showActionButton
-    }
-
-    func makeNSView(context: Context) -> UpdateButton {
-        let button = UpdateButton()
-        button.showActionButton = showActionButton
-        return button
-    }
-
-    func updateNSView(_ nsView: UpdateButton, context: Context) {
-        nsView.app = app
-        nsView.showActionButton = showActionButton
-    }
-}
+typealias SwiftUIUpdateButton = SwiftUIUpdateButtonView

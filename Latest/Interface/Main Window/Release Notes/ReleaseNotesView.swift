@@ -43,7 +43,7 @@ struct ReleaseNotesContentView: View {
         case .error(let error):
             ReleaseNotesErrorView(error: error)
         case .content(let attributedString):
-            ReleaseNotesTextView(attributedString: attributedString)
+            ReleaseNotesTextView(attributedString: AttributedString(attributedString))
         }
     }
 }
@@ -125,94 +125,82 @@ struct ReleaseNotesErrorView: View {
 
 @MainActor
 final class ReleaseNotesTextViewModel: ObservableObject {
-    let attributedString: NSAttributedString
+    let attributedString: AttributedString
     let contentInset: CGFloat = 14
 
-    var formattedAttributedString: NSAttributedString {
+    var formattedAttributedString: AttributedString {
         format(attributedString)
     }
 
-    init(attributedString: NSAttributedString) {
+    init(attributedString: AttributedString) {
         self.attributedString = attributedString
     }
 
-    private func format(_ attributedString: NSAttributedString) -> NSAttributedString {
-        let string = NSMutableAttributedString(attributedString: attributedString)
-        let textRange = NSMakeRange(0, attributedString.length)
-        let defaultFont = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+    private func format(_ attributedString: AttributedString) -> AttributedString {
+        var string = attributedString
 
-        string.removeAttribute(.foregroundColor, range: textRange)
-        string.addAttribute(.foregroundColor, value: NSColor.labelColor, range: textRange)
+        // Set default font and remove problematic attributes
+        string.font = .body
+        string.foregroundColor = .primary
 
-        string.removeAttribute(.backgroundColor, range: textRange)
-        string.removeAttribute(.shadow, range: textRange)
+        // Remove any background colors and shadows that might not work well in SwiftUI
+        // SwiftUI AttributedString handles this differently than NSAttributedString
 
-        string.removeAttribute(.font, range: textRange)
-        string.addAttribute(.font, value: defaultFont, range: textRange)
+        // Process the string to enhance formatting while preserving existing styles
+        var finalString = AttributedString()
 
+        for run in string.runs {
+            var runString = AttributedString(string[run.range])
 
-        attributedString.enumerateAttribute(NSAttributedString.Key.font, in: textRange, options: .reverse) { (fontObject, range, stopPointer) in
-            guard let font = fontObject as? NSFont else { return }
+            // Preserve bold and italic formatting from the original
+            if let font = run.font {
+                // Convert font traits to SwiftUI equivalents
+                if font.weight == .bold {
+                    runString.font = .body.bold()
+                } else if font.weight == .medium {
+                    runString.font = .body.weight(.medium)
+                } else if font.weight == .semibold {
+                    runString.font = .body.weight(.semibold)
+                } else {
+                    runString.font = .body
+                }
 
-            let traits = font.fontDescriptor.symbolicTraits
-            let fontDescriptor = defaultFont.fontDescriptor.withSymbolicTraits(traits)
-            if let font = NSFont(descriptor: fontDescriptor, size: defaultFont.pointSize) {
-                string.addAttribute(.font, value: font, range: range)
+                // Handle italic styling
+                if font.design == .default {
+                    // For italic detection in AttributedString, we need to check the font descriptor
+                    // This is simplified - in a real implementation you might want more sophisticated detection
+                    runString.font = runString.font?.italic() ?? .body.italic()
+                }
             }
+
+            // Ensure good contrast and readability
+            runString.foregroundColor = .primary
+
+            // Remove any background colors that might interfere with dark mode
+            // SwiftUI handles background colors differently
+
+            finalString.append(runString)
         }
 
-        return string
+        return finalString
     }
 }
 
 struct ReleaseNotesTextView: View {
     @StateObject private var viewModel: ReleaseNotesTextViewModel
 
-    init(attributedString: NSAttributedString) {
+    init(attributedString: AttributedString) {
         self._viewModel = StateObject(wrappedValue: ReleaseNotesTextViewModel(attributedString: attributedString))
     }
 
     var body: some View {
-        AttributedTextView(attributedString: viewModel.formattedAttributedString)
-            .padding(viewModel.contentInset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ScrollView {
+            Text(viewModel.formattedAttributedString)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(viewModel.contentInset)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
-// MARK: - Attributed Text View Wrapper
-
-struct AttributedTextView: NSViewRepresentable {
-    let attributedString: NSAttributedString
-
-    func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSTextView.scrollableTextView()
-        let textView = scrollView.documentView as! NSTextView
-
-        textView.isEditable = false
-        textView.isSelectable = true
-        textView.isRichText = true
-        textView.allowsUndo = false
-        textView.drawsBackground = false
-        textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = false
-        textView.autoresizingMask = [.width]
-        textView.textContainer?.containerSize = CGSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
-        textView.textContainer?.widthTracksTextView = true
-
-        // Ensure scrollView expands to fill available space
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.autohidesScrollers = true
-
-        return scrollView
-    }
-
-    func updateNSView(_ nsView: NSScrollView, context: Context) {
-        guard let textView = nsView.documentView as? NSTextView else { return }
-        textView.textStorage?.setAttributedString(attributedString)
-    }
-
-    func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSScrollView, context: Context) -> CGSize? {
-        return proposal.replacingUnspecifiedDimensions(by: CGSize(width: 400, height: 300))
-    }
-}

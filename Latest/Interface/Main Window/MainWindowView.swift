@@ -7,7 +7,6 @@
 //
 
 import SwiftUI
-import Cocoa
 import Observation
 
 /// The main SwiftUI window view that replaces the storyboard-based main window
@@ -47,7 +46,7 @@ struct MainWindowView: View {
         VStack(spacing: 0) {
             updateListContainer
         }
-        .background(Color(.controlBackgroundColor))
+        .background(.regularMaterial)
     }
     
     private var updateListContainer: some View {
@@ -72,7 +71,7 @@ struct MainWindowView: View {
                 emptyReleaseNotesView
             }
         }
-        .background(Color(.controlBackgroundColor))
+        .background(.regularMaterial)
     }
     
     private var emptyReleaseNotesView: some View {
