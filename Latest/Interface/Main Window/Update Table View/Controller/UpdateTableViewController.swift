@@ -27,6 +27,34 @@ class UpdateListRowModel: NSObject, Identifiable {
         self.setupUpdateObservation()
     }
 
+    func highlightedName(filterQuery: String?) -> AttributedString {
+        var attributedString = AttributedString(app.name)
+
+        if let filterQuery = filterQuery, !filterQuery.isEmpty {
+            let range = app.name.range(of: filterQuery, options: .caseInsensitive)
+            if let range = range {
+                let nsRange = NSRange(range, in: app.name)
+                let attributedRange = Range(nsRange, in: attributedString)
+
+                if let attributedRange = attributedRange {
+                    attributedString[attributedRange].backgroundColor = .yellow.opacity(0.3)
+                }
+            }
+        }
+
+        return attributedString
+    }
+
+    var versionText: String? {
+        if let version = app.version.versionNumber,
+           let newVersion = app.remoteVersion?.versionNumber {
+            return "\(version) → \(newVersion)"
+        } else if let version = app.version.versionNumber {
+            return version
+        }
+        return nil
+    }
+
     private func setupUpdateObservation() {
         UpdateQueue.shared.addObserver(self, to: app.identifier) { [weak self] progress in
             DispatchQueue.main.async {
@@ -194,14 +222,8 @@ struct UpdateListRowView: View {
                     .foregroundColor(.primary)
                     .lineLimit(1)
 
-                if let version = rowModel.app.version.versionNumber,
-                   let newVersion = rowModel.app.remoteVersion?.versionNumber {
-                    Text("\(version) → \(newVersion)")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                } else if let version = rowModel.app.version.versionNumber {
-                    Text(version)
+                if let versionText = rowModel.versionText {
+                    Text(versionText)
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -242,21 +264,7 @@ struct UpdateListRowView: View {
     }
 
     private func highlightedAppName() -> AttributedString {
-        var attributedString = AttributedString(rowModel.app.name)
-
-        if let filterQuery = filterQuery, !filterQuery.isEmpty {
-            let range = rowModel.app.name.range(of: filterQuery, options: .caseInsensitive)
-            if let range = range {
-                let nsRange = NSRange(range, in: rowModel.app.name)
-                let attributedRange = Range(nsRange, in: attributedString)
-
-                if let attributedRange = attributedRange {
-                    attributedString[attributedRange].backgroundColor = .yellow.opacity(0.3)
-                }
-            }
-        }
-
-        return attributedString
+        rowModel.highlightedName(filterQuery: filterQuery)
     }
 }
 

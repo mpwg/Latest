@@ -123,18 +123,17 @@ struct ReleaseNotesErrorView: View {
     }
 }
 
-struct ReleaseNotesTextView: View {
+@MainActor
+final class ReleaseNotesTextViewModel: ObservableObject {
     let attributedString: NSAttributedString
     let contentInset: CGFloat = 14
 
-    var body: some View {
-        AttributedTextView(attributedString: formattedAttributedString)
-            .padding(contentInset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    var formattedAttributedString: NSAttributedString {
+        format(attributedString)
     }
 
-    private var formattedAttributedString: NSAttributedString {
-        format(attributedString)
+    init(attributedString: NSAttributedString) {
+        self.attributedString = attributedString
     }
 
     private func format(_ attributedString: NSAttributedString) -> NSAttributedString {
@@ -142,21 +141,16 @@ struct ReleaseNotesTextView: View {
         let textRange = NSMakeRange(0, attributedString.length)
         let defaultFont = NSFont.systemFont(ofSize: NSFont.systemFontSize)
 
-        // Fix foreground color
         string.removeAttribute(.foregroundColor, range: textRange)
         string.addAttribute(.foregroundColor, value: NSColor.labelColor, range: textRange)
 
-        // Remove background color
         string.removeAttribute(.backgroundColor, range: textRange)
-
-        // Remove shadows
         string.removeAttribute(.shadow, range: textRange)
 
-        // Reset font
         string.removeAttribute(.font, range: textRange)
         string.addAttribute(.font, value: defaultFont, range: textRange)
 
-        // Copy traits like italic and bold
+
         attributedString.enumerateAttribute(NSAttributedString.Key.font, in: textRange, options: .reverse) { (fontObject, range, stopPointer) in
             guard let font = fontObject as? NSFont else { return }
 
@@ -168,6 +162,20 @@ struct ReleaseNotesTextView: View {
         }
 
         return string
+    }
+}
+
+struct ReleaseNotesTextView: View {
+    @StateObject private var viewModel: ReleaseNotesTextViewModel
+
+    init(attributedString: NSAttributedString) {
+        self._viewModel = StateObject(wrappedValue: ReleaseNotesTextViewModel(attributedString: attributedString))
+    }
+
+    var body: some View {
+        AttributedTextView(attributedString: viewModel.formattedAttributedString)
+            .padding(viewModel.contentInset)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
