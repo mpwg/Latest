@@ -163,27 +163,6 @@ class UpdateListViewModel: ObservableObject {
 
 // MARK: - SwiftUI Views
 
-struct SwiftUIUpdateButton: NSViewRepresentable {
-    let app: App?
-    let showActionButton: Bool
-
-    init(app: App?, showActionButton: Bool = true) {
-        self.app = app
-        self.showActionButton = showActionButton
-    }
-
-    func makeNSView(context: Context) -> UpdateButton {
-        let button = UpdateButton()
-        button.showActionButton = showActionButton
-        return button
-    }
-
-    func updateNSView(_ nsView: UpdateButton, context: Context) {
-        nsView.app = app
-        nsView.showActionButton = showActionButton
-    }
-}
-
 struct UpdateListRowView: View {
     @Bindable var rowModel: UpdateListRowModel
     let filterQuery: String?
@@ -240,7 +219,7 @@ struct UpdateListRowView: View {
                     .background(Color(.controlBackgroundColor))
                     .clipShape(RoundedRectangle(cornerRadius: 4))
             } else {
-                SwiftUIUpdateButton(app: rowModel.app, showActionButton: true)
+                SwiftUIUpdateButtonView(app: rowModel.app, showActionButton: true)
                     .frame(height: 21)
             }
         }

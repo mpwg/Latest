@@ -9,6 +9,7 @@
 import Cocoa
 import WebKit
 import SwiftUI
+import Combine
 
 
 /**
@@ -209,6 +210,13 @@ class ReleaseNotesViewController: NSViewController {
 
 // MARK: - SwiftUI Implementation
 
+enum ReleaseNotesState {
+    case empty
+    case loading
+    case error(Error)
+    case content(NSAttributedString)
+}
+
 @MainActor
 final class ReleaseNotesSwiftUIViewModel: ObservableObject {
     @Published var state: ReleaseNotesState = .loading
@@ -253,7 +261,7 @@ final class ReleaseNotesSwiftUIViewModel: ObservableObject {
 
                 switch result {
                 case .success(let attributedString):
-                    self.state = .text(attributedString)
+                    self.state = .content(attributedString)
                 case .failure(let error):
                     self.state = .error(error)
                 }
@@ -264,12 +272,6 @@ final class ReleaseNotesSwiftUIViewModel: ObservableObject {
     deinit {
         loadingTimer?.invalidate()
     }
-}
-
-enum ReleaseNotesState {
-    case loading
-    case error(Error)
-    case text(NSAttributedString)
 }
 
 struct ReleaseNotesView: View {
@@ -288,11 +290,13 @@ struct ReleaseNotesContentView: View {
     var body: some View {
         Group {
             switch state {
+            case .empty:
+                EmptyView()
             case .loading:
                 ReleaseNotesLoadingView()
             case .error(let error):
                 ReleaseNotesErrorView(error: error)
-            case .text(let attributedString):
+            case .content(let attributedString):
                 ReleaseNotesTextView(attributedString: attributedString)
             }
         }
@@ -432,5 +436,37 @@ struct AttributedTextView: NSViewRepresentable {
 
     func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSScrollView, context: Context) -> CGSize? {
         return proposal.replacingUnspecifiedDimensions(by: CGSize(width: 400, height: 300))
+    }
+}
+
+// MARK: - SwiftUI Update Button
+
+struct SwiftUIUpdateButtonView: View {
+    let app: App?
+    let showActionButton: Bool
+    
+    init(app: App?, showActionButton: Bool = true) {
+        self.app = app
+        self.showActionButton = showActionButton
+    }
+    
+    var body: some View {
+        Group {
+            if let app = app, showActionButton {
+                Button(action: {
+                    // Simple action - could be enhanced later
+                    print("Update button tapped for \(app.name)")
+                }) {
+                    Text("Update")
+                        .font(.system(size: 11))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            } else {
+                EmptyView()
+            }
+        }
     }
 }
