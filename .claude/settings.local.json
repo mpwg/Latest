@@ -6,7 +6,10 @@
       "Bash(gh issue:*)",
       "Bash(chmod:*)",
       "Bash(/Users/mat/code/Latest/update_storyboard.sh)",
-      "Bash(xcodebuild:*)"
+      "Bash(xcodebuild:*)",
+      "Bash(pkill:*)",
+      "Bash(xargs:*)",
+      "Bash(xed:*)"
     ],
     "deny": [],
     "ask": []
