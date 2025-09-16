@@ -9,6 +9,7 @@
 import Cocoa
 import WebKit
 import SwiftUI
+import Combine
 
 
 /**
@@ -209,6 +210,13 @@ class ReleaseNotesViewController: NSViewController {
 
 // MARK: - SwiftUI Implementation
 
+enum ReleaseNotesState {
+    case empty
+    case loading
+    case error(Error)
+    case content(NSAttributedString)
+}
+
 @MainActor
 final class ReleaseNotesSwiftUIViewModel: ObservableObject {
     @Published var state: ReleaseNotesState = .loading
@@ -253,7 +261,7 @@ final class ReleaseNotesSwiftUIViewModel: ObservableObject {
 
                 switch result {
                 case .success(let attributedString):
-                    self.state = .text(attributedString)
+                    self.state = .content(attributedString)
                 case .failure(let error):
                     self.state = .error(error)
                 }
@@ -266,19 +274,206 @@ final class ReleaseNotesSwiftUIViewModel: ObservableObject {
     }
 }
 
-enum ReleaseNotesState {
-    case loading
-    case error(Error)
-    case text(NSAttributedString)
+// MARK: - App Info Header View
+
+struct AppInfoHeaderView: View {
+    let app: App
+    @State private var appIcon: NSImage?
+    @State private var showingSupportStatus = false
+
+    private static let appDateFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .long
+        dateFormatter.timeStyle = .none
+        return dateFormatter
+    }()
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                // App Icon
+                Group {
+                    if let appIcon = appIcon {
+                        Image(nsImage: appIcon)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.quaternary)
+                            .overlay(
+                                Image(systemName: "app.dashed")
+                                    .foregroundColor(.secondary)
+                            )
+                    }
+                }
+                .frame(width: 48, height: 48)
+                .cornerRadius(8)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    // App Name
+                    Text(app.name)
+                        .font(.headline)
+                        .lineLimit(1)
+
+                    // Version Information
+                    if let versionInfo = app.localizedVersionInformation {
+                        Text(versionInfo.combined(includeNew: app.updateAvailable))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    // Update Date
+                    if let date = app.latestUpdateDate {
+                        Text(Self.appDateFormatter.string(from: date))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                VStack(spacing: 8) {
+                    // Update Button - Simplified placeholder for now
+                    Button("Update") {
+                        app.performUpdate()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    // External Update Label
+                    if app.updateAvailable, let externalUpdaterName = app.externalUpdaterName {
+                        Text("Update in \(externalUpdaterName)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+
+            // Support Status Button (if enabled)
+            if shouldShowSupportStatus {
+                HStack {
+                    Button(action: {
+                        showingSupportStatus = true
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(nsImage: app.source.supportState.statusImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 16, height: 16)
+
+                            Text(app.source.supportState.compactLabel)
+                                .font(.caption)
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundColor(.secondary)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+            }
+        }
+        .onAppear {
+            loadAppIcon()
+        }
+        .onChange(of: app) { _, _ in
+            loadAppIcon()
+        }
+        .sheet(isPresented: $showingSupportStatus) {
+            SupportStatusInfoView(app: app)
+        }
+    }
+
+    private var shouldShowSupportStatus: Bool {
+        AppListSettings.shared.includeUnsupportedApps || AppListSettings.shared.includeAppsWithLimitedSupport
+    }
+
+    private func loadAppIcon() {
+        IconCache.shared.icon(for: app) { icon in
+            DispatchQueue.main.async {
+                self.appIcon = icon
+            }
+        }
+    }
+}
+
+// MARK: - Support Status Info View
+
+struct SupportStatusInfoView: View {
+    let app: App
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            HStack {
+                Image(nsImage: app.source.supportState.statusImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 32, height: 32)
+
+                Text(app.source.supportState.label)
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Spacer()
+
+                Button("Done") {
+                    dismiss()
+                }
+            }
+
+            // Description
+            Text(supportStateDescription)
+                .font(.body)
+                .foregroundColor(.secondary)
+
+            // Report Issue Button (only for full support)
+            if case .full = app.source.supportState {
+                Button("Report Issue") {
+                    NSWorkspace.shared.open(URL(string: "https://github.com/mangerlahn/Latest/issues")!)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .frame(width: 400, height: 200)
+    }
+
+    private var supportStateDescription: String {
+        switch app.source.supportState {
+        case .none:
+            return NSLocalizedString("NoSupportDescription", comment: "Description for apps without support.")
+        case .limited:
+            return NSLocalizedString("LimitedSupportDescription", comment: "Description for apps with limited support.")
+        case .full:
+            return NSLocalizedString("FullSupportDescription", comment: "Description for apps with full support.")
+        }
+    }
 }
 
 struct ReleaseNotesView: View {
     @ObservedObject var viewModel: ReleaseNotesSwiftUIViewModel
 
     var body: some View {
-        ReleaseNotesContentView(state: viewModel.state)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
+        VStack(spacing: 0) {
+            if let app = viewModel.app {
+                AppInfoHeaderView(app: app)
+                    .background(.regularMaterial)
+
+                Divider()
+            }
+
+            ReleaseNotesContentView(state: viewModel.state)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -288,11 +483,13 @@ struct ReleaseNotesContentView: View {
     var body: some View {
         Group {
             switch state {
+            case .empty:
+                EmptyView()
             case .loading:
                 ReleaseNotesLoadingView()
             case .error(let error):
                 ReleaseNotesErrorView(error: error)
-            case .text(let attributedString):
+            case .content(let attributedString):
                 ReleaseNotesTextView(attributedString: attributedString)
             }
         }
@@ -432,5 +629,37 @@ struct AttributedTextView: NSViewRepresentable {
 
     func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSScrollView, context: Context) -> CGSize? {
         return proposal.replacingUnspecifiedDimensions(by: CGSize(width: 400, height: 300))
+    }
+}
+
+// MARK: - SwiftUI Update Button
+
+struct SwiftUIUpdateButtonView: View {
+    let app: App?
+    let showActionButton: Bool
+
+    init(app: App?, showActionButton: Bool = true) {
+        self.app = app
+        self.showActionButton = showActionButton
+    }
+
+    var body: some View {
+        Group {
+            if let app = app, showActionButton {
+                Button(action: {
+                    // Simple action - could be enhanced later
+                    print("Update button tapped for \(app.name)")
+                }) {
+                    Text("Update")
+                        .font(.system(size: 11))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            } else {
+                EmptyView()
+            }
+        }
     }
 }
