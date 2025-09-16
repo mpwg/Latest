@@ -6,7 +6,7 @@
 //  Copyright © 2018 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import AppKit
 
 fileprivate let ReleaseNotesTextParagraphCellIdentifier = NSUserInterfaceItemIdentifier(rawValue: "ReleaseNotesTextParagraphCellIdentifier")
 

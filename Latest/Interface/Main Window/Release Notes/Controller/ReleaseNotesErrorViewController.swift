@@ -6,7 +6,7 @@
 //  Copyright © 2018 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import AppKit
 
 /// The controller presenting errors to the user
 class ReleaseNotesErrorViewController: NSViewController {

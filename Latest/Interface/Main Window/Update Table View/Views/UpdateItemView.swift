@@ -8,7 +8,7 @@
 
 // Basically adapted from the NSTouchBar Catalog @ https://developer.apple.com/library/archive/samplecode/NSTouchBarCatalog/Introduction/Intro.html
 
-import Cocoa
+import AppKit
 
 /// The scubber view holds the applications icon as well as it's name
 class UpdateItemView: NSScrubberItemView {

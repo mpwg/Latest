@@ -6,7 +6,8 @@
 //  Copyright © 2017 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import Foundation
+import AppKit
 
 /**
  This class controls the main window of the app. It includes the list of apps that have an update available as well as the release notes for the specific update.

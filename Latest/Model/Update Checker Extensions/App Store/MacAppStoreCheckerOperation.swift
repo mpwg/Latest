@@ -6,7 +6,8 @@
 //  Copyright © 2019 Max Langer. All rights reserved.
 //
 
-import Cocoa
+import Foundation
+import AppKit
 
 let MalformedURLError = NSError(domain: NSURLErrorDomain, code: NSURLErrorUnsupportedURL, userInfo: nil)
 
