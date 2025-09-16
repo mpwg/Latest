@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import Combine
 
 /// Coordinates window-level behavior independently from the AppKit implementation.
-final class MainWindowViewModel: NSObject, Observer, UpdateCheckProgressReporting {
+final class MainWindowViewModel: NSObject, ObservableObject, Observer, UpdateCheckProgressReporting {
     enum ProgressState: Equatable {
         case hidden
         case indeterminate
@@ -26,25 +27,45 @@ final class MainWindowViewModel: NSObject, Observer, UpdateCheckProgressReportin
 
     let appListViewModel: AppListViewModel
 
-    var onProgressStateChange: ((ProgressState) -> Void)?
-    var onReloadAvailabilityChange: ((Bool) -> Void)?
-    var onUpdateAllAvailabilityChange: ((Bool) -> Void)?
-    var onMenuStateChange: ((MenuState) -> Void)?
-
-    private let coordinator: UpdateCheckCoordinator
-    private var isObserving = false
-    private var isReloadEnabled = true {
+    // Published properties for SwiftUI
+    @Published var progressState: ProgressState = .hidden
+    @Published var isReloadEnabled: Bool = true
+    @Published var isUpdateAllAvailable: Bool = false
+    @Published var menuState: MenuState = MenuState(
+        sortOrder: .name,
+        showInstalledUpdates: false,
+        showIgnoredUpdates: false,
+        sortOptions: AppListSettings.SortOptions.allCases
+    )
+    
+    // Legacy callback-based properties for AppKit compatibility
+    var onProgressStateChange: ((ProgressState) -> Void)? {
         didSet {
-            guard oldValue != isReloadEnabled else { return }
-            onReloadAvailabilityChange?(isReloadEnabled)
-        }
-    }
-    private var progressState: ProgressState = .hidden {
-        didSet {
-            guard oldValue != progressState else { return }
+            // Call immediately with current state
             onProgressStateChange?(progressState)
         }
     }
+    var onReloadAvailabilityChange: ((Bool) -> Void)? {
+        didSet {
+            // Call immediately with current state
+            onReloadAvailabilityChange?(isReloadEnabled)
+        }
+    }
+    var onUpdateAllAvailabilityChange: ((Bool) -> Void)? {
+        didSet {
+            // Call immediately with current state
+            onUpdateAllAvailabilityChange?(isUpdateAllAvailable)
+        }
+    }
+    var onMenuStateChange: ((MenuState) -> Void)? {
+        didSet {
+            // Call immediately with current state
+            onMenuStateChange?(menuState)
+        }
+    }
+
+    private let coordinator: UpdateCheckCoordinator
+    private var isObserving = false
     private var totalChecks = 0
     private var completedChecks = 0
 
@@ -77,6 +98,9 @@ final class MainWindowViewModel: NSObject, Observer, UpdateCheckProgressReportin
         }
 
         deliverCurrentState()
+        
+        // Start initial update check
+        coordinator.run()
     }
 
     func stop() {
@@ -125,7 +149,7 @@ final class MainWindowViewModel: NSObject, Observer, UpdateCheckProgressReportin
         AppListSettings.shared.showIgnoredUpdates.toggle()
     }
 
-    func menuState() -> MenuState {
+    private func currentMenuState() -> MenuState {
         MenuState(sortOrder: AppListSettings.shared.sortOrder,
                   showInstalledUpdates: AppListSettings.shared.showInstalledUpdates,
                   showIgnoredUpdates: AppListSettings.shared.showIgnoredUpdates,
@@ -133,11 +157,15 @@ final class MainWindowViewModel: NSObject, Observer, UpdateCheckProgressReportin
     }
 
     private func notifyUpdateAvailability() {
-        onUpdateAllAvailabilityChange?(hasUpdatesAvailable())
+        let hasUpdates = hasUpdatesAvailable()
+        isUpdateAllAvailable = hasUpdates
+        onUpdateAllAvailabilityChange?(hasUpdates)
     }
 
     private func notifyMenuState() {
-        onMenuStateChange?(menuState())
+        let currentState = currentMenuState()
+        menuState = currentState
+        onMenuStateChange?(currentState)
     }
 
     // MARK: - UpdateCheckProgressReporting
@@ -145,12 +173,15 @@ final class MainWindowViewModel: NSObject, Observer, UpdateCheckProgressReportin
     func updateCheckerDidStartScanningForApps(_ updateChecker: UpdateCheckCoordinator) {
         isReloadEnabled = false
         progressState = .indeterminate
+        onReloadAvailabilityChange?(isReloadEnabled)
+        onProgressStateChange?(progressState)
     }
 
     func updateChecker(_ updateChecker: UpdateCheckCoordinator, didStartCheckingApps numberOfApps: Int) {
         totalChecks = max(numberOfApps - 1, 0)
         completedChecks = 0
         progressState = .determinate(total: totalChecks, completed: completedChecks)
+        onProgressStateChange?(progressState)
     }
 
     func updateChecker(_ updateChecker: UpdateCheckCoordinator, didCheckApp: App) {
@@ -159,11 +190,14 @@ final class MainWindowViewModel: NSObject, Observer, UpdateCheckProgressReportin
         }
         completedChecks = min(completedChecks + 1, max(total, 0))
         progressState = .determinate(total: total, completed: completedChecks)
+        onProgressStateChange?(progressState)
     }
 
     func updateCheckerDidFinishCheckingForUpdates(_ updateChecker: UpdateCheckCoordinator) {
         isReloadEnabled = true
         progressState = .hidden
+        onReloadAvailabilityChange?(isReloadEnabled)
+        onProgressStateChange?(progressState)
         notifyUpdateAvailability()
     }
 }

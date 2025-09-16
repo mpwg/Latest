@@ -135,7 +135,7 @@ class MainWindowController: NSWindowController, NSMenuItemValidation, NSMenuDele
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
-        let menuState = self.viewModel.menuState()
+        let menuState = self.viewModel.menuState
 
         menu.items.forEach { (menuItem) in
 			// Sort By menu constructed dynamically

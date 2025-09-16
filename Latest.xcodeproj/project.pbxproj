@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1B3B13A851904A24B26A65009526A109 /* SwiftUIMainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DBECD9B6AFAB9903AE907605E4A /* SwiftUIMainWindowController.swift */; };
 		406492CB2E795EB300BD95DE /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 406492CA2E795EB300BD95DE /* Localizable.xcstrings */; };
 		406492CE2E795EB300BD95DE /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 406492CD2E795EB300BD95DE /* InfoPlist.xcstrings */; };
 		50037513245EA9FA00D3BB0D /* UpdateGroupCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50037512245EA9FA00D3BB0D /* UpdateGroupCellView.swift */; };
@@ -14,7 +15,6 @@
 		501EF8EF2B9A77B400F0D759 /* AppDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501EF8EE2B9A77B400F0D759 /* AppDirectory.swift */; };
 		50290E751E53EB6A00133E3D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50290E741E53EB6A00133E3D /* AppDelegate.swift */; };
 		50290E791E53EB6A00133E3D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 50290E781E53EB6A00133E3D /* Assets.xcassets */; };
-		50290E7C1E53EB6A00133E3D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 50290E7A1E53EB6A00133E3D /* Main.storyboard */; };
 		502929EF2120621B00F00D1C /* ReleaseNotesTextViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 502929EE2120621B00F00D1C /* ReleaseNotesTextViewController.swift */; };
 		502929F22120623100F00D1C /* ReleaseNotesErrorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 502929F02120623100F00D1C /* ReleaseNotesErrorViewController.swift */; };
 		502929F62120624700F00D1C /* ReleaseNotesLoadingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 502929F42120624700F00D1C /* ReleaseNotesLoadingViewController.swift */; };
@@ -78,6 +78,7 @@
 		50FEB87D2B1BE630006FB75D /* OSVersionTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50FEB87C2B1BE630006FB75D /* OSVersionTest.swift */; };
 		50FEB87F2B1BE67F006FB75D /* VersionSanitizationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50FEB87E2B1BE67E006FB75D /* VersionSanitizationTest.swift */; };
 		50FEB8812B1D2402006FB75D /* ExcludedAppIdentifiers.plist in Resources */ = {isa = PBXBuildFile; fileRef = 50FEB8802B1D2402006FB75D /* ExcludedAppIdentifiers.plist */; };
+		8CDDE0AFFBB04413A3D306A06C54044F /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9345CECFFC49DEB8E4E1E413384E08 /* MainWindowView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,8 +92,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3D9345CECFFC49DEB8E4E1E413384E08 /* MainWindowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
 		406492CA2E795EB300BD95DE /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		406492CC2E795EB300BD95DE /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/Main.xcstrings; sourceTree = "<group>"; };
 		406492CD2E795EB300BD95DE /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		50037512245EA9FA00D3BB0D /* UpdateGroupCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateGroupCellView.swift; sourceTree = "<group>"; };
 		501EF8EC2B9A665A00F0D759 /* BundleCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleCollector.swift; sourceTree = "<group>"; };
@@ -100,7 +101,6 @@
 		50290E711E53EB6A00133E3D /* Latest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Latest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		50290E741E53EB6A00133E3D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		50290E781E53EB6A00133E3D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		50290E7B1E53EB6A00133E3D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		50290E7D1E53EB6A00133E3D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50290E831E53EB7900133E3D /* Latest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Latest.entitlements; sourceTree = "<group>"; };
 		502929EE2120621B00F00D1C /* ReleaseNotesTextViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseNotesTextViewController.swift; sourceTree = "<group>"; };
@@ -193,6 +193,7 @@
 		50FEB87C2B1BE630006FB75D /* OSVersionTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSVersionTest.swift; sourceTree = "<group>"; };
 		50FEB87E2B1BE67E006FB75D /* VersionSanitizationTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionSanitizationTest.swift; sourceTree = "<group>"; };
 		50FEB8802B1D2402006FB75D /* ExcludedAppIdentifiers.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ExcludedAppIdentifiers.plist; sourceTree = "<group>"; };
+		6DBECD9B6AFAB9903AE907605E4A /* SwiftUIMainWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftUIMainWindowController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -383,6 +384,7 @@
 		5093EF9A2B9139E80041E6C1 /* Main Window */ = {
 			isa = PBXGroup;
 			children = (
+				3D9345CECFFC49DEB8E4E1E413384E08 /* MainWindowView.swift */,
 				5095122E1FF3634E003D2D7F /* Window Controllers */,
 				50DAEF3E21047E3B00B32E8A /* Update Table View */,
 				5058BA36211F9F49003F332B /* Release Notes */,
@@ -452,7 +454,6 @@
 		5095122A1FF36326003D2D7F /* Interface */ = {
 			isa = PBXGroup;
 			children = (
-				50290E7A1E53EB6A00133E3D /* Main.storyboard */,
 				5093EF9A2B9139E80041E6C1 /* Main Window */,
 				504FB4AA2B76CA3B009C73E9 /* Settings */,
 			);
@@ -463,6 +464,7 @@
 			isa = PBXGroup;
 			children = (
 				509512351FF36388003D2D7F /* MainWindowController.swift */,
+				6DBECD9B6AFAB9903AE907605E4A /* SwiftUIMainWindowController.swift */,
 			);
 			path = "Window Controllers";
 			sourceTree = "<group>";
@@ -656,7 +658,7 @@
 				BuildIndependentTargetsInParallel = YES;
 				CLASSPREFIX = "";
 				LastSwiftUpdateCheck = 1510;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2600;
 				ORGANIZATIONNAME = "Max Langer";
 				TargetAttributes = {
 					50290E701E53EB6A00133E3D = {
@@ -742,7 +744,6 @@
 				50290E791E53EB6A00133E3D /* Assets.xcassets in Resources */,
 				50C8C85C208A0EE9004FF5D5 /* dsa_pub.pem in Resources */,
 				50FEB8812B1D2402006FB75D /* ExcludedAppIdentifiers.plist in Resources */,
-				50290E7C1E53EB6A00133E3D /* Main.storyboard in Resources */,
 				406492CE2E795EB300BD95DE /* InfoPlist.xcstrings in Resources */,
 				50A86BBD27EA6BF4007A5F80 /* Credits.rtf in Resources */,
 				406492CB2E795EB300BD95DE /* Localizable.xcstrings in Resources */,
@@ -791,6 +792,8 @@
 				50737559278B0A7400F371D8 /* AppListSettings.swift in Sources */,
 				504FB4A92B76CA28009C73E9 /* UpdateCheckSettings.swift in Sources */,
 				509512361FF36388003D2D7F /* MainWindowController.swift in Sources */,
+				1B3B13A851904A24B26A65009526A109 /* SwiftUIMainWindowController.swift in Sources */,
+				8CDDE0AFFBB04413A3D306A06C54044F /* MainWindowView.swift in Sources */,
 				508323E4257824AA000BBA13 /* UpdateButton.swift in Sources */,
 				50BEF14C2AC2CB110052C417 /* WebContentLoader.swift in Sources */,
 				50BEF14E2AC972B40052C417 /* UpdateRepository.swift in Sources */,
@@ -814,7 +817,6 @@
 				501EF8ED2B9A665A00F0D759 /* BundleCollector.swift in Sources */,
 				50C9F0F5234637BD00FD1802 /* UpdateCheckerOperation.swift in Sources */,
 				50D6EF5F281461A3002D7006 /* Sparkle.swift in Sources */,
-				50ACE3F221D58DAD002FB72D /* UpdateTableView+Search.swift in Sources */,
 				502929EF2120621B00F00D1C /* ReleaseNotesTextViewController.swift in Sources */,
 				501EF8EF2B9A77B400F0D759 /* AppDirectory.swift in Sources */,
 				508323E5257824AA000BBA13 /* UpdateButtonCell.swift in Sources */,
@@ -835,8 +837,6 @@
 				5039DE8522CA396F0088B39B /* UpdateQueue.swift in Sources */,
 				50DAEF4421047FA900B32E8A /* UpdateItemView.swift in Sources */,
 				50037513245EA9FA00D3BB0D /* UpdateGroupCellView.swift in Sources */,
-				50DAEF4021047E5100B32E8A /* UpdateTableView+TouchBar.swift in Sources */,
-				506DF7782125580400D792FC /* UpdateTableView.swift in Sources */,
 				509512301FF36378003D2D7F /* UpdateCell.swift in Sources */,
 				50366E5227DFD14100D4E247 /* Source.swift in Sources */,
 				50B016982C38986300590339 /* AppDirectoryStore.swift in Sources */,
@@ -869,18 +869,6 @@
 			targetProxy = 50C81D6E1FBADC5900324C2E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXVariantGroup section */
-		50290E7A1E53EB6A00133E3D /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				50290E7B1E53EB6A00133E3D /* Base */,
-				406492CC2E795EB300BD95DE /* mul */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		50290E7E1E53EB6A00133E3D /* Debug */ = {
@@ -942,6 +930,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1000,6 +989,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";

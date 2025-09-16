@@ -6,13 +6,38 @@
 //  Copyright © 2017 Max Langer. All rights reserved.
 //
 
-import Cocoa
 
-@NSApplicationMain
+import SwiftUI
+
+@main
+struct LatestApp: SwiftUI.App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var mainViewModel = MainWindowViewModel()
+    
+    var body: some Scene {
+        WindowGroup("Latest") {
+            MainWindowView(viewModel: mainViewModel)
+                .frame(minWidth: 800, minHeight: 600)
+        }
+        .windowStyle(.titleBar)
+        .windowToolbarStyle(.unified)
+        .windowResizability(.contentSize)
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings...") {
+                    SettingsWindowController.shared.showWindow(nil)
+                }
+                .keyboardShortcut(",")
+            }
+        }
+    }
+}
+
+// Supporting AppDelegate for additional functionality
 class AppDelegate: NSObject, NSApplicationDelegate {
-
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Insert code here to initialize your application
+        // Additional setup if needed
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -27,5 +52,4 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func showSettings(_ sender: Any?) {
         SettingsWindowController.shared.showWindow(sender)
     }
-    
 }
