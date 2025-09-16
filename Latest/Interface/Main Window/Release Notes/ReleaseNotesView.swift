@@ -150,6 +150,7 @@ final class ReleaseNotesTextViewModel: ObservableObject {
         string.removeAttribute(.font, range: textRange)
         string.addAttribute(.font, value: defaultFont, range: textRange)
 
+
         attributedString.enumerateAttribute(NSAttributedString.Key.font, in: textRange, options: .reverse) { (fontObject, range, stopPointer) in
             guard let font = fontObject as? NSFont else { return }
 

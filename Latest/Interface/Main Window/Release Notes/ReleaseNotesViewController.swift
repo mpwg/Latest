@@ -268,7 +268,6 @@ final class ReleaseNotesSwiftUIViewModel: ObservableObject {
 
 // MARK: - App Info Header View
 
-
 struct AppInfoHeaderView: View {
     let app: App
     @State private var appIcon: NSImage?
@@ -329,6 +328,7 @@ struct AppInfoHeaderView: View {
                     // Version Information
                     if let versionText = versionText {
                         Text(versionText)
+
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -337,6 +337,7 @@ struct AppInfoHeaderView: View {
                     // Update Date
                     if let formattedDate = formattedUpdateDate {
                         Text(formattedDate)
+
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -355,6 +356,7 @@ struct AppInfoHeaderView: View {
                     // External Update Label
                     if let externalUpdaterText = externalUpdaterText {
                         Text(externalUpdaterText)
+
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
