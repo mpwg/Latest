@@ -16,7 +16,7 @@ struct LocationsSettingsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(localizedMain("ivV-VN-4CO.title"))
+            Text("Locations")
                 .font(.headline)
             
             List(directoryStore.directoryList, id: \.self, selection: $selection) { url in
@@ -28,11 +28,11 @@ struct LocationsSettingsView: View {
             
             HStack(spacing: 12) {
                 Button(action: presentOpenPanel) {
-                    Label(localizedMain("SettingsLocationsAdd"), systemImage: "plus")
+                    Label("Add Location", systemImage: "plus")
                 }
                 
                 Button(action: removeSelected) {
-                    Label(localizedMain("SettingsLocationsRemove"), systemImage: "minus")
+                    Label("Remove Location", systemImage: "minus")
                 }
                 .disabled(!canRemoveSelection)
                 
@@ -72,8 +72,4 @@ struct LocationsSettingsView: View {
         directoryStore.remove(selection)
         self.selection = nil
     }
-}
-
-private func localizedMain(_ key: String) -> String {
-    String(localized: .init(key), table: "Main", bundle: .main)
 }

@@ -53,7 +53,7 @@ final class SettingsWindowController: NSWindowController {
     private init() {
         let hostingController = NSHostingController(rootView: SettingsView())
         let window = NSWindow(contentViewController: hostingController)
-        window.title = NSLocalizedString("DfQ-ss-Qv2.title", tableName: "Main", bundle: .main, value: "Settings", comment: "Settings window title")
+        window.title = NSLocalizedString("Settings", comment: "Settings window title")
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.toolbarStyle = .unified
         window.setContentSize(NSSize(width: 460, height: 340))

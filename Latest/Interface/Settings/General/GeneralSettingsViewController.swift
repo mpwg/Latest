@@ -14,20 +14,20 @@ struct GeneralSettingsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(localizedMain("Aeb-LJ-TzL.title"))
+            Text("General Settings")
                 .font(.headline)
             
             VStack(alignment: .leading, spacing: 8) {
-                Toggle(localizedMain("Ntm-I4-heJ.title"), isOn: settings.includeLimitedBinding)
-                Text(localizedMain("rG3-x9-kec.title"))
+                Toggle("Include apps with limited support", isOn: settings.includeLimitedBinding)
+                Text("Update information is generally available but may sometimes be outdated or inaccurate. Updates cannot be performed directly here.")
                     .font(.callout)
                     .foregroundColor(.secondary)
                     .padding(.leading, 20)
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                Toggle(localizedMain("HfB-8a-u7P.title"), isOn: settings.includeUnsupportedBinding)
-                Text(localizedMain("Mdn-MF-57Q.title"))
+                Toggle("Include unsupported apps", isOn: settings.includeUnsupportedBinding)
+                Text("Apps that can't be updated automatically by Latest, such as apps without integrated update mechanisms.")
                     .font(.callout)
                     .foregroundColor(.secondary)
                     .padding(.leading, 20)
@@ -38,10 +38,6 @@ struct GeneralSettingsView: View {
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
-}
-
-private func localizedMain(_ key: String) -> String {
-    String(localized: .init(key), table: "Main", bundle: .main)
 }
 
 /// Bridges the existing observable settings into an `ObservableObject` for SwiftUI.
