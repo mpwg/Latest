@@ -1509,6 +1509,7 @@
     },
     "CancellingUpdateStatus" : {
       "comment" : "Update progress state of cancelling an update",
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2154,6 +2155,7 @@
     },
     "DownloadingUpdateStatus" : {
       "comment" : "Update progress state of downloading an update. The first %@ stands for the already downloaded bytes, the second one for the total amount of bytes. One expected output would be 'Downloading 3 MB of 21 MB'",
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -3014,6 +3016,7 @@
     },
     "ExtractingUpdateStatus" : {
       "comment" : "Update progress state of extracting the downloaded update",
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4093,6 +4096,7 @@
     },
     "InitializingUpdateStatus" : {
       "comment" : "Update progress state of initializing an update",
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4738,6 +4742,7 @@
     },
     "InstallingUpdateStatus" : {
       "comment" : "Update progress state of installing an update",
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -10992,6 +10997,7 @@
     },
     "WaitingUpdateStatus" : {
       "comment" : "Update progress state of waiting to start an update",
+      "extractionState" : "stale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

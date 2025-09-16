@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue:*)",
+      "Bash(chmod:*)",
+      "Bash(/Users/mat/code/Latest/update_storyboard.sh)",
+      "Bash(xcodebuild:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
