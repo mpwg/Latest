@@ -10,7 +10,7 @@ import XCTest
     }
     func testSelectionAndPlainReleaseNotes() {
         let app = launch()
-        let row = app.staticTexts["Latest Test"].firstMatch
+        let row = app.descendants(matching: .any).matching(identifier: "app-row-org.example.test").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 10)); row.click()
         XCTAssertTrue(app.staticTexts["release-notes"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Controlled release notes fixture."].exists)
@@ -21,18 +21,18 @@ import XCTest
         let search = app.searchFields.firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 10))
         search.click(); search.typeText("missing application")
-        XCTAssertFalse(app.staticTexts["Latest Test"].exists)
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "app-row-org.example.test").firstMatch.exists)
         search.typeKey("a", modifierFlags: .command); search.typeKey(XCUIKeyboardKey.delete.rawValue, modifierFlags: [])
-        XCTAssertTrue(app.staticTexts["Latest Test"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "app-row-org.example.test").firstMatch.waitForExistence(timeout: 5))
     }
     func testIgnoreIsPersistentAndHidesRow() {
         let app = launch()
-        let row = app.staticTexts["Latest Test"].firstMatch
+        let row = app.descendants(matching: .any).matching(identifier: "app-row-org.example.test").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 10)); row.click()
         app.buttons["ignore-selected"].click()
-        XCTAssertFalse(app.staticTexts["Latest Test"].exists)
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "app-row-org.example.test").firstMatch.exists)
         app.terminate(); app.launch()
-        XCTAssertFalse(app.staticTexts["Latest Test"].exists)
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: "app-row-org.example.test").firstMatch.exists)
     }
     func testGermanInterface() {
         let app = launch("de")

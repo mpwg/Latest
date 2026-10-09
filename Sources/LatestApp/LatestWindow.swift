@@ -64,6 +64,7 @@ private struct AppListRow: View {
             if let event = row.event, !event.isTerminal { ProgressView().controlSize(.small) }
         }.padding(.vertical, 5)
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("app-row-" + row.record.app.bundleID)
     }
 }
 
