@@ -45,6 +45,11 @@ import AppKit
         selfCheck.target = self
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: String(localized: "Quit Latest"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q").target = NSApp
+        let editItem = NSMenuItem(); menu.addItem(editItem)
+        let edit = NSMenu(title: String(localized: "Edit")); editItem.submenu = edit
+        edit.addItem(withTitle: String(localized: "Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: String(localized: "Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: String(localized: "Select All"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         NSApp.mainMenu = menu
     }
     @objc private func openSettings() { showSettings() }

@@ -33,6 +33,7 @@ jobs:
       - name: Run Swift Testing suite
         run: swift test --build-system native --enable-swift-testing --disable-xctest
       - name: Run native UI tests
+        if: success() || failure()
         run: |
           mkdir -p .build/ui-test-state
           xcodebuild -project Latest.xcodeproj -scheme Latest -destination 'platform=macOS' -derivedDataPath .build/xcode -resultBundlePath .build/native-tests.xcresult CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= test
