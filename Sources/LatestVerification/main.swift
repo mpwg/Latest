@@ -1,8 +1,14 @@
 import Foundation
 import LatestCore
+import LatestProcess
+import LatestPlatform
 
 @main struct Verification {
-    static func main() async throws {
+    static func main() async {
+        do { try await run() }
+        catch { FileHandle.standardError.write(Data(("Verification failed: \(error)\n").utf8)); exit(1) }
+    }
+    static func run() async throws {
         var count = 0
         func check(_ condition: Bool, _ name: String) throws {
             guard condition else { throw LatestFailure.rejected("FAIL: \(name)") }
@@ -42,6 +48,57 @@ import LatestCore
         do { _ = try BrokerPolicy.arguments(for: .init(storeID: 0, bundleID: "x", path: app.id.path)); throw LatestFailure.process("Zero accepted") }
         catch LatestFailure.rejected { try check(true, "Empty/all-app mas request unreachable") }
         try check(SafeText.releaseNotes("<script>evil()</script><p>Safe</p>") == "Safe", "Release notes rendered without scripts")
+        let caskData = Data(#"{"casks":[{"token":"valid","version":"2","installed":"1","artifacts":[{"app":["Test.app"]}],"depends_on":{"macos":{">=":["14"]}}},{"token":"empty-os","version":"2","artifacts":[{"app":["Other.app"]}],"depends_on":{"macos":{">=":[""]}}},{"token":"--bad","version":"2"}]}"#.utf8)
+        let casks = try Metadata.casks(caskData)
+        try check(casks.count == 2 && casks.first?.minimumOS == "14" && casks.last?.minimumOS == nil, "Invalid cask entries cannot discard valid neighbours")
+        try check(try Metadata.outdatedCaskTokens(Data(#"{"casks":[{"name":"test","current_version":"2","installed_versions":["1"]}]}"#.utf8)) == ["test"], "Actual Homebrew outdated JSON schema")
+        try check(!Metadata.validToken("test;echo unsafe") && !Metadata.validToken("--force") && Metadata.validToken("test@2"), "Cask argument validation")
+        let installedJSON = Data(#"{"adamID":123,"bundleID":"org.example.Test","path":"/Applications/Test.app","version":"1"}"#.utf8)
+        try check(try MasMetadata.installed(installedJSON) == [claim], "Pinned mas normalized installation JSON")
+        try check(try MasMetadata.outdated(Data(#"{"adamID":123,"newVersion":"2"}"#.utf8)) == [123], "Pinned mas normalized outdated JSON")
+        try check(MachO.architectures(Data([0xcf,0xfa,0xed,0xfe,0x0c,0,0,1])) == [.arm64], "Native Mach-O architecture")
+        try check(MachO.architectures(Data([1,2])) == [], "Truncated Mach-O header")
+        let runner = CommandRunner()
+        let quoted = try await runner.run(executable: URL(fileURLWithPath: "/usr/bin/printf"), arguments: ["%s", "Robert's app;$(echo unsafe)"], environment: CommandRunner.userEnvironment())
+        try check(quoted.exitCode == 0 && quoted.text == "Robert's app;$(echo unsafe)", "Arguments never enter a shell")
+        do {
+            _ = try await runner.run(executable: URL(fileURLWithPath: "/bin/sleep"), arguments: ["10"], environment: CommandRunner.userEnvironment(), timeout: .milliseconds(30))
+            throw LatestFailure.process("Timeout not enforced")
+        } catch LatestFailure.timeout { try check(true, "Process timeout kills owned group") }
+        do {
+            _ = try await runner.run(executable: URL(fileURLWithPath: "/usr/bin/yes"), arguments: [], environment: CommandRunner.userEnvironment(), maximumBytes: 100)
+            throw LatestFailure.rejected("Output bound not enforced")
+        } catch LatestFailure.process { try check(true, "Process output is bounded and drained without deadlock") }
+        let cancelled = Task { try await runner.run(executable: URL(fileURLWithPath: "/bin/sleep"), arguments: ["10"], environment: CommandRunner.userEnvironment()) }
+        try await Task.sleep(for: .milliseconds(40)); cancelled.cancel()
+        do { _ = try await cancelled.value; throw LatestFailure.process("Cancellation ignored") }
+        catch is CancellationError { try check(true, "Process cancellation reaps the child") }
+        let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/verification-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = root.appendingPathComponent("Test.app/Contents")
+        try FileManager.default.createDirectory(at: fixture, withIntermediateDirectories: true)
+        let plist: [String: String] = ["CFBundleIdentifier": "org.example.Test", "CFBundleName": "Test", "CFBundleShortVersionString": "1", "CFBundleVersion": "1"]
+        try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0).write(to: fixture.appendingPathComponent("Info.plist"))
+        let inventory = AppInventory.collect([.init(path: root.path)])
+        try check(inventory.apps.count == 1 && inventory.apps.first?.version.display == "1", "Inventory reads Info.plist without loading foreign code")
+        var updated = plist; updated["CFBundleShortVersionString"] = "2"
+        try PropertyListSerialization.data(fromPropertyList: updated, format: .xml, options: 0).write(to: fixture.appendingPathComponent("Info.plist"))
+        try check(AppInventory.collect([.init(path: root.path)]).apps.first?.version.display == "2", "Inventory bypasses stale Bundle caches")
+        try check(AppInventory.collect([.init(path: root.path, enabled: false)]).apps.isEmpty, "Disabled directories are excluded")
+        try check(!AppInventory.collect([.init(path: root.appendingPathComponent("missing").path)]).warnings.isEmpty, "Missing directory is recoverable")
+        let store = PreferencesStore(url: root.appendingPathComponent("preferences.json"))
+        var preferences = try await store.load(legacy: ["IgnoredAppsKey": .strings(["org.example.Test"]), "directoryPaths": .strings([root.path])])
+        try check(preferences.ignoredBundleIDs.contains("org.example.Test") && preferences.directories.contains(where: { $0.path == root.path }), "Legacy preferences migrate")
+        preferences.showCurrent = false; try await store.save(preferences)
+        let persisted = try await store.load(legacy: ["IgnoredAppsKey": .strings([])])
+        try check(persisted == preferences, "Migration runs once and settings persist")
+        do { _ = try Metadata.exclusions(Data("not a plist".utf8)); throw LatestFailure.process("Invalid plist accepted") }
+        catch LatestFailure.process(let message) { throw LatestFailure.process(message) }
+        catch { try check(true, "Invalid exclusion response is recoverable") }
+        let http = BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("cache"))
+        do { _ = try await http.fetch(URL(string: "http://example.invalid")!); throw LatestFailure.process("HTTP accepted") }
+        catch LatestFailure.rejected { try check(true, "HTTP rejected before network access") }
         print("Verified \(count) core invariants.")
     }
 }
