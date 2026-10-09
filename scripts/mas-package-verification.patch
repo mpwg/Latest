@@ -1,0 +1,53 @@
+diff --git a/Sources/mas/AppStore/AppStoreAction+download.swift b/Sources/mas/AppStore/AppStoreAction+download.swift
+index dc6b9fe..61ab920 100644
+--- a/Sources/mas/AppStore/AppStoreAction+download.swift
++++ b/Sources/mas/AppStore/AppStoreAction+download.swift
+@@ -361,11 +361,33 @@ private actor DownloadQueueObserver: CKDownloadQueueObserver {
+ 			throw MASError.error("Failed to find receipt to import for \(appNameAndVersion)")
+ 		}
+ 
++		guard
++			let verifier = ProcessInfo.processInfo.environment["LATEST_PACKAGE_VERIFIER"],
++			let expectedID = ProcessInfo.processInfo.environment["LATEST_EXPECTED_STORE_ID"],
++			let expectedBundle = ProcessInfo.processInfo.environment["LATEST_EXPECTED_BUNDLE_ID"],
++			let expectedPath = ProcessInfo.processInfo.environment["LATEST_EXPECTED_APP_PATH"],
++			expectedID == String(adamID)
++		else {
++			throw MASError.error("The Latest package verification policy is unavailable")
++		}
++		let (verifiedOutput, _) = try await run(
++			verifier, pkgHardLinkPath, expectedID, expectedBundle, expectedPath,
++			errorMessage: "App Store package verification failed"
++		) { process in try run(asEffectiveUID: 0, andEffectiveGID: 0) { try process.run() } }
++		let verifiedPackagePath = verifiedOutput.trimmingCharacters(in: .whitespacesAndNewlines)
++		guard verifiedPackagePath.hasPrefix("/private/var/tmp/latest-package."), verifiedPackagePath.hasSuffix("/update.pkg") else {
++			throw MASError.error("Invalid verified package path")
++		}
++		defer {
++			try? run(asEffectiveUID: 0, andEffectiveGID: 0) {
++				try FileManager.default.removeItem(at: URL(fileURLWithPath: verifiedPackagePath).deletingLastPathComponent())
++			}
++		}
+ 		let (_, standardErrorString) = try await run(
+ 			"/usr/sbin/installer",
+ 			"-dumplog",
+ 			"-pkg",
+-			pkgHardLinkPath,
++			verifiedPackagePath,
+ 			"-target",
+ 			"/",
+ 			errorMessage: "Failed to \(action) \(appNameAndVersion) from \(pkgHardLinkPath)",
+@@ -389,7 +411,13 @@ private actor DownloadQueueObserver: CKDownloadQueueObserver {
+ 			)
+ 		}
+ 
++		guard appFolderURL.resolvingSymlinksInPath().path == expectedPath else {
++			throw MASError.error("Installer returned an unrelated application path")
++		}
+ 		let receiptURL = appFolderURL.appending(path: "Contents/_MASReceipt/receipt", directoryHint: .notDirectory)
++		guard receiptURL.resolvingSymlinksInPath().path == receiptURL.path else {
++			throw MASError.error("Receipt path contains a symlink")
++		}
+ 		do {
+ 			let fileManager = FileManager.default
+ 			try run(asEffectiveUID: 0, andEffectiveGID: 0) {

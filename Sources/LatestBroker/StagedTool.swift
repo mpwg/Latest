@@ -8,7 +8,7 @@ struct StagedTool {
     let directory: URL
     let executable: URL
 
-    static func prepare(source: URL, configuration: BrokerConfiguration) throws -> Self {
+    static func prepare(source: URL, hash: String, requirement: String) throws -> Self {
         guard getuid() == 0 else { throw LatestFailure.rejected("The installation broker must be launched by the system.") }
         let descriptor = open(source.path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC)
         guard descriptor >= 0 else { throw LatestFailure.rejected("Cannot open the bundled tool safely.") }
@@ -39,8 +39,8 @@ struct StagedTool {
             remaining -= off_t(count)
         }
         guard fsync(output) == 0,
-              try CodeTrust.sha256(executable) == configuration.masHash else { throw LatestFailure.rejected("Bundled tool digest mismatch.") }
-        try CodeTrust.verify(executable, requirement: ForkIdentity.requirement(identifier: ForkIdentity.tool, team: configuration.team))
+              try CodeTrust.sha256(executable) == hash else { throw LatestFailure.rejected("Bundled tool digest mismatch.") }
+        try CodeTrust.verify(executable, requirement: requirement)
         success = true
         return .init(directory: directory, executable: executable)
     }

@@ -26,19 +26,21 @@ public enum CodeTrust {
 public struct BrokerConfiguration: Sendable {
     public let team: String
     public let masHash: String
-    public init(team: String, masHash: String) throws {
+    public let verifierHash: String
+    public init(team: String, masHash: String, verifierHash: String) throws {
         _ = try ForkIdentity.requirement(identifier: ForkIdentity.application, team: team)
-        guard masHash.count == 64, masHash.allSatisfy({ $0.isHexDigit && $0.isASCII }) else {
+        guard [masHash, verifierHash].allSatisfy({ $0.count == 64 && $0.allSatisfy { $0.isHexDigit && $0.isASCII } }) else {
             throw LatestFailure.rejected("The bundled App Store tool has no valid build pin.")
         }
-        self.team = team; self.masHash = masHash.lowercased()
+        self.team = team; self.masHash = masHash.lowercased(); self.verifierHash = verifierHash.lowercased()
     }
     public static func load(appURL: URL) throws -> Self {
         guard let bundle = Bundle(url: appURL), let info = bundle.infoDictionary,
-              let team = info["LatestSigningTeam"] as? String, let hash = info["LatestMasSHA256"] as? String else {
+              let team = info["LatestSigningTeam"] as? String, let hash = info["LatestMasSHA256"] as? String,
+              let verifierHash = info["LatestVerifierSHA256"] as? String else {
             throw LatestFailure.rejected("Signed App Store update configuration is unavailable.")
         }
-        let result = try Self(team: team, masHash: hash)
+        let result = try Self(team: team, masHash: hash, verifierHash: verifierHash)
         try CodeTrust.verify(appURL, requirement: ForkIdentity.requirement(identifier: ForkIdentity.application, team: team))
         return result
     }

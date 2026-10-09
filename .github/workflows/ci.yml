@@ -1,0 +1,47 @@
+name: macOS 27 verification
+on:
+  push:
+    branches: [develop, main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verification-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify required SDK
+        run: |
+          xcodebuild -version
+          swift --version
+          test "$(sw_vers -productVersion | cut -d. -f1)" -ge 27
+      - name: Bootstrap locked dependencies
+        run: python3 scripts/bootstrap.py
+      - name: Build application and verification executable
+        run: swift build
+      - name: Run regression and integration fixtures
+        run: .build/debug/LatestVerification
+      - name: Check repository and localization
+        run: python3 scripts/validate.py
+      - name: Run Swift Testing suite
+        run: swift test
+      - name: Run native UI tests
+        run: |
+          mkdir -p .build/ui-test-state
+          xcodebuild -project Latest.xcodeproj -scheme Latest -destination 'platform=macOS' -derivedDataPath .build/xcode -resultBundlePath .build/native-tests.xcresult CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= test
+      - name: Package controlled debug bundle
+        run: python3 scripts/package_app.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macOS-27-evidence
+          path: |
+            .build/native-tests.xcresult
+            .build/debug/Latest.app

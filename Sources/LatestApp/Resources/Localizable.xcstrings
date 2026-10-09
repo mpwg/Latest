@@ -1,0 +1,1128 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%lld apps": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld apps"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Apps"
+          }
+        }
+      }
+    },
+    "A major upgrade may require a new licence or change compatibility. Review the release notes before continuing.": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A major upgrade may require a new licence or change compatibility. Review the release notes before continuing."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine neue Hauptversion kann eine neue Lizenz benötigen oder die Kompatibilität ändern. Prüfe vorab die Versionshinweise."
+          }
+        }
+      }
+    },
+    "Add Folder…": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Folder…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner hinzufügen…"
+          }
+        }
+      }
+    },
+    "All Sources": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Sources"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Quellen"
+          }
+        }
+      }
+    },
+    "App Store": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store"
+          }
+        }
+      }
+    },
+    "App Store Updates": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store Updates"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App-Store-Updates"
+          }
+        }
+      }
+    },
+    "Applications": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applications"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anwendungen"
+          }
+        }
+      }
+    },
+    "Approve Latest in System Settings → General → Login Items & Extensions.": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve Latest in System Settings → General → Login Items & Extensions."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaube Latest unter Systemeinstellungen → Allgemein → Anmeldeobjekte & Erweiterungen."
+          }
+        }
+      }
+    },
+    "Beta": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beta"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beta"
+          }
+        }
+      }
+    },
+    "Bundle Identifier": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bundle Identifier"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bundle-Kennung"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "Catalogue Hint": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catalogue Hint"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kataloghinweis"
+          }
+        }
+      }
+    },
+    "Check for Latest Updates…": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Latest Updates…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Latest-Updates suchen…"
+          }
+        }
+      }
+    },
+    "Check for Updates": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Updates"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Updates suchen"
+          }
+        }
+      }
+    },
+    "Checking %lld of %lld": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking %lld of %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfe %lld von %lld"
+          }
+        }
+      }
+    },
+    "Choose an app to inspect its update source and release notes.": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an app to inspect its update source and release notes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle eine App, um Updatequelle und Versionshinweise anzusehen."
+          }
+        }
+      }
+    },
+    "Choose which folders Latest scans. Disabling a folder excludes its apps.": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose which folders Latest scans. Disabling a folder excludes its apps."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle die Ordner für die Suche. Deaktivierte Ordner und ihre Apps werden ausgeschlossen."
+          }
+        }
+      }
+    },
+    "Clear Skipped Version": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Skipped Version"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersprungene Version zurücksetzen"
+          }
+        }
+      }
+    },
+    "Confirm Major Upgrade": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm Major Upgrade"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hauptversionswechsel bestätigen"
+          }
+        }
+      }
+    },
+    "Direct updates require the signed installation helper. iOS apps, duplicate installations and nonstandard locations open the App Store instead.": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direct updates require the signed installation helper. iOS apps, duplicate installations and nonstandard locations open the App Store instead."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direkte Updates benötigen den signierten Installationshelfer. iOS-Apps, mehrere Installationen und abweichende Speicherorte werden im App Store aktualisiert."
+          }
+        }
+      }
+    },
+    "Enable Installation Helper": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Installation Helper"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installationshelfer aktivieren"
+          }
+        }
+      }
+    },
+    "General": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        }
+      }
+    },
+    "Homebrew": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Homebrew"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Homebrew"
+          }
+        }
+      }
+    },
+    "Ignore App": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignore App"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App ignorieren"
+          }
+        }
+      }
+    },
+    "Ignored": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignored"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignoriert"
+          }
+        }
+      }
+    },
+    "Incompatible Update": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incompatible Update"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht kompatibles Update"
+          }
+        }
+      }
+    },
+    "Install Major Upgrade": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install Major Upgrade"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Hauptversion installieren"
+          }
+        }
+      }
+    },
+    "Keep Latest Open": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Latest Open"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest geöffnet lassen"
+          }
+        }
+      }
+    },
+    "Latest": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest"
+          }
+        }
+      }
+    },
+    "Location": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicherort"
+          }
+        }
+      }
+    },
+    "Locations": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locations"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicherorte"
+          }
+        }
+      }
+    },
+    "Major Upgrade": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Major Upgrade"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Hauptversion"
+          }
+        }
+      }
+    },
+    "New version: %@": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New version: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Version: %@"
+          }
+        }
+      }
+    },
+    "No release notes are available.": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No release notes are available."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Versionshinweise verfügbar."
+          }
+        }
+      }
+    },
+    "OK": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Open App": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open App"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App öffnen"
+          }
+        }
+      }
+    },
+    "Open Diagnostics": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Diagnostics"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnose öffnen"
+          }
+        }
+      }
+    },
+    "Open Original Release Notes": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Original Release Notes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Originale Versionshinweise öffnen"
+          }
+        }
+      }
+    },
+    "Open Updater": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Updater"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updater öffnen"
+          }
+        }
+      }
+    },
+    "Release Channel": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release Channel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updatekanal"
+          }
+        }
+      }
+    },
+    "Release Notes": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release Notes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versionshinweise"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen"
+          }
+        }
+      }
+    },
+    "Reveal in Finder": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reveal in Finder"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder anzeigen"
+          }
+        }
+      }
+    },
+    "Search apps": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search apps"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps suchen"
+          }
+        }
+      }
+    },
+    "Select an App": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an App"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App auswählen"
+          }
+        }
+      }
+    },
+    "Show Ignored and Skipped Apps": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Ignored and Skipped Apps"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorierte und übersprungene Apps anzeigen"
+          }
+        }
+      }
+    },
+    "Show Unknown and Incompatible Apps": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Unknown and Incompatible Apps"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannte und nicht kompatible Apps anzeigen"
+          }
+        }
+      }
+    },
+    "Show Up-to-date Apps": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Up-to-date Apps"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktuelle Apps anzeigen"
+          }
+        }
+      }
+    },
+    "Skip This Version": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip This Version"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Version überspringen"
+          }
+        }
+      }
+    },
+    "Sort by Source": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort by Source"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Quelle sortieren"
+          }
+        }
+      }
+    },
+    "Source": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelle"
+          }
+        }
+      }
+    },
+    "Sparkle": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparkle"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparkle"
+          }
+        }
+      }
+    },
+    "Stable": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stable"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stabil"
+          }
+        }
+      }
+    },
+    "Status Unknown": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status Unknown"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status unbekannt"
+          }
+        }
+      }
+    },
+    "Stop Ignoring": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop Ignoring"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht mehr ignorieren"
+          }
+        }
+      }
+    },
+    "Text Size": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text Size"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Textgröße"
+          }
+        }
+      }
+    },
+    "Unknown Source": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown Source"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannte Quelle"
+          }
+        }
+      }
+    },
+    "Up to Date": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to Date"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktuell"
+          }
+        }
+      }
+    },
+    "Update": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
+          }
+        }
+      }
+    },
+    "Update All": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update All"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle aktualisieren"
+          }
+        }
+      }
+    },
+    "Update Available": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update Available"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update verfügbar"
+          }
+        }
+      }
+    },
+    "Update Externally": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update Externally"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extern aktualisieren"
+          }
+        }
+      }
+    },
+    "Update Failed": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update Failed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "Updates Are Running": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates Are Running"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates laufen"
+          }
+        }
+      }
+    },
+    "Version Skipped": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version Skipped"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version übersprungen"
+          }
+        }
+      }
+    },
+    "Wait for installation to finish before quitting Latest.": {
+      "comment": "Latest application interface text.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait for installation to finish before quitting Latest."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warte, bis die Installation abgeschlossen ist, bevor du Latest beendest."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

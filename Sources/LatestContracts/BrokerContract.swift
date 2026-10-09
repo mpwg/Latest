@@ -8,9 +8,10 @@ public enum ForkIdentity {
     public static let application = "io.github.mpwg.Latest"
     public static let broker = "io.github.mpwg.Latest.Broker"
     public static let tool = "io.github.mpwg.Latest.mas"
+    public static let verifier = "io.github.mpwg.Latest.PackageVerifier"
     public static func requirement(identifier: String, team: String) throws -> String {
         guard team.count == 10, team.allSatisfy({ $0.isASCII && ($0.isUppercase || $0.isNumber) }),
-              [application, broker, tool].contains(identifier) else {
+              [application, broker, tool, verifier].contains(identifier) else {
             throw IdentityError.unconfigured
         }
         return "anchor apple generic and identifier \"\(identifier)\" and certificate leaf[subject.OU] = \"\(team)\""

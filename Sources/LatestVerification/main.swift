@@ -99,6 +99,86 @@ import LatestPlatform
         let http = BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("cache"))
         do { _ = try await http.fetch(URL(string: "http://example.invalid")!); throw LatestFailure.process("HTTP accepted") }
         catch LatestFailure.rejected { try check(true, "HTTP rejected before network access") }
+        try PackagePolicy.validate(bundleIDs: [claim.bundleID], installLocations: ["/Applications"], payloadPaths: ["Test.app", "Test.app/Contents/Info.plist"], containsScripts: false, claim: claim)
+        try check(true, "Package policy accepts only the selected application subtree")
+        for path in ["Other.app/Contents/a", "../Library/a", "/Library/a", "Test.app/../Other.app"] {
+            do {
+                try PackagePolicy.validate(bundleIDs: [claim.bundleID], installLocations: ["/Applications"], payloadPaths: [path], containsScripts: false, claim: claim)
+                throw LatestFailure.process("Unrelated package path accepted")
+            } catch LatestFailure.rejected { try check(true, "Package path rejected: \(path)") }
+        }
+        do {
+            try PackagePolicy.validate(bundleIDs: [claim.bundleID], installLocations: ["/Applications"], payloadPaths: ["Test.app"], containsScripts: true, claim: claim)
+            throw LatestFailure.process("Package scripts accepted")
+        } catch LatestFailure.rejected { try check(true, "Install scripts cannot reach root execution") }
+        let gate = CompletionGate<Int>()
+        let completedOnce = await withTaskGroup(of: Bool.self, returning: Int.self) { group in
+            for index in 0..<32 { group.addTask { await gate.finish(.success(index)) } }
+            var accepted = 0; for await value in group { if value { accepted += 1 } }; return accepted
+        }
+        try check(completedOnce == 1, "Concurrent reply/timeout/cancel races complete exactly once")
+        let terminal = try await gate.wait()
+        try check(terminal >= 0 && terminal < 32, "Reply received before waiter is preserved")
+        let record = AppRecord(app: app, candidate: .init(app: app, source: .homebrew, version: .init(display: "1.3"), action: .homebrew("test"), authoritative: true), status: .available)
+        try check(Presentation.visible([record], query: "ORG.EXAMPLE", source: .homebrew, preferences: .init()).count == 1, "Search and source filters")
+        try check(Presentation.visible([record], query: "", source: .sparkle, preferences: .init()).isEmpty, "Mismatched source hidden")
+        var hidden = Preferences(); hidden.showCurrent = false; hidden.showUnknown = false
+        try check(Presentation.visible([.init(app: app, status: .current), .init(app: app, status: .unknown)], query: "", source: nil, preferences: hidden).isEmpty, "Visibility preferences")
+        try check(Presentation.bulkEligible(record.candidate!, status: .available), "Bulk accepts verified minor updates")
+        try check(!Presentation.bulkEligible(candidate, status: .available), "Bulk rejects catalogue hints and major upgrades")
+        var ignored = Preferences(); ignored.ignoredBundleIDs = [app.bundleID]
+        let os = OperatingSystemVersion(majorVersion: 27, minorVersion: 0, patchVersion: 0)
+        try check(Resolution.record(app, candidate: record.candidate, preferences: ignored, operatingSystem: os, architecture: .arm64).status == .ignored, "Ignored apps are never actionable")
+        var skipped = Preferences(); skipped.skippedVersions[app.id.path] = record.candidate?.id
+        try check(Resolution.record(app, candidate: record.candidate, preferences: skipped, operatingSystem: os, architecture: .arm64).status == .skipped, "Only selected version is skipped")
+        let incompatible = UpdateCandidate(app: app, source: .sparkle, version: .init(display: "2"), action: .sparkle(URL(string: "https://fixture.invalid")!), authoritative: true, minimumOS: "28", architectures: [.x86_64])
+        try check(Resolution.record(app, candidate: incompatible, preferences: .init(), operatingSystem: os, architecture: .arm64).status == .incompatible, "OS and architecture constraints prevent installation")
+        let beta = UpdateCandidate(app: app, source: .sparkle, version: .init(display: "2beta"), action: incompatible.action, authoritative: true, channel: .beta)
+        try check(Resolution.record(app, candidate: beta, preferences: .init(), operatingSystem: os, architecture: .arm64).status == .unknown, "Stable channel rejects beta updates")
+        let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [HTTPFixture.self]
+        let transport = URLSession(configuration: configuration)
+        let fixtureHTTP = BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("transport-cache"), testSession: transport)
+        let response = try await fixtureHTTP.fetch(URL(string: "https://fixture.invalid/valid")!) { _ = try JSONSerialization.jsonObject(with: $0) }
+        try check(!response.stale && response.data.count > 0, "Valid HTTPS response is decoded and cached")
+        for endpoint in ["error", "large", "downgrade"] {
+            do {
+                _ = try await fixtureHTTP.fetch(URL(string: "https://fixture.invalid/\(endpoint)")!, maximumBytes: 100)
+                throw LatestFailure.process("Invalid transport response accepted")
+            } catch LatestFailure.network { try check(true, "Transport rejects \(endpoint)") }
+        }
+        do {
+            _ = try await fixtureHTTP.fetch(URL(string: "https://fixture.invalid/invalid")!) { _ = try JSONSerialization.jsonObject(with: $0) }
+            throw LatestFailure.process("Invalid JSON cached")
+        } catch LatestFailure.process(let message) { throw LatestFailure.process(message) }
+        catch { try check(true, "Malformed response is never accepted as valid cache data") }
+        let offlineConfiguration = URLSessionConfiguration.ephemeral; offlineConfiguration.protocolClasses = [OfflineFixture.self]
+        let offline = BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("transport-cache"), testSession: URLSession(configuration: offlineConfiguration))
+        let cached = try await offline.fetch(URL(string: "https://fixture.invalid/valid")!) { _ = try JSONSerialization.jsonObject(with: $0) }
+        try check(cached.stale && cached.data == response.data, "Offline uses only validated last-known-good data and marks it stale")
+        let ownership = OwnedRequest(), cancellationResult = CompletionGate<Bool>()
+        let accepted = await ownership.start { _ in
+            do { try await Task.sleep(for: .seconds(10)); await cancellationResult.finish(.success(false)) }
+            catch { await cancellationResult.finish(.success(true)) }
+        }
+        try check(accepted, "Broker connection owns its preflight task")
+        await ownership.disconnect()
+        try check(try await cancellationResult.wait(), "Disconnect cancels owned preflight task")
+        let installation = OwnedRequest(), ready = CompletionGate<Bool>(), resultGate = CompletionGate<Bool>()
+        _ = await installation.start { owner in
+            do {
+                try await owner.handOffToInstaller(); await ready.finish(.success(true))
+                try await Task.sleep(for: .milliseconds(30)); await resultGate.finish(.success(true))
+            } catch { await resultGate.finish(.success(false)) }
+        }
+        _ = try await ready.wait(); await installation.disconnect()
+        try check(try await resultGate.wait(), "Started installation completes safely after client disconnect")
+        let seed = Data(repeating: 7, count: 32)
+        let publicKey = try ReleaseSigning.publicKey(seed: seed)
+        let signature = try ReleaseSigning.signature(data: response.data, seed: seed)
+        try check(try ReleaseSigning.verify(data: response.data, signature: signature, publicKey: publicKey), "Ed25519 update signatures verify")
+        try check(try !ReleaseSigning.verify(data: response.data + Data([1]), signature: signature, publicKey: publicKey), "Modified update archive signature is rejected")
+        let feed = try ReleaseSigning.signedFeed(response.data, seed: seed)
+        try check(String(decoding: feed, as: UTF8.self).contains("<!-- sparkle-signatures:\nedSignature: ") && String(decoding: feed, as: UTF8.self).contains("length: \(response.data.count)"), "Signed feed uses Sparkle 2.10 envelope")
         print("Verified \(count) core invariants.")
     }
 }
