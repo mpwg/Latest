@@ -36,7 +36,7 @@ struct LatestWindow: View {
             ToolbarItem { Button("Check for Updates", systemImage: "arrow.clockwise") { model.refresh() }.disabled(model.scanning).accessibilityIdentifier("refresh") }
             ToolbarItem { Button("Update All", systemImage: "square.and.arrow.down") { model.updateAll() }
                 .disabled(model.scanning || !model.rows.contains { $0.record.status == .available && $0.record.candidate?.isMajorUpgrade == false }) }
-            ToolbarItem { SettingsLink() }
+            ToolbarItem { Button("Settings…", systemImage: "gear") { model.showSettingsHandler() } }
         }
         .alert("Update Failed", isPresented: $model.showingError) {
             Button("Open Diagnostics") { NSWorkspace.shared.activateFileViewerSelecting([model.diagnosticURL]) }

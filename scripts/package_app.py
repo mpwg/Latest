@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import plistlib
+import re
 import shutil
 import subprocess
 
@@ -59,6 +60,11 @@ def package(configuration, identity, team, public_key, version):
     for name, identifier in [("mas", "mas"), ("LatestPackageVerifier", "PackageVerifier"), ("LatestBroker", "Broker")]:
         path = contents / "Resources" / name
         run(signing + ["--identifier", "io.github.mpwg.Latest." + identifier, str(path)])
+    if identity != "-":
+        details = subprocess.run(["codesign", "-dvv", str(contents / "Resources/LatestBroker")], check=True, capture_output=True, text=True)
+        actual_team = re.search(r"TeamIdentifier=([A-Z0-9]{10})", details.stderr)
+        if not actual_team or actual_team.group(1) != team:
+            raise ValueError("Configured team does not match the signing certificate's actual TeamIdentifier")
     info["LatestMasSHA256"] = hashlib.sha256((contents / "Resources/mas").read_bytes()).hexdigest()
     info["LatestVerifierSHA256"] = hashlib.sha256((contents / "Resources/LatestPackageVerifier").read_bytes()).hexdigest()
     (contents / "Info.plist").write_bytes(plistlib.dumps(info))

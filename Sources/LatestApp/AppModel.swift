@@ -36,6 +36,7 @@ import LatestPlatform
     var notesToken = UUID()
     var needsBrokerApproval = false
     var activeUpdates: Int { rows.filter { $0.event != nil && $0.event?.isTerminal == false }.count }
+    @ObservationIgnored var showSettingsHandler: () -> Void = {}
     let diagnosticURL: URL
     private let store: PreferencesStore
     private let inventory = AppInventory()

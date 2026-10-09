@@ -1139,6 +1139,57 @@
           }
         }
       }
+    },
+    "About Latest": {
+      "comment": "Application menu action.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Latest"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über Latest"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "comment": "Application menu action.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen…"
+          }
+        }
+      }
+    },
+    "Quit Latest": {
+      "comment": "Application menu action.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Latest"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest beenden"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
