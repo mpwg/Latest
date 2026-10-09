@@ -2,6 +2,8 @@ import Foundation
 import LatestCore
 import LatestProcess
 import LatestPlatform
+import LatestContracts
+import LatestTrust
 
 @main struct Verification {
     static func main() async {
@@ -179,6 +181,53 @@ import LatestPlatform
         try check(try !ReleaseSigning.verify(data: response.data + Data([1]), signature: signature, publicKey: publicKey), "Modified update archive signature is rejected")
         let feed = try ReleaseSigning.signedFeed(response.data, seed: seed)
         try check(String(decoding: feed, as: UTF8.self).contains("<!-- sparkle-signatures:\nedSignature: ") && String(decoding: feed, as: UTF8.self).contains("length: \(response.data.count)"), "Signed feed uses Sparkle 2.10 envelope")
+        try check(!FeedPolicy.compatible(URL(string: "https://fixture.invalid/x86-64/update.xml")!, with: [.arm64]), "Architecture-specific feed cannot switch ARM to Intel")
+        try check(!FeedPolicy.compatible(URL(string: "https://fixture.invalid/arm64/update.zip")!, with: [.x86_64]), "Architecture-specific archive cannot switch Intel to ARM")
+        try check(FeedPolicy.compatible(URL(string: "https://fixture.invalid/universal/update.xml")!, with: [.arm64, .x86_64]), "Universal update feed remains supported")
+        try check(try Metadata.casks(Data(#"[{"token":"valid","version":"1"},"invalid item"]"#.utf8)).count == 1, "Malformed catalogue neighbour is isolated")
+        let olderPreferences = try JSONDecoder().decode(Preferences.self, from: Data(#"{"showCurrent":false}"#.utf8))
+        try check(!olderPreferences.showCurrent && !olderPreferences.showCatalogueHints, "New preference fields do not break existing settings")
+        let prefix = root.appendingPathComponent("brew-prefix")
+        let stagedApp = prefix.appendingPathComponent("Caskroom/test/1/Test.app")
+        try FileManager.default.createDirectory(at: stagedApp.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: stagedApp, withDestinationURL: fixture.deletingLastPathComponent())
+        let caskJSON = root.appendingPathComponent("brew-info.json")
+        try Data(#"{"casks":[{"token":"test","version":"3","installed":"1","auto_updates":false,"artifacts":[{"app":["Test.app"]}]}]}"#.utf8).write(to: caskJSON)
+        let fakeBrew = root.appendingPathComponent("brew")
+        let script = """
+        #!/usr/bin/python3
+        import json,sys
+        from pathlib import Path
+        root=Path(__file__).resolve().parent
+        args=sys.argv[1:]
+        if args==['--prefix']: print(root/'brew-prefix')
+        elif args==['info','--cask','--json=v2','--installed']: print((root/'brew-info.json').read_text())
+        elif args==['outdated','--cask','--json=v2','test']: print(json.dumps({'casks':[{'name':'test','current_version':'3','installed_versions':['1']}]}))
+        elif args==['upgrade','--cask','--no-ask','test']: (root/'executed-arguments.json').write_text(json.dumps(args))
+        else: sys.exit(2)
+        """
+        try Data(script.utf8).write(to: fakeBrew)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: fakeBrew.path)
+        let brewProvider = HomebrewProvider(executable: fakeBrew)
+        guard let scanned = AppInventory.snapshot(at: fixture.deletingLastPathComponent()) else { throw LatestFailure.process("Fixture disappeared") }
+        let brewContext = CheckContext(apps: [scanned], preferences: .init())
+        guard let owned = try await brewProvider.check(scanned, context: brewContext) else { throw LatestFailure.process("Managed fixture not recognized") }
+        try check(owned.source == .homebrew && owned.authoritative && owned.comparison == .older, "Local cask registration authorizes only its canonical app")
+        let unowned = AppSnapshot(url: root.appendingPathComponent("Elsewhere/Test.app"), bundleID: scanned.bundleID, name: scanned.name, version: scanned.version)
+        try check(try await brewProvider.check(unowned, context: brewContext) == nil, "Name match without registered installation cannot authorize Homebrew")
+        try await brewProvider.upgrade(owned, context: brewContext)
+        let recordedArguments = try JSONDecoder().decode([String].self, from: Data(contentsOf: root.appendingPathComponent("executed-arguments.json")))
+        try check(recordedArguments == ["upgrade", "--cask", "--no-ask", "test"], "Homebrew upgrades exactly one verified cask")
+        do {
+            try CodeTrust.verify(URL(fileURLWithPath: "/usr/bin/true"), requirement: ForkIdentity.requirement(identifier: ForkIdentity.tool, team: "26ZJLRV99G"))
+            throw LatestFailure.process("Foreign signing identity accepted")
+        } catch LatestFailure.rejected { try check(true, "Foreign signed executable fails the fork's designated requirement") }
+        do { _ = try ForkIdentity.requirement(identifier: ForkIdentity.application, team: "bad\"team"); throw LatestFailure.process("Malformed team accepted") }
+        catch ForkIdentity.IdentityError.unconfigured { try check(true, "Signing requirements cannot be injected") }
+        let helper = try await runner.run(executable: URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/debug/LatestBroker"), arguments: [], environment: CommandRunner.userEnvironment())
+        try check(helper.exitCode != 0, "Broker cannot be launched as an ordinary unprivileged process")
+        let verifier = try await runner.run(executable: URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/debug/LatestPackageVerifier"), arguments: ["/tmp/invalid.pkg", "123", claim.bundleID, claim.path], environment: CommandRunner.userEnvironment())
+        try check(verifier.exitCode != 0, "Package verifier rejects unauthorized direct invocation")
         print("Verified \(count) core invariants.")
     }
 }

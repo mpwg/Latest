@@ -27,6 +27,7 @@ def package(configuration, identity, team, public_key, version):
     for folder in ["MacOS", "Resources", "Frameworks", "Library/LaunchDaemons"]:
         (contents / folder).mkdir(parents=True, exist_ok=True)
     shutil.copy2(binaries / "LatestApp", contents / "MacOS/Latest")
+    run(["install_name_tool", "-add_rpath", "@executable_path/../Frameworks", str(contents / "MacOS/Latest")])
     for product in ["LatestBroker", "LatestPackageVerifier"]:
         shutil.copy2(binaries / product, contents / "Resources" / product)
     shutil.copy2(ROOT / "Vendor/mas/.build/release/mas", contents / "Resources/mas")

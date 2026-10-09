@@ -31,7 +31,7 @@ jobs:
       - name: Check repository and localization
         run: python3 scripts/validate.py
       - name: Run Swift Testing suite
-        run: swift test
+        run: swift test --build-system native --enable-swift-testing --disable-xctest
       - name: Run native UI tests
         run: |
           mkdir -p .build/ui-test-state

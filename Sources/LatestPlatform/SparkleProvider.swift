@@ -8,6 +8,10 @@ public struct SparkleProvider: UpdateProvider {
     public func check(_ app: AppSnapshot, context: CheckContext) async throws -> UpdateCandidate? {
         guard !app.hasReceipt, app.feedURL != nil else { return nil }
         let channel = context.preferences.channels[app.id.path, default: .stable]
+        if let url = app.feedURL, !FeedPolicy.compatible(url, with: app.architectures) {
+            return .init(app: app, source: .sparkle, version: app.version, action: .external(app.id.url),
+                         authoritative: false, comparison: .unknown)
+        }
         return try await SparkleSession.check(app, channel: channel)
     }
     @MainActor public func install(_ candidate: UpdateCandidate, channel: ReleaseChannel,
@@ -94,6 +98,9 @@ public struct SparkleProvider: UpdateProvider {
     func showUpdateFound(with appcastItem: SUAppcastItem, state: SPUUserUpdateState, reply: @escaping (SPUUserUpdateChoice) -> Void) {
         guard !completed else { reply(.dismiss); return }
         let result = candidate(appcastItem)
+        if let fileURL = appcastItem.fileURL, !FeedPolicy.compatible(fileURL, with: app.architectures) {
+            reply(.dismiss); finish(.failure(LatestFailure.rejected("This Sparkle update targets a different architecture or insecure URL. Use the app's own updater."))); return
+        }
         if installing {
             guard result.version == expectedVersion else {
                 reply(.dismiss); finish(.failure(LatestFailure.rejected("The Sparkle update changed; check for updates again."))); return
@@ -135,5 +142,5 @@ public struct SparkleProvider: UpdateProvider {
     func showSendingTerminationSignal() {}
     func dismissUpdateInstallation() {}
     func feedURLString(for updater: SPUUpdater) -> String? { app.feedURL?.absoluteString }
-    func allowedChannels(for updater: SPUUpdater) -> Set<String> { channel == .beta ? ["beta"] : [] }
+    func allowedChannels(for updater: SPUUpdater) -> Set<String> { channel == .beta ? ["beta", "stable"] : ["stable"] }
 }

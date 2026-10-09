@@ -1122,6 +1122,23 @@
           }
         }
       }
+    },
+    "Show Informational Catalogue Hints": {
+      "comment": "Optional non-authoritative catalogue metadata; it cannot authorize installation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Informational Catalogue Hints"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unverbindliche Kataloghinweise anzeigen"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

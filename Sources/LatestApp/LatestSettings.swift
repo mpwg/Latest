@@ -18,6 +18,7 @@ private struct GeneralSettings: View {
             Toggle("Show Ignored and Skipped Apps", isOn: $model.preferences.showIgnored)
             Toggle("Show Unknown and Incompatible Apps", isOn: $model.preferences.showUnknown)
             Toggle("Sort by Source", isOn: $model.preferences.sortBySource)
+            Toggle("Show Informational Catalogue Hints", isOn: $model.preferences.showCatalogueHints)
             LabeledContent("Text Size") { Slider(value: $model.preferences.fontScale, in: 1...1.6).frame(width: 160) }
             Section("App Store Updates") {
                 Text("Direct updates require the signed installation helper. iOS apps, duplicate installations and nonstandard locations open the App Store instead.")

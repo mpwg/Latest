@@ -46,6 +46,7 @@ import LatestPlatform
     private let sparkle = SparkleProvider()
     private let broker = BrokerClient()
     private let http: BoundedHTTPClient
+    private let catalogue: CatalogueProvider
     private var scanTask: Task<Void, Never>?
     private var monitoringTask: Task<Void, Never>?
     private var jobs: [AppInstanceID: Task<Void, Never>] = [:]
@@ -68,6 +69,7 @@ import LatestPlatform
         store = PreferencesStore(url: root.appendingPathComponent("preferences.json"))
         diagnosticURL = root.appendingPathComponent("diagnostics.log")
         http = BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("Cache"))
+        catalogue = CatalogueProvider(http: http)
         let tool = Bundle.main.url(forResource: "mas", withExtension: nil)
         appStore = AppStoreProvider(http: http, masURL: tool)
     }
@@ -122,7 +124,7 @@ import LatestPlatform
         }
         selectedRow = rows.first { $0.id == selectedID }; filter()
         let context = CheckContext(apps: result.apps, preferences: preferences)
-        let providers: [any UpdateProvider] = [appStore, brew, sparkle]
+        let providers: [any UpdateProvider] = [appStore, brew, sparkle, catalogue]
         await withTaskGroup(of: AppRecord.self) { group in
             var iterator = result.apps.makeIterator()
             for _ in 0..<8 { if let app = iterator.next() { group.addTask { await Self.check(app, providers: providers, context: context) } } }
