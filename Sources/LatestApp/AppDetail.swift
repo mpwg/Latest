@@ -23,9 +23,9 @@ private struct AppDetailHeader: View {
             Image(nsImage: row.icon).resizable().frame(width: 72, height: 72).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
                 Text(row.record.app.name).font(.title)
-                Text(row.record.app.version.description).foregroundStyle(.secondary)
+                Text(row.record.app.version.description).foregroundStyle(.secondary).accessibilityIdentifier("installed-version")
                 if let candidate = row.record.candidate { Text("New version: \(candidate.version.description)") }
-                StatusTitle(status: row.record.status)
+                StatusTitle(status: row.record.status).accessibilityIdentifier("selected-status")
             }
         }
     }
@@ -43,7 +43,8 @@ private struct AppDetailActions: View {
                         .accessibilityIdentifier("cancel-update")
                 } else {
                     Button(row.record.status == .external ? "Open Updater" : "Update") { model.requestUpdate(row) }
-                        .buttonStyle(.borderedProminent).disabled(![.available, .external].contains(row.record.status))
+                        .buttonStyle(.borderedProminent)
+                        .disabled(model.scanning || model.isUpdating(row.id) || ![.available, .external].contains(row.record.status))
                         .accessibilityIdentifier("update-selected")
                 }
                 Button("Open App") { NSWorkspace.shared.open(row.id.url) }

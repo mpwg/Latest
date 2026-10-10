@@ -459,4 +459,70 @@ import XCTest
         XCTAssertTrue(app.staticTexts["New version: 1.1.0 (2)"].waitForExistence(timeout: 30))
         app.terminate()
     }
+
+    private func majorBulkStage(_ name: String, root: String) {
+        FileHandle.standardOutput.write(Data(("L17_READY_" + name + "\n").utf8))
+        let path = root + "/evidence/l17/" + name + "-ready"
+        let deadline = Date().addingTimeInterval(45)
+        while !FileManager.default.fileExists(atPath: path), Date() < deadline { Thread.sleep(forTimeInterval: 0.1) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path))
+    }
+    private func selectNativePath(_ app: XCUIApplication, _ path: String) {
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND value == %@", "app-row-", path)).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
+        XCTAssertTrue(app.staticTexts[path].exists)
+    }
+
+    func testNativeMajorConsentAndCancellation() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectNativeSparkle(app, root: root)
+        XCTAssertTrue(app.staticTexts["Major Upgrade"].exists)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.buttons["Install Major Upgrade"].waitForExistence(timeout: 10))
+        app.buttons["Cancel"].click()
+        XCTAssertFalse(app.buttons["Install Major Upgrade"].exists)
+        majorBulkStage("CANCEL_MAJOR", root: root)
+        XCTAssertEqual(app.staticTexts["installed-version"].label, "1.0.0 (1)")
+        app.buttons["update-selected"].click()
+        app.buttons["Install Major Upgrade"].click()
+        let installed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "2.0.0 (2)"), object: app.staticTexts["installed-version"])
+        XCTAssertEqual(XCTWaiter.wait(for: [installed], timeout: 120), .completed)
+        let current = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Up to Date"), object: app.staticTexts["selected-status"])
+        XCTAssertEqual(XCTWaiter.wait(for: [current], timeout: 30), .completed)
+        app.terminate()
+    }
+
+    func testNativeBulkEligibilityAndDuplicateActivation() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        let top = root + "/applications/Latest Sparkle Fixture.app"
+        selectNativePath(app, top)
+        XCTAssertTrue(app.staticTexts["New version: 1.1.0 (2)"].waitForExistence(timeout: 30))
+        XCTAssertFalse(app.buttons["refresh"].isEnabled)
+        XCTAssertFalse(app.buttons["update-selected"].isEnabled)
+        XCTAssertFalse(app.buttons["update-all"].isEnabled)
+        majorBulkStage("SCAN", root: root)
+        let scanned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["refresh"])
+        XCTAssertEqual(XCTWaiter.wait(for: [scanned], timeout: 60), .completed)
+        XCTAssertTrue(app.buttons["update-all"].isEnabled)
+        app.buttons["update-all"].doubleClick()
+        XCTAssertTrue(app.buttons["cancel-update"].waitForExistence(timeout: 30))
+        XCTAssertFalse(app.buttons["update-all"].isEnabled)
+        XCTAssertFalse(app.buttons["update-selected"].exists)
+        majorBulkStage("BULK", root: root)
+        let data = try Data(contentsOf: URL(fileURLWithPath: root + "/evidence/l17/bulk/paths.json"))
+        let paths = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: String])
+        for key in ["selected", "minor"] {
+            selectNativePath(app, try XCTUnwrap(paths[key]))
+            let installed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "1.1.0 (2)"), object: app.staticTexts["installed-version"])
+            XCTAssertEqual(XCTWaiter.wait(for: [installed], timeout: 120), .completed)
+            let current = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Up to Date"), object: app.staticTexts["selected-status"])
+            XCTAssertEqual(XCTWaiter.wait(for: [current], timeout: 30), .completed)
+        }
+        selectNativePath(app, try XCTUnwrap(paths["major"]))
+        XCTAssertEqual(app.staticTexts["installed-version"].label, "1.0.0 (1)")
+        XCTAssertTrue(app.staticTexts["Major Upgrade"].exists)
+        app.terminate()
+    }
 }

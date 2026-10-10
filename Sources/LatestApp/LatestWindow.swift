@@ -35,7 +35,7 @@ struct LatestWindow: View {
             }.accessibilityIdentifier("source-filter") }
             ToolbarItem { Button("Check for Updates", systemImage: "arrow.clockwise") { model.refresh() }.disabled(model.scanning).accessibilityIdentifier("refresh") }
             ToolbarItem { Button("Update All", systemImage: "square.and.arrow.down") { model.updateAll() }
-                .disabled(model.scanning || !model.rows.contains { $0.record.status == .available && $0.record.candidate?.isMajorUpgrade == false }) }
+                .disabled(model.scanning || model.activeUpdates > 0 || !model.hasBulkUpdates).accessibilityIdentifier("update-all") }
             ToolbarItem { Button("Settings…", systemImage: "gear") { model.showSettingsHandler() }.accessibilityIdentifier("settings") }
         }
         .alert("Update Failed", isPresented: $model.showingError) {
@@ -43,7 +43,7 @@ struct LatestWindow: View {
             Button("OK", role: .cancel) {}
         } message: { Text(model.errorMessage) }
         .confirmationDialog("Confirm Major Upgrade", isPresented: $model.confirmingMajor, titleVisibility: .visible) {
-            Button("Install Major Upgrade") { model.confirmMajor() }
+            Button("Install Major Upgrade") { model.confirmMajor() }.disabled(model.scanning)
             Button("Cancel", role: .cancel) { model.pendingMajor = nil }
         } message: { Text("A major upgrade may require a new licence or change compatibility. Review the release notes before continuing.") }
     }
