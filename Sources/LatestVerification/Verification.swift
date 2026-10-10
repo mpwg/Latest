@@ -202,7 +202,9 @@ import LatestTrust
         args=sys.argv[1:]
         if args==['--prefix']: print(root/'brew-prefix')
         elif args==['info','--cask','--json=v2','--installed']: print((root/'brew-info.json').read_text())
-        elif args==['outdated','--cask','--json=v2','test']: print(json.dumps({'casks':[{'name':'test','current_version':'3','installed_versions':['1']}]}))
+        elif args==['outdated','--cask','--json=v2','test']:
+            response={'casks':[] if (root/'failed-outdated').exists() else [{'name':'test','current_version':'3','installed_versions':['1']}]}
+            print(json.dumps(response)); sys.exit(1)
         elif args==['upgrade','--cask','--no-ask','test']: (root/'executed-arguments.json').write_text(json.dumps(args))
         else: sys.exit(2)
         """
@@ -218,6 +220,13 @@ import LatestTrust
         try await brewProvider.upgrade(owned, context: brewContext)
         let recordedArguments = try JSONDecoder().decode([String].self, from: Data(contentsOf: root.appendingPathComponent("executed-arguments.json")))
         try check(recordedArguments == ["upgrade", "--cask", "--no-ask", "test"], "Homebrew upgrades exactly one verified cask")
+        try Data().write(to: root.appendingPathComponent("failed-outdated"))
+        do {
+            _ = try await brewProvider.check(scanned, context: brewContext)
+            throw LatestFailure.network("A failed outdated command without its selected cask was accepted")
+        } catch LatestFailure.process {
+            try check(true, "Homebrew exit 1 without the selected outdated cask is rejected")
+        }
         do {
             try CodeTrust.verify(URL(fileURLWithPath: "/usr/bin/true"), requirement: ForkIdentity.requirement(identifier: ForkIdentity.tool, team: "26ZJLRV99G"))
             throw LatestFailure.process("Foreign signing identity accepted")
