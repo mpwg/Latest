@@ -4,9 +4,8 @@ from pathlib import Path
 import argparse
 import json
 import os
-import re
 import subprocess
-import xml.etree.ElementTree as ET
+from appcast import MAX_FEED_BYTES, merge_feed, version_tuple
 
 ROOT = Path(__file__).resolve().parent.parent
 UPDATE = json.loads((ROOT/"Config/updates.json").read_text())
@@ -15,13 +14,25 @@ def run(arguments, capture=False, input=None):
     result=subprocess.run(arguments,cwd=ROOT,check=True,text=True,capture_output=capture,input=input)
     return result.stdout.strip() if capture else None
 
-def release(version, identity, team, profile):
-    if not re.fullmatch(r"\d+\.\d+\.\d+",version): raise ValueError("Use a stable semantic release version")
+def release(version, identity, team, profile, existing_feed=None, first_release=False):
+    version_tuple(version)
+    if (existing_feed is not None) == first_release:
+        raise ValueError('Specify exactly one of --existing-feed or --first-release; history is never silently discarded.')
     private=os.environ.get("SPARKLE_PRIVATE_KEY")
     if not private: raise ValueError("SPARKLE_PRIVATE_KEY is required through the environment")
     run(["swift","build","-c","release","--product","LatestRelease"])
     public=run([".build/release/LatestRelease","public-key","-"],capture=True,input=private)
     if public != UPDATE["publicKey"]: raise ValueError("Private update key does not match the committed public key")
+    existing = None
+    if existing_feed is not None:
+        path = Path(existing_feed)
+        if path.stat().st_size > MAX_FEED_BYTES: raise ValueError('Existing appcast exceeds the feed size limit.')
+        existing = path.read_bytes()
+        # Authenticate exactly the bytes that will be merged, avoiding a second file read.
+        run([".build/release/LatestRelease", "verify-feed", public, "-"], input=existing.decode('utf-8'))
+    build=run(["git","rev-list","--count","HEAD"],capture=True)
+    # Fail on malformed history, duplicates and regressions before packaging/notarizing.
+    merge_feed(existing, version=version, build=build, length=1, signature='A'*86+'==')
     run(["python3","scripts/package_app.py","--configuration","release","--identity",identity,"--team",team,"--public-key",public,"--version",version])
     destination=ROOT/".release"/version;destination.mkdir(parents=True,exist_ok=True)
     archive=destination/"Latest.zip"
@@ -33,18 +44,10 @@ def release(version, identity, team, profile):
     # Sign the final stapled archive, not the pre-notarization bytes.
     run(["ditto","-c","-k","--keepParent",str(app),str(archive)])
     signature=run([".build/release/LatestRelease","sign","-",str(archive)],capture=True,input=private)
-    namespace="http://www.andymatuschak.org/xml-namespaces/sparkle"
-    ET.register_namespace("sparkle",namespace)
-    rss=ET.Element("rss",version="2.0");channel=ET.SubElement(rss,"channel")
-    ET.SubElement(channel,"title").text="Latest — mpwg fork"
-    ET.SubElement(channel,"link").text="https://github.com/mpwg/Latest"
-    item=ET.SubElement(channel,"item");ET.SubElement(item,"title").text="Latest "+version
-    ET.SubElement(item,"{%s}minimumSystemVersion"%namespace).text="27.0"
-    build=run(["git","rev-list","--count","HEAD"],capture=True)
-    ET.SubElement(item,"enclosure",{"url":f"https://github.com/mpwg/Latest/releases/download/v{version}/Latest.zip","length":str(archive.stat().st_size),"type":"application/octet-stream","{%s}version"%namespace:build,"{%s}shortVersionString"%namespace:version,"{%s}edSignature"%namespace:signature})
     unsigned=destination/"appcast-unsigned.xml"
-    unsigned.write_bytes(ET.tostring(rss,encoding="utf-8",xml_declaration=True)+b"\n")
+    unsigned.write_bytes(merge_feed(existing, version=version, build=build, length=archive.stat().st_size, signature=signature))
     run([".build/release/LatestRelease","sign-feed","-",str(unsigned),str(destination/"appcast.xml")],input=private)
+    run([".build/release/LatestRelease","verify-feed",public,str(destination/"appcast.xml")])
     (destination/"source-revision.txt").write_text(run(["git","rev-parse","HEAD"],capture=True)+"\n")
     run(["git","archive","--format=tar.gz","--output",str(destination/"source.tar.gz"),"HEAD"])
     print("Prepared release artifacts:",destination)
@@ -53,4 +56,7 @@ if __name__=="__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--version",required=True);p.add_argument("--identity",required=True)
     p.add_argument("--team",required=True);p.add_argument("--notary-profile",required=True)
-    a=p.parse_args();release(a.version,a.identity,a.team,a.notary_profile)
+    history=p.add_mutually_exclusive_group(required=True)
+    history.add_argument('--existing-feed',type=Path)
+    history.add_argument('--first-release',action='store_true')
+    a=p.parse_args();release(a.version,a.identity,a.team,a.notary_profile,a.existing_feed,a.first_release)
