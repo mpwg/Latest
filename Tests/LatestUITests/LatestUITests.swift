@@ -504,7 +504,6 @@ import XCTest
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = "L17 native major post-install metadata"; attachment.lifetime = .keepAlways
         add(attachment)
-        FileHandle.standardOutput.write(Data((app.debugDescription + "\n").utf8))
         assertNativeText(app.staticTexts["installed-version"], targetVersion, timeout: 5)
         app.terminate()
     }
