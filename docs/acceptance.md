@@ -1,7 +1,10 @@
 # Acceptance matrix
 
-Baseline: beta 4c1e111, macOS 27.0.1, Swift 6.4 Command Line Tools.
-Implementation: modernization PR stack in mpwg/Latest, through 6773493.
+Baseline: beta 4c1e111; local platform macOS 27.0.1 / Swift 6.4 Command Line Tools.
+Verified implementation: modernization PR stack in mpwg/Latest, commit
+`273136101412f767c02d40291bc08a456c2200b8`.
+CI evidence: macOS 27, Xcode 27.0, Swift 6.4, runs completed on 2026-10-09
+and logs/artifacts checked again on 2026-10-10.
 Statuses: passed, open, not verifiable. Evidence must match current code.
 
 | Criterion | Status | Evidence / next check |
@@ -13,9 +16,9 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | Homebrew ownership / targeted updates | open | Local registered fixture and targeted process passed; real controlled cask update outstanding |
 | Bundled mas / restricted broker | open | Compiled/pinned tools, own/foreign signer checks, request and package policy passed; native privileged request/install outstanding |
 | Sparkle 2.10.0 / lifecycle | open | Pinned distribution and main-actor adapter build passed; controlled signed appcast install outstanding |
-| SwiftUI / filtering / ignore / channels / migration | open | Core/persistence fixtures passed; visible Developer-signed native main window; final XCUITest outstanding |
+| SwiftUI / filtering / ignore / channels / migration | open | Five native XCUITests passed on 2731361: search, selection/notes, ignore/restart, German labels, identifiers/screenshot. Source filters, sorting, channels, skip/major/bulk actions and normal signed-app migration remain open |
 | English/German string catalogues | passed | 74 keys, translated states and placeholder parity |
-| Shared schemes / GitHub Actions | open | Xcode 27 builds and Swift Testing passed on 9ce86aa; UI compile warning corrected in 6773493; final run pending |
+| Shared schemes / GitHub Actions | passed | Both linked runs on 2731361 passed bootstrap, app build, 83 compiled invariants, validation, seven Swift Testing tests, five native UI tests and debug packaging |
 | Native installation / receipts / architecture | not verifiable | Xcode / controlled signed test apps |
 | Keyboard / VoiceOver / large text | not verifiable | Native interaction |
 | Release signing / notarization / self-update | not verifiable | Own Developer ID / notarization / feed |
@@ -23,7 +26,31 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 
 Overall acceptance: open.
 
-## Current concrete evidence
+## Current CI evidence for 2731361
+
+Both successful runs tested the exact implementation commit above:
+
+| Run | Trigger | Retained artifact |
+|---|---|---|
+| [37988080394](https://github.com/mpwg/Latest/actions/runs/37988080394) | Pull request | [macOS-27-evidence / 11644028271](https://github.com/mpwg/Latest/actions/runs/37988080394/artifacts/11644028271) |
+| [37988071896](https://github.com/mpwg/Latest/actions/runs/37988071896) | Push | [macOS-27-evidence / 11643464628](https://github.com/mpwg/Latest/actions/runs/37988071896/artifacts/11643464628) |
+
+The downloaded artifacts each contain `native-tests.xcresult` and the controlled
+debug `Latest.app`. The logs report **83 compiled production-code invariants**,
+**74 English/German keys**, **seven Swift Testing tests** and **five native
+XCUITests with zero failures**. Swift Testing runs both directly and in the
+shared Xcode scheme; these are repeated runs of the same seven tests.
+The UI suite runs real macOS views with `--ui-testing` and an isolated debug
+inventory. Its exact behaviours and remaining limits are listed in
+[test coverage](test-coverage.md#native-ui-evidence-for-2731361).
+
+CI packages an **ad-hoc debug bundle**. It does not prove production signing,
+privileged broker registration or any real provider installation.
+
+## Earlier local evidence and its limits
+
+The following observations were recorded during the modernization and are
+retained as historical local evidence, not fresh production acceptance:
 
 - `swift build -Xswiftc -warnings-as-errors`: passed locally. CLT linker reports
   missing optional Developer framework search directories; no Swift warning or
@@ -39,10 +66,15 @@ Overall acceptance: open.
 - Controlled native launch: one own-fork process and a **1000 × 702** main window
   observed through CoreGraphics; isolated `.build/ui-smoke/preferences.json`.
   This proves startup, not VoiceOver or full interaction.
-- [Xcode run 37985458283](https://github.com/mpwg/Latest/actions/runs/37985458283):
-  dependency/bootstrap, app build, regression executable, repository validation
-  and Swift Testing passed. Native UI build failed on a warnings-as-errors
-  trailing-closure diagnostic; source was corrected without relaxing warnings.
+
+## L01 documentation acceptance (#6)
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| Exact implementation commit, both successful runs and xcresult links | passed | Commit and artifact table above; both artifacts downloaded and their result bundles checked on 2026-10-10 |
+| Five native UI behaviours listed with separate remaining gates | passed | Native UI table in test-coverage.md; installation and accessibility rows remain open/not verifiable |
+| Obsolete pending-CI claims removed; README remains consistent | passed | Shared-scheme row above and updated README release status |
+| Evidence has environment, revision and observed result | passed | CI logs, artifact metadata and local documentation checks; no runtime code changed in L01 |
 
 Developer ID/notarization and a real signed self-update remain unavailable in
 this environment. Real App Store receipts/package compatibility and controlled

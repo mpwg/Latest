@@ -35,6 +35,12 @@ broker and cannot load non-platform frameworks under production library
 validation. Developer-signed bundles keep hardened runtime and library validation.
 No packaging command registers a helper or modifies installed applications.
 
+For controlled installation acceptance, use the
+[disposable native fixtures](docs/native-fixtures.md). They provide two own
+signed app versions, separate preferences, a local HTTPS feed and a real cask
+inside an isolated Homebrew prefix, with explicit cleanup instructions. Fixture
+preparation is separate from successfully updating an app through Latest.
+
 ## Features and boundaries
 
 - Native SwiftUI inventory, search, source filtering, stable name/path sorting,
@@ -70,6 +76,11 @@ German; legacy translation resources remain as references for future migrations.
 **The modernization is not fully accepted for production.** See
 [acceptance](docs/acceptance.md) for current evidence and remaining native
 installation, accessibility, signing, notarization and self-update gates.
+The verified implementation at `2731361` passed both Xcode 27 CI runs,
+including seven Swift Testing tests and five native UI tests. The
+[test coverage](docs/test-coverage.md#native-ui-evidence-for-2731361) lists exactly
+what those isolated UI fixtures establish. Real provider installations,
+privileged broker behaviour and full accessibility still need separate evidence.
 No release has been published and no user application was updated during tests.
 
 The fork's public update key and feed are in Config/updates.json. The private key
