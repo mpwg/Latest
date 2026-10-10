@@ -40,6 +40,7 @@ private struct AppDetailActions: View {
                     ProgressView(value: event.progress).frame(width: 160)
                     Text(event.phase.rawValue.capitalized)
                     Button("Cancel") { model.cancel(row) }.disabled(event.phase == .installing || event.phase == .verifying)
+                        .accessibilityIdentifier("cancel-update")
                 } else {
                     Button(row.record.status == .external ? "Open Updater" : "Update") { model.requestUpdate(row) }
                         .buttonStyle(.borderedProminent).disabled(![.available, .external].contains(row.record.status))
