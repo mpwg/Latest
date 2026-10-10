@@ -16,13 +16,13 @@ private final class HTTPSRedirectPolicy: NSObject, URLSessionTaskDelegate {
 public actor BoundedHTTPClient {
     private let session: URLSession
     private let cacheDirectory: URL
-    public init(cacheDirectory: URL) {
+    public init(cacheDirectory: URL, testSession: URLSession? = nil) {
         self.cacheDirectory = cacheDirectory
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = 20
         configuration.timeoutIntervalForResource = 45
         configuration.httpMaximumConnectionsPerHost = 4
-        session = URLSession(configuration: configuration, delegate: HTTPSRedirectPolicy(), delegateQueue: nil)
+        session = testSession ?? URLSession(configuration: configuration, delegate: HTTPSRedirectPolicy(), delegateQueue: nil)
     }
     public func fetch(_ url: URL, maximumBytes: Int = 4_000_000,
                       validate: @Sendable (Data) throws -> Void = { _ in }) async throws -> HTTPResponse {

@@ -97,10 +97,29 @@ public struct Preferences: Codable, Equatable, Sendable {
     public var showIgnored = false
     public var showUnknown = true
     public var sortBySource = false
+    public var showCatalogueHints = false
     public var fontScale: Double = 1
     public init(directories: [DirectoryPreference] = [
         .init(path: "/Applications"), .init(path: FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications").path)
     ]) { self.directories = directories }
+    private enum CodingKeys: String, CodingKey {
+        case directories, ignoredBundleIDs, skippedVersions, channels, showCurrent, showIgnored,
+             showUnknown, sortBySource, showCatalogueHints, fontScale
+    }
+    public init(from decoder: any Decoder) throws {
+        self.init()
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        directories = try container.decodeIfPresent([DirectoryPreference].self, forKey: .directories) ?? directories
+        ignoredBundleIDs = try container.decodeIfPresent(Set<String>.self, forKey: .ignoredBundleIDs) ?? []
+        skippedVersions = try container.decodeIfPresent([String: String].self, forKey: .skippedVersions) ?? [:]
+        channels = try container.decodeIfPresent([String: ReleaseChannel].self, forKey: .channels) ?? [:]
+        showCurrent = try container.decodeIfPresent(Bool.self, forKey: .showCurrent) ?? true
+        showIgnored = try container.decodeIfPresent(Bool.self, forKey: .showIgnored) ?? false
+        showUnknown = try container.decodeIfPresent(Bool.self, forKey: .showUnknown) ?? true
+        sortBySource = try container.decodeIfPresent(Bool.self, forKey: .sortBySource) ?? false
+        showCatalogueHints = try container.decodeIfPresent(Bool.self, forKey: .showCatalogueHints) ?? false
+        fontScale = min(1.6, max(1, try container.decodeIfPresent(Double.self, forKey: .fontScale) ?? 1))
+    }
 }
 
 public struct CheckContext: Sendable {
