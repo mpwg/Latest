@@ -6,6 +6,16 @@ exact duplicate-instance selection across changed scan enumeration. The entire
 ordinary suite passes seven UI tests plus seven Swift contracts; real provider
 checks and installation cases retain their separate environments and evidence.
 
+## L06 native Sparkle lifecycle evidence
+
+At `ffb4ea0`, [three opt-in native cases](sparkle-lifecycle-acceptance.md) exercise
+stalled HTTPS cancellation, HTTP 503/retry and delayed running-app termination
+at installer handoff. Job journals show one terminal outcome; disk digests prove
+no pre-retry mutation and unchanged same-ID/other-provider controls. Retries
+install signed 1.1.0; native restart retains the observed version/status. Three
+additional Swift Testing contracts exercise actual adapter late callbacks and
+old-token rejection, bringing that suite to ten tests.
+
 `LatestVerification` executes production core/adapter code with controlled
 fixtures on macOS 27. It performs no root installation and no user-app update.
 `LatestCoreTests` provides the Xcode Swift Testing suite; `LatestUITests` uses

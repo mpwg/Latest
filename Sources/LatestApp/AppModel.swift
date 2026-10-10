@@ -59,6 +59,7 @@ import LatestPlatform
     #if DEBUG
     @ObservationIgnored private var fixtureOrderReversed = false
     #endif
+    private let nativeJobJournal: URL?
 
     init(preferencesDirectory: URL? = nil, homebrewExecutable: URL? = nil) {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
@@ -80,6 +81,7 @@ import LatestPlatform
         holdNativeScans = false
         #endif
         let root = preferencesDirectory ?? nativeRoot?.appendingPathComponent("preferences/l03") ?? (uiTesting ? (testRoot ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/ui-test-state")) : support.appendingPathComponent("io.github.mpwg.Latest"))
+        nativeJobJournal = nativeRoot?.appendingPathComponent("preferences/l03/job-events.jsonl")
         brew = HomebrewProvider(executable: homebrewExecutable ?? nativeRoot?.appendingPathComponent("homebrew/bin/brew"))
         store = PreferencesStore(url: root.appendingPathComponent("preferences.json"))
         diagnosticURL = root.appendingPathComponent("diagnostics.log")
@@ -255,7 +257,24 @@ import LatestPlatform
         }
     }
     private func accept(_ event: UpdateEvent, candidate: UpdateCandidate, token: UUID) async {
-        if await jobLedger.accept(event, app: candidate.app.id, token: token) { rows.first { $0.id == candidate.app.id }?.event = event }
+        if await jobLedger.accept(event, app: candidate.app.id, token: token) {
+            rows.first { $0.id == candidate.app.id }?.event = event
+            if let nativeJobJournal {
+                do {
+                    let entry = ["job": token.uuidString, "path": candidate.app.id.path, "phase": event.phase.rawValue,
+                                 "time": Date().ISO8601Format()]
+                    var data = try JSONSerialization.data(withJSONObject: entry, options: .sortedKeys)
+                    data.append(10)
+                    if !FileManager.default.fileExists(atPath: nativeJobJournal.path) {
+                        try data.write(to: nativeJobJournal, options: .atomic)
+                    } else {
+                        let file = try FileHandle(forWritingTo: nativeJobJournal)
+                        defer { try? file.close() }
+                        try file.seekToEnd(); try file.write(contentsOf: data)
+                    }
+                } catch { /* Optional native evidence must not change an install outcome. */ }
+            }
+        }
     }
     func selectNotes() {
         let token = UUID(); notesToken = token; notes = ""; loadingNotes = false

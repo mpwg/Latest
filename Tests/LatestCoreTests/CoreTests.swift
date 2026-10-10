@@ -50,4 +50,52 @@ import Testing
             try PackagePolicy.validate(bundleIDs: [claim.bundleID], installLocations: ["/Applications"], payloadPaths: ["../Library/evil"], containsScripts: false, claim: claim)
         }
     }
+    @MainActor @Test func sparkleCancellationAndLateCallbacks() {
+        let app = AppSnapshot(url: URL(fileURLWithPath: "/tmp/Fixture.app"), bundleID: "org.example.Fixture", name: "Fixture", version: .init(display: "1"))
+        var events: [UpdateEvent] = []
+        var cancellations = 0
+        let session = SparkleSession(app: app, channel: .stable, installing: true) { events.append($0) }
+        session.showDownloadInitiated { cancellations += 1 }
+        session.showDownloadDidReceiveExpectedContentLength(100)
+        session.showDownloadDidReceiveData(ofLength: 20)
+        session.cancel(); session.cancel()
+        #expect(cancellations == 1)
+        #expect(events.last?.progress == 0.2)
+        let count = events.count
+        session.showDownloadDidReceiveData(ofLength: 50)
+        session.showDownloadDidStartExtractingUpdate()
+        session.showInstallingUpdate(withApplicationTerminated: true, retryTerminatingApplication: {})
+        session.showUpdaterError(LatestFailure.timeout, acknowledgement: {})
+        session.showUpdateInstalledAndRelaunched(false, acknowledgement: {})
+        #expect(events.count == count)
+        session.showDownloadInitiated { cancellations += 1 }
+        #expect(cancellations == 2)
+    }
+    @MainActor @Test func sparkleHandoffRejectsCancellation() {
+        let app = AppSnapshot(url: URL(fileURLWithPath: "/tmp/Fixture.app"), bundleID: "org.example.Fixture", name: "Fixture", version: .init(display: "1"))
+        var events: [UpdateEvent] = []
+        var cancellations = 0
+        let session = SparkleSession(app: app, channel: .stable, installing: true) { events.append($0) }
+        session.showDownloadInitiated { cancellations += 1 }
+        session.showDownloadDidStartExtractingUpdate()
+        session.cancel()
+        session.showInstallingUpdate(withApplicationTerminated: true, retryTerminatingApplication: {})
+        #expect(cancellations == 0)
+        #expect(events.map(\.phase) == [.downloading, .installing, .installing])
+        session.showUpdateInstalledAndRelaunched(false, acknowledgement: {})
+        let count = events.count
+        session.showDownloadDidReceiveData(ofLength: 100)
+        #expect(events.count == count)
+    }
+    @Test func completedJobCannotAffectRetry() async throws {
+        let app = AppInstanceID(url: URL(fileURLWithPath: "/tmp/Fixture.app"))
+        let ledger = JobLedger()
+        let old = try await ledger.start(app)
+        #expect(await ledger.accept(.init(.cancelled), app: app, token: old))
+        #expect(await ledger.accept(.init(.failed), app: app, token: old) == false)
+        let retry = try await ledger.start(app)
+        #expect(await ledger.accept(.init(.installing), app: app, token: old) == false)
+        #expect(await ledger.accept(.init(.downloading), app: app, token: retry))
+        #expect(await ledger.event(for: app)?.phase == .downloading)
+    }
 }
