@@ -76,4 +76,99 @@ import XCTest
         add(after)
         app.terminate()
     }
+
+    private func nativeRoot() throws -> String {
+        let environment = ProcessInfo.processInfo.environment
+        guard let root = environment["LATEST_NATIVE_FIXTURE_ROOT"] ?? environment["TEST_RUNNER_LATEST_NATIVE_FIXTURE_ROOT"] else {
+            throw XCTSkip("Explicit disposable native fixture environment is required.")
+        }
+        return root
+    }
+
+    private func nativeApp(_ root: String, holdScans: Bool = false, catalogue: Bool = false) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["--native-install-test-directory", root, "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        if holdScans { app.launchArguments.append("--native-install-test-hold-scans") }
+        if catalogue {
+            let data = try? Data(contentsOf: URL(fileURLWithPath: root + "/manifest.json"))
+            let value = data.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            let port = value?["port"] as? Int ?? 8443
+            app.launchArguments += ["--native-install-test-catalogue-url", "https://localhost:\(port)/catalogue.json"]
+        }
+        app.launchEnvironment["XDG_CONFIG_HOME"] = root + "/user-config"
+        app.launchEnvironment["HOMEBREW_CACHE"] = root + "/brew-cache"
+        app.launchEnvironment["HOMEBREW_LOGS"] = root + "/brew-logs"
+        app.launchEnvironment["HOMEBREW_TEMP"] = root + "/brew-temp"
+        app.launch()
+        return app
+    }
+
+    private func selectManaged(_ app: XCUIApplication, root: String) {
+        let row = app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.Homebrew").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
+        XCTAssertTrue(app.staticTexts[root + "/applications/Latest Homebrew Fixture.app"].exists)
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["update-selected"])
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed)
+    }
+
+    private func stage(_ name: String, root: String) {
+        FileHandle.standardOutput.write(Data(("L04_READY_" + name + "\n").utf8))
+        let path = root + "/evidence/l04/" + name + "-ready"
+        let deadline = Date().addingTimeInterval(45)
+        while !FileManager.default.fileExists(atPath: path), Date() < deadline { Thread.sleep(forTimeInterval: 0.1) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path), "The external fixture change must complete.")
+    }
+
+    func testNativeHomebrewProvenanceLoss() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectManaged(app, root: root)
+        stage("LOSS", root: root)
+        app.buttons["refresh"].click()
+        let blocked = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == false"), object: app.buttons["update-selected"])
+        XCTAssertEqual(XCTWaiter.wait(for: [blocked], timeout: 30), .completed)
+        XCTAssertTrue(app.staticTexts["Status Unknown"].firstMatch.exists)
+        app.terminate()
+    }
+
+    func testNativeHomebrewChangedInstance() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root, holdScans: true)
+        selectManaged(app, root: root)
+        stage("SWAP", root: root)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["The selected app changed. Check for updates again."].waitForExistence(timeout: 15))
+        app.terminate()
+    }
+
+    func testNativeCatalogueCannotInstallUnmanagedNameMatch() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root, catalogue: true)
+        let filter = app.popUpButtons["source-filter"]
+        XCTAssertTrue(filter.waitForExistence(timeout: 20)); filter.click()
+        app.menuItems["Catalogue Hint"].click()
+        let row = app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.Homebrew").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
+        XCTAssertTrue(app.staticTexts[root + "/applications/Unmanaged/Latest Homebrew Fixture.app"].exists)
+        XCTAssertFalse(app.buttons["update-selected"].isEnabled)
+        XCTAssertTrue(app.staticTexts["Catalogue metadata is informational; installation ownership is not established."].exists)
+        app.terminate()
+    }
+
+    func testNativeHomebrewFailureThenRetry() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectManaged(app, root: root)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["Update Failed"].waitForExistence(timeout: 45))
+        stage("RETRY", root: root)
+        app.windows.buttons["OK"].firstMatch.click()
+        app.buttons["refresh"].click()
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["update-selected"])
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["1.1.0 (2)"].firstMatch.waitForExistence(timeout: 60))
+        XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 20))
+        app.terminate()
+    }
 }

@@ -90,8 +90,10 @@ public actor CommandRunner {
          "HOMEBREW_NO_ANALYTICS": "1", "HOMEBREW_NO_INSTALL_CLEANUP": "1"]
         // Homebrew 7 stores custom-tap trust in the user's configured XDG directory.
         // Keep that location; never replace the user's explicit trust decisions.
-        if let configuration = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"], configuration.hasPrefix("/") {
-            environment["XDG_CONFIG_HOME"] = configuration
+        for key in ["XDG_CONFIG_HOME", "HOMEBREW_CACHE", "HOMEBREW_LOGS", "HOMEBREW_TEMP"] {
+            if let location = ProcessInfo.processInfo.environment[key], location.hasPrefix("/") {
+                environment[key] = location
+            }
         }
         return environment
     }

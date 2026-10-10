@@ -55,6 +55,7 @@ import LatestPlatform
     private var started = false
     private var fingerprints = Set<String>()
     private let uiTesting: Bool
+    private let holdNativeScans: Bool
 
     init(preferencesDirectory: URL? = nil, homebrewExecutable: URL? = nil) {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
@@ -68,15 +69,19 @@ import LatestPlatform
         let testRoot = arguments.firstIndex(of: "--ui-test-directory").flatMap { $0 + 1 < arguments.count ? URL(fileURLWithPath: arguments[$0+1]) : nil }
         #if DEBUG
         let nativeRoot = arguments.firstIndex(of: "--native-install-test-directory").flatMap { $0 + 1 < arguments.count ? URL(fileURLWithPath: arguments[$0+1]) : nil }
+        let catalogueURL = arguments.firstIndex(of: "--native-install-test-catalogue-url").flatMap { $0 + 1 < arguments.count ? URL(string: arguments[$0+1]) : nil }
+        holdNativeScans = nativeRoot != nil && arguments.contains("--native-install-test-hold-scans")
         #else
         let nativeRoot: URL? = nil
+        let catalogueURL: URL? = nil
+        holdNativeScans = false
         #endif
         let root = preferencesDirectory ?? nativeRoot?.appendingPathComponent("preferences/l03") ?? (uiTesting ? (testRoot ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/ui-test-state")) : support.appendingPathComponent("io.github.mpwg.Latest"))
         brew = HomebrewProvider(executable: homebrewExecutable ?? nativeRoot?.appendingPathComponent("homebrew/bin/brew"))
         store = PreferencesStore(url: root.appendingPathComponent("preferences.json"))
         diagnosticURL = root.appendingPathComponent("diagnostics.log")
         http = BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("Cache"))
-        catalogue = CatalogueProvider(http: http)
+        catalogue = CatalogueProvider(http: http, catalogueURL: catalogueURL)
         let tool = Bundle.main.url(forResource: "mas", withExtension: nil)
         appStore = AppStoreProvider(http: http, masURL: tool)
     }
@@ -96,6 +101,9 @@ import LatestPlatform
         if ProcessInfo.processInfo.arguments.contains("--ui-testing") { installFixtures(); return }
         #endif
         refresh()
+        // A controlled race test holds only automatic scans, preserving manual scans
+        // and the production freshness/provenance check at installation time.
+        if holdNativeScans { return }
         monitoringTask = Task { [weak self] in
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(5)) } catch { return }
