@@ -23,7 +23,8 @@ private struct AppDetailHeader: View {
             Image(nsImage: row.icon).resizable().frame(width: 72, height: 72).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
                 Text(row.record.app.name).font(.title)
-                Text(row.record.app.version.description).foregroundStyle(.secondary).accessibilityIdentifier("installed-version")
+                Text(row.record.app.version.description).foregroundStyle(.secondary)
+                    .accessibilityValue(row.record.app.version.description).accessibilityIdentifier("installed-version")
                 if let candidate = row.record.candidate { Text("New version: \(candidate.version.description)") }
                 StatusTitle(status: row.record.status).accessibilityIdentifier("selected-status")
             }
