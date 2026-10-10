@@ -4,20 +4,6 @@ import LatestCore
 import LatestContracts
 import LatestTrust
 
-private actor ReplyGate {
-    private var continuation: CheckedContinuation<Data, Error>?
-    private var outcome: Result<Data, Error>?
-    func wait(_ continuation: CheckedContinuation<Data, Error>) {
-        if let outcome { continuation.resume(with: outcome) }
-        else { self.continuation = continuation }
-    }
-    func finish(_ result: Result<Data, Error>) {
-        guard outcome == nil else { return }
-        outcome = result
-        continuation?.resume(with: result); continuation = nil
-    }
-}
-
 @MainActor public final class BrokerClient {
     private var connections: [UUID: NSXPCConnection] = [:]
     private func invalidate(_ token: UUID) { connections.removeValue(forKey: token)?.invalidate() }
@@ -38,7 +24,7 @@ private actor ReplyGate {
         connections[token] = connection
         connection.setCodeSigningRequirement(requirement)
         connection.remoteObjectInterface = NSXPCInterface(with: LatestBrokerProtocol.self)
-        let gate = ReplyGate()
+        let gate = CompletionGate<Data>()
         connection.invalidationHandler = { Task { await gate.finish(.failure(LatestFailure.process("The update helper disconnected."))) } }
         connection.interruptionHandler = { Task { await gate.finish(.failure(LatestFailure.process("The update helper was interrupted."))) } }
         connection.resume()
@@ -47,8 +33,7 @@ private actor ReplyGate {
         let payload = try JSONEncoder().encode(claim)
         _ = try await withTaskCancellationHandler {
             try Task.checkCancellation()
-            return try await withCheckedThrowingContinuation { continuation in
-                Task { await gate.wait(continuation) }
+            let dispatch = Task { @MainActor in
                 guard let proxy = connection.remoteObjectProxyWithErrorHandler({ error in
                     Task { await gate.finish(.failure(LatestFailure.process(error.localizedDescription))) }
                 }) as? any LatestBrokerProtocol else {
@@ -62,8 +47,10 @@ private actor ReplyGate {
                     }
                 }
             }
+            defer { dispatch.cancel() }
+            return try await gate.wait()
         } onCancel: {
-            Task { @MainActor in await gate.finish(.failure(CancellationError())); self.invalidate(token) }
+            Task { @MainActor in await gate.finish(.failure(LatestFailure.cancelled)); self.invalidate(token) }
         }
     }
 }

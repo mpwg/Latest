@@ -39,6 +39,11 @@ def bootstrap():
         if reverse.returncode:
             run(["git", "apply", "--check", str(patch)], cwd=mas)
             run(["git", "apply", str(patch)], cwd=mas)
+    patch = ROOT / "scripts/mas-package-verification.patch"
+    reverse = subprocess.run(["git", "apply", "--reverse", "--check", str(patch)], cwd=mas, capture_output=True)
+    if reverse.returncode:
+        run(["git", "apply", "--check", str(patch)], cwd=mas)
+        run(["git", "apply", str(patch)], cwd=mas)
     run(["swift", "build", "-c", "release", "--disable-automatic-resolution", "--package-path", str(mas), "--product", "mas"])
     print("Verified Sparkle 2.10.0 and built mas v7.0.0 from its pinned source.")
 

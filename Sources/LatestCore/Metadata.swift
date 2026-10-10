@@ -25,8 +25,8 @@ public enum Metadata {
     public static func casks(_ data: Data) throws -> [CaskMetadata] {
         let object = try JSONSerialization.jsonObject(with: data)
         let list: [[String: Any]]
-        if let values = object as? [[String: Any]] { list = values }
-        else if let dictionary = object as? [String: Any], let values = dictionary["casks"] as? [[String: Any]] { list = values }
+        if let values = object as? [Any] { list = values.compactMap { $0 as? [String: Any] } }
+        else if let dictionary = object as? [String: Any], let values = dictionary["casks"] as? [Any] { list = values.compactMap { $0 as? [String: Any] } }
         else { throw LatestFailure.network("Invalid Homebrew metadata.") }
         return list.compactMap { entry in
             guard let token = entry["token"] as? String, validToken(token), let version = entry["version"] as? String else { return nil }

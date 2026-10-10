@@ -1,69 +1,99 @@
-# Latest
+# Latest — mpwg fork
 
-[![Translation status][image-1]][1]
+A native macOS 27+ application that inventories installed apps, reports their
+update provenance and performs user-initiated updates through Sparkle,
+Homebrew or a restricted App Store helper. The modernization starts from
+upstream 0.12-beta2. This fork is an independent project; releases and support
+belong to [mpwg/Latest](https://github.com/mpwg/Latest).
 
-This is Latest, a small utility app for the Mac. Latest is a free and open-source app for macOS that checks if all your apps are up to date. Get a quick overview of which apps changed and what changed and update them right away. Latest currently supports apps downloaded from the Mac App Store and apps that use Sparkle for updates, which covers most of the apps on the market.
+## Build and verify
 
-Latest is developed in my free time, so occasional updates may happen. Take a look at the [Issues][2] section to see what's coming. If you have an idea for a new feature, or encounter any bugs, feel free to open a new issue.
-I am thankful for contributions. Check out the section below for more information.
+Use Xcode 27 / Swift 6.4 and macOS 27 or newer:
 
-![Latest][image-2]
+```sh
+python3 scripts/bootstrap.py
+swift build
+.build/debug/LatestVerification
+python3 scripts/validate.py
+swift test --build-system native --enable-swift-testing --disable-xctest
+```
 
-## Installation
+The compiled verification executable also works with the macOS 27 Command
+Line Tools. Swift Testing and XCUITest require full Xcode. Open the shared
+Latest.xcodeproj scheme for native tests. Dependencies are pinned in
+Config/dependencies.json and mas's committed upstream Package.resolved;
+bootstrap applies the reviewed SDK and package-verification patches.
 
-There are multiple ways to install the app.
+Create an app bundle with your Apple Development identity and team:
 
-### Download the App
+```sh
+python3 scripts/package_app.py --identity YOUR_SIGNING_IDENTITY --team YOUR_TEAM_ID
+```
 
-The easiest way to install Latest is to [download][3] the latest release as an app. You unzip the download by double-clicking on it (if that does not happen automatically) and then move the `Latest.app` into the `Applications` folder.
+A bundle signed ad hoc is only a packaging artifact: it cannot use the privileged
+broker and cannot load non-platform frameworks under production library
+validation. Developer-signed bundles keep hardened runtime and library validation.
+No packaging command registers a helper or modifies installed applications.
 
-If you would like to check out earlier versions, head over to the [Releases][4] page to browse the history of Latest.
+For controlled installation acceptance, use the
+[disposable native fixtures](docs/native-fixtures.md). They provide two own
+signed app versions, separate preferences, a local HTTPS feed and a real cask
+inside an isolated Homebrew prefix, with explicit cleanup instructions. Fixture
+preparation is separate from successfully updating an app through Latest.
 
-### Homebrew Cask
+## Features and boundaries
 
-Latest can also be installed via [Homebrew Cask][5]. If you have not installed Homebrew, follow the simple instructions [here][6].
-After that, run `brew install --cask latest` to install the current version of Latest.
+- Native SwiftUI inventory, search, source filtering, stable name/path sorting,
+  source sorting, larger text, plain-text release notes and local diagnostics.
+- Explicit unknown, incompatible, up-to-date, available, ignored and skipped states.
+- App-level stable/beta channels; major upgrades require confirmation and are
+  excluded from bulk updates.
+- Configurable scan directories, including disabling standard application folders.
+- One-time migration of old location, ignored-app and visibility preferences.
+- Installed Homebrew casks require a canonical local registration. Catalogue
+  hints are optional and never authorize an installation. Homebrew is optional.
+- Sparkle 2.10 uses public APIs and the exact selected bundle. Explicitly
+  incompatible architecture URLs are rejected. Dynamic feeds without verifiable
+  metadata need the application's own updater.
+- App Store updates use pinned mas v7.0.0 behind a mutually authenticated broker.
+  Duplicate instances, wrapped iOS apps and nonstandard locations open App Store.
+  Package fallback requires authenticated Apple signing, the selected bundle and
+  a restricted payload; packages with scripts or unverifiable metadata are rejected.
+- HTTPS-only bounded responses, last-known-good cache with stale state, scan
+  generations and one terminal update outcome.
 
-### Build from Source
+The helper is enabled explicitly in Settings and approved in System Settings.
+Preflight can be cancelled; once an installer is handed off, the bounded job
+finishes safely even if the client disconnects. Closing/quitting while updates
+run is prevented by the application. Success requires checking the installed
+bundle again, not just a successful process exit.
 
-**To build Latest, Xcode 11 and Swift 5 is required.**
+English is the repository and source language. The new UI supports English and
+German; legacy translation resources remain as references for future migrations.
 
-You can build Latest directly on your machine. To do that, you have to download the source code by cloning the repository: `git clone --recurse-submodules git@github.com:mangerlahn/Latest.git`.
+## Release status
 
-Then you can open the `Latest.xcodeproj` and hit *Build and Run*. Make sure that the `Latest` scheme is selected.
+**The modernization is not fully accepted for production.** See
+[acceptance](docs/acceptance.md) for current evidence and remaining native
+installation, accessibility, signing, notarization and self-update gates.
+The verified implementation at `2731361` passed both Xcode 27 CI runs,
+including seven Swift Testing tests and five native UI tests. The
+[test coverage](docs/test-coverage.md#native-ui-evidence-for-2731361) lists exactly
+what those isolated UI fixtures establish. Real provider installations,
+privileged broker behaviour and full accessibility still need separate evidence.
+No release has been published and no user application was updated during tests.
 
-## Contribution
+The fork's public update key and feed are in Config/updates.json. The private key
+is excluded under .release/ and must be backed up securely. Release packaging
+requires your own Developer ID, notarization credentials and the matching
+Ed25519 seed. Never commit or print a private signing key.
 
-I am thankful for all contributions to the project. You can contribute typo-fixes, translations, code and of course suggestions, wishes, and bug reports.
+See [architecture](docs/modernization.md), [beta audit](docs/audit-2026-10-09.md),
+[test coverage](docs/test-coverage.md) and [security boundary](docs/security-boundary.md).
 
-### Translations
+## Upstream and licence
 
-The text used in Latest is hosted by the kind people over at [Weblate][7]. If you would like to add a new language, or improve an existing one, [here][8] is your starting point.
-
-[![Translation status][image-3]][9]
-
-### Code
-
-Take a look at the [Issues][10] section to see what you can do. If you have your own idea, and it does not appear in the issues list, please add it first. I don't think that I would reject any pull request, but it is useful to know about your idea earlier. Imagine two people have the same idea at the same time and both put a lot of work into that just to find out that someone else has made the same when it's too late.  
-
-I would like to assign every issue to the person working on that particular thing, so if you would like to implement something, leave a small note in the issue. I will assign the issue to you and it's yours.
-
-## Donation
-
-As mentioned above, Latest is free for you to use. I work on the app in my spare time. If you would like to support the development by donating, you can do so [here][11].
-
-[1]:	https://hosted.weblate.org/engage/latest/
-[2]:	https://github.com/mangerlahn/latest/issues
-[3]:	https://max.codes/latest/Latest.zip
-[4]:	https://github.com/mangerlahn/Latest/releases
-[5]:	https://github.com/Homebrew/homebrew-cask
-[6]:	https://brew.sh
-[7]:	https://weblate.org/
-[8]:	https://hosted.weblate.org/engage/latest/
-[9]:	https://hosted.weblate.org/engage/latest/
-[10]:	https://github.com/mangerlahn/latest/issues
-[11]:	https://max.codes/latest/donate
-
-[image-1]:	https://hosted.weblate.org/widgets/latest/-/svg-badge.svg
-[image-2]:	./latest.png
-[image-3]:	https://hosted.weblate.org/widgets/latest/-/multi-auto.svg
+Based on [Max Langer's Latest](https://github.com/mangerlahn/Latest).
+Preserve its copyright and [GPL-3.0 licence](LICENSE.md).
+Sparkle and mas retain their respective upstream licences; packaging includes
+the application's licence and dependency notices.
