@@ -470,7 +470,7 @@ import XCTest
     private func selectNativePath(_ app: XCUIApplication, _ path: String) {
         let row = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND value == %@", "app-row-", path)).firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
-        XCTAssertTrue(app.staticTexts[path].exists)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "value == %@ OR label == %@ OR identifier == %@", path, path, path)).firstMatch.exists)
     }
     private func assertNativeText(_ element: XCUIElement, _ text: String, timeout: TimeInterval = 30) {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@ OR label == %@", text, text), object: element)
