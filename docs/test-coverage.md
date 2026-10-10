@@ -1,5 +1,13 @@
 # Test coverage and evidence
 
+## L17 native major and bulk evidence
+
+[Four actual native cases](major-bulk-acceptance.md) at `11d08a6` verify major
+cancel/consent, explicit provider-major policy, changed-consent rejection and
+bulk eligibility with two real signed installations and unchanged excluded apps.
+Controlled real HTTPS gates prove scan-time and duplicate-job protection. The
+installed version's live native accessibility value is checked after replacement.
+
 ## L16 native preference evidence
 
 [Two actual native cases](app-preferences-acceptance.md) at `2743f68` cover

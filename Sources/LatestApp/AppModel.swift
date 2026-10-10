@@ -35,7 +35,13 @@ import LatestPlatform
     var notes = ""
     var notesToken = UUID()
     var needsBrokerApproval = false
-    var activeUpdates: Int { rows.filter { $0.event != nil && $0.event?.isTerminal == false }.count }
+    var activeUpdates: Int { jobs.count }
+    var hasBulkUpdates: Bool {
+        rows.contains { row in
+            !isUpdating(row.id) && row.record.candidate.map { Presentation.bulkEligible($0, status: row.record.status) } == true
+        }
+    }
+    func isUpdating(_ id: AppInstanceID) -> Bool { jobs[id] != nil }
     @ObservationIgnored var showSettingsHandler: () -> Void = {}
     let diagnosticURL: URL
     private let store: PreferencesStore
@@ -197,13 +203,15 @@ import LatestPlatform
     }
     func clearSkip(_ row: AppRow) { preferences.skippedVersions.removeValue(forKey: row.id.path); save(); refresh() }
     func requestUpdate(_ row: AppRow) {
-        guard row.record.status == .available || row.record.status == .external, let candidate = row.record.candidate else { return }
+        guard !scanning, !isUpdating(row.id), row.record.status == .available || row.record.status == .external,
+              let candidate = row.record.candidate else { return }
         if case .external(let url) = candidate.action { NSWorkspace.shared.open(url); return }
         if candidate.isMajorUpgrade { pendingMajor = candidate; confirmingMajor = true }
         else { perform(candidate) }
     }
-    func confirmMajor() { if let pendingMajor { perform(pendingMajor) }; pendingMajor = nil }
+    func confirmMajor() { if !scanning, let pendingMajor { perform(pendingMajor) }; pendingMajor = nil }
     func updateAll() {
+        guard !scanning, activeUpdates == 0 else { return }
         for row in rows where row.record.candidate.map({ Presentation.bulkEligible($0, status: row.record.status) }) == true { requestUpdate(row) }
     }
     func cancel(_ row: AppRow) {

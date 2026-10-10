@@ -23,6 +23,12 @@ ignore/reversal, version skipping and clearing, later-version availability and
 Stable/Beta persistence for the selected canonical instance. It uses actual
 signed bundles and production provider checks, preserving every fixture bundle.
 
+The [L17 native major/bulk suite](docs/major-bulk-acceptance.md) verifies explicit
+major consent, provider-declared major updates and rejection of a newly changed
+consent requirement. Bulk updates include only available eligible minor targets.
+Scan-time and repeated starts are guarded, and selected version accessibility
+values stay current after installation.
+
 ## Build and verify
 
 Use Xcode 27 / Swift 6.4 and macOS 27 or newer:
