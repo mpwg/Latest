@@ -33,6 +33,8 @@ Overall acceptance: open.
 fixes the Unknown Source filter. Seven native UI tests and seven Swift contracts
 passed on `b61f414`; 84 invariants and warnings-as-errors Release build passed.
 The read-only inventory never establishes a provider installation result.
+Both filter/sort tests also pass after integration at `4e77913`, with current
+Release build, 84 invariants, seven Swift contracts and seven appcast regressions.
 
 L28 at `3ba5c3d` passes seven Python regressions including actual Swift Ed25519
 signing/verification, seven Swift Testing contracts, 84 compiled invariants and

@@ -13,6 +13,16 @@ These fixtures exercise actual native SwiftUI views and the production
 Presentation filter/sort and preference-save paths. They perform no provider
 check or installation.
 
+Integration recheck at `4e77913` on 2026-10-10 (same environment/signing team):
+both source-filter and visibility/stable-instance-sort XCUITests passed again,
+zero failures, after integrating current L05/L28 main changes. Retained evidence:
+`.build/l15-current/filter-sort.xcresult`, `native-tests.log` and
+`source-evidence.json`. The warnings-as-errors Release build, 84 compiled
+invariants, seven Swift Testing contracts, 74 localization keys and all seven
+appcast/signature regressions passed on that integrated source. The appcast
+regression requires building the current LatestRelease Debug tool first;
+an existing binary from another branch is not current evidence.
+
 ## Reproduce
 
 With full Xcode 27 and an own Apple Development identity/team:
