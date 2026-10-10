@@ -84,6 +84,7 @@ def main():
     result = dict(before='1.0.0 (1)', after='1.1.0 (2)', bundleID=after['CFBundleIdentifier'], path=str(installed),
                   sourceRevision=native_fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
                   applicationModelSHA256=hashlib.sha256((REPO / 'Sources/LatestApp/AppModel.swift').read_bytes()).hexdigest(),
+                  testSourceSHA256=hashlib.sha256((REPO / 'Tests/LatestUITests/LatestUITests.swift').read_bytes()).hexdigest(),
                   nativeTest='LatestUITests/testNativeHomebrewUpdate', resultBundle=str(result_bundle),
                   unrelatedFixturesUnchanged=True, hostCasksUnchanged=True, observedUpgradeProcesses=sorted(observed),
                   upgradeArguments=['upgrade', '--cask', '--no-ask', native_fixtures.TOKEN])

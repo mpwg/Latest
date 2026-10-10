@@ -55,6 +55,8 @@ import XCTest
         app.launchArguments = ["--native-install-test-directory", root, "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launchEnvironment["XDG_CONFIG_HOME"] = root + "/user-config"
         app.launch()
+        let window = app.windows["Latest"]
+        XCTAssertTrue(window.waitForExistence(timeout: 10))
         let row = app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.Homebrew").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 60))
         row.click()
@@ -62,14 +64,14 @@ import XCTest
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: update)
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 60), .completed)
         XCTAssertTrue(app.staticTexts[root + "/applications/Latest Homebrew Fixture.app"].exists)
-        let before = XCTAttachment(screenshot: app.screenshot())
+        let before = XCTAttachment(screenshot: window.screenshot())
         before.name = "L03 real managed baseline before update"; before.lifetime = .keepAlways
         add(before)
         update.click()
         XCTAssertTrue(app.staticTexts["1.1.0 (2)"].firstMatch.waitForExistence(timeout: 90))
         XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
         XCTAssertFalse(app.alerts["Update Failed"].exists)
-        let after = XCTAttachment(screenshot: app.screenshot())
+        let after = XCTAttachment(screenshot: window.screenshot())
         after.name = "L03 installed version after production verification"; after.lifetime = .keepAlways
         add(after)
         app.terminate()
