@@ -22,11 +22,19 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | Native installation / receipts / architecture | not verifiable | Xcode / controlled signed test apps |
 | Keyboard / VoiceOver / large text | not verifiable | Native interaction |
 | Release signing / notarization / self-update | not verifiable | Own Developer ID / notarization / feed |
+| Appcast history and complete-feed signatures | passed | L28 seven regressions on 3ba5c3d: preserved history/notes, ordering, first/empty feed, invalid/duplicate metadata and actual complete-feed signing/tamper rejection |
 | README reflects current implementation | passed | Own fork, build/verification commands, features, restrictions and release status |
 
 Overall acceptance: open.
 
 ## Subsequent native implementation evidence
+
+L28 at `3ba5c3d` passes seven Python regressions including actual Swift Ed25519
+signing/verification, seven Swift Testing contracts, 84 compiled invariants and
+the warnings-as-errors build. [Release instructions](releasing.md) document
+mandatory explicit history selection and authenticated merging. This does not
+establish notarization, self-update or publication acceptance; the owner deferred
+release credentials on 2026-10-10.
 
 [L04](homebrew-native-rejection.md) adds four real native rejection/recovery
 checks on `eec132b`, with no upgrade process for rejected provenance/instance/
