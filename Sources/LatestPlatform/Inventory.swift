@@ -1,6 +1,7 @@
 import Foundation
 import CryptoKit
 import LatestCore
+import LatestTrust
 
 public struct InventoryResult: Sendable {
     public let apps: [AppSnapshot]
@@ -47,20 +48,41 @@ public actor AppInventory {
         let receipt = canonical.appendingPathComponent("Contents/_MASReceipt/receipt")
         let receiptValues = try? receipt.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
         let hasReceipt = receiptValues?.isRegularFile == true && (receiptValues?.fileSize ?? 0) > 0
+        let receiptDigest: String
+        if hasReceipt, (receiptValues?.fileSize ?? Int.max) <= 1_000_000, let receiptData = try? Data(contentsOf: receipt) {
+            receiptDigest = SHA256.hash(data: receiptData).map { String(format: "%02x", $0) }.joined()
+        } else { receiptDigest = hasReceipt ? "unreadable-or-oversized" : "none" }
         var architectures = Set<Architecture>()
+        var executableIdentity = "missing"
         if let executable = info["CFBundleExecutable"] as? String, executable == URL(fileURLWithPath: executable).lastPathComponent,
            let handle = try? FileHandle(forReadingFrom: canonical.appendingPathComponent("Contents/MacOS").appendingPathComponent(executable)) {
             defer { try? handle.close() }
+            executableIdentity = fileIdentity(canonical.appendingPathComponent("Contents/MacOS").appendingPathComponent(executable))
             if let header = try? handle.read(upToCount: 4096) { architectures = MachO.architectures(header) }
         }
         let feed = (info["SUFeedURL"] as? String).flatMap(URL.init(string:)).flatMap { $0.scheme == "https" && $0.user == nil && $0.password == nil ? $0 : nil }
         let modification = (attributes[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0
-        let fingerprint = SHA256.hash(data: data + Data("\(modification)|\(hasReceipt)".utf8)).map { String(format: "%02x", $0) }.joined()
+        let signing = CodeTrust.signingIdentity(canonical)
+        let architectureIdentity = architectures.map(\.rawValue).sorted().joined(separator: ",")
+        let identity = "\(modification)|\(hasReceipt)|\(receiptDigest)|\(fileIdentity(canonical))|\(executableIdentity)|\(architectureIdentity)|\(signing?.digest ?? "unsigned")|\(signing?.team ?? "")"
+        let fingerprint = SHA256.hash(data: data + Data(identity.utf8)).map { String(format: "%02x", $0) }.joined()
         return AppSnapshot(url: canonical, bundleID: bundleID, name: info["CFBundleDisplayName"] as? String ?? info["CFBundleName"] as? String ?? canonical.deletingPathExtension().lastPathComponent,
                            version: .init(display: info["CFBundleShortVersionString"] as? String, build: info["CFBundleVersion"] as? String),
                            architectures: architectures, hasReceipt: hasReceipt,
                            isWrapped: FileManager.default.fileExists(atPath: canonical.appendingPathComponent("Wrapper").path),
-                           feedURL: feed, fingerprint: fingerprint)
+                           feedURL: feed, signatureTeam: signing?.team, fingerprint: fingerprint)
+    }
+    private static func fileIdentity(_ url: URL) -> String {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path) else { return "missing" }
+        return [attributes[.systemNumber], attributes[.systemFileNumber], attributes[.size], attributes[.modificationDate], attributes[.creationDate]]
+            .map { String(describing: $0 ?? "missing") }.joined(separator: "|")
+    }
+    public static func validateForInstallation(_ expected: AppSnapshot) throws -> AppSnapshot {
+        guard let fresh = snapshot(at: expected.id.url), fresh.fingerprint == expected.fingerprint else {
+            throw LatestFailure.rejected("The selected app changed. Check for updates again.")
+        }
+        try CodeTrust.verifyPresentSignature(fresh.id.url)
+        return fresh
     }
 }
 

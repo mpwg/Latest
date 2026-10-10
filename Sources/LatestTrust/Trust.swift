@@ -5,6 +5,27 @@ import LatestCore
 import LatestContracts
 
 public enum CodeTrust {
+    public struct SigningIdentity: Sendable {
+        public let digest: String
+        public let team: String?
+    }
+    /// Fast signature metadata is identity evidence; integrity is checked separately before installation.
+    public static func signingIdentity(_ url: URL) -> SigningIdentity? {
+        var code: SecStaticCode?
+        var information: CFDictionary?
+        guard SecStaticCodeCreateWithPath(url as CFURL, [], &code) == errSecSuccess, let code,
+              SecCodeCopySigningInformation(code, SecCSFlags(rawValue: kSecCSSigningInformation), &information) == errSecSuccess,
+              let values = information as? [String: Any], let hash = values[kSecCodeInfoUnique as String] as? Data else { return nil }
+        return .init(digest: hash.map { String(format: "%02x", $0) }.joined(), team: values[kSecCodeInfoTeamIdentifier as String] as? String)
+    }
+    public static func verifyPresentSignature(_ url: URL) throws {
+        guard signingIdentity(url) != nil else { return }
+        var code: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(url as CFURL, [], &code) == errSecSuccess, let code,
+              SecStaticCodeCheckValidity(code, SecCSFlags(rawValue: kSecCSStrictValidate | kSecCSCheckAllArchitectures), nil) == errSecSuccess else {
+            throw LatestFailure.rejected("Code signature verification failed.")
+        }
+    }
     public static func verify(_ url: URL, requirement text: String) throws {
         var code: SecStaticCode?
         var requirement: SecRequirement?
