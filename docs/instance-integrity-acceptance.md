@@ -1,6 +1,6 @@
 # Native app-instance integrity — #51
 
-Observed on 2026-10-10 at `dbd576e`, macOS 27.0.1 / Xcode 27.0 / Swift 6.4,
+Observed on 2026-10-10 at `379cacc`, macOS 27.0.1 / Xcode 27.0 / Swift 6.4,
 arm64. Client, runner and fixture apps use the own Apple Development team
 `PZV43D6HWT`. These cases use actual selected bundles, native Update actions,
 the production preflight and a real signed Sparkle installation.
@@ -34,7 +34,8 @@ signed selected-instance installation.
 | Evidence and README | passed | Native xcresults, source hashes, environment, mutation preconditions, journals and preserved target/control results retained; README links reproduction |
 
 Fast signing metadata is identity evidence, not full cryptographic validation.
-Before installation, a present signature must pass strict validation for every
+Signature preflight runs off the UI actor and honors cancellation. Before
+installation, a present signature must pass strict validation for every
 architecture; identity is read again afterwards. Unsigned hosts remain supported
 where the update provider separately establishes provenance. The signature check
 applies to all install paths; positive Store acceptance still needs its real target.

@@ -29,7 +29,7 @@ Overall acceptance: open.
 
 ## Subsequent native implementation evidence
 
-[#51](instance-integrity-acceptance.md) at `dbd576e` adds actual native rejection
+[#51](instance-integrity-acceptance.md) at `379cacc` adds actual native rejection
 of signed executable replacement and signed-code tampering despite unchanged
 Info.plist and restored times. Both fail before provider work and preserve altered
 target/control bytes. A valid target still installs through the actual UI.

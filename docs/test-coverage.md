@@ -2,7 +2,7 @@
 
 ## Native executable-instance integrity
 
-[#51](instance-integrity-acceptance.md) at `dbd576e` verifies two real preflight
+[#51](instance-integrity-acceptance.md) at `379cacc` verifies two real preflight
 rejections with unchanged metadata/times and a real positive signed installation.
 Native journals prove rejection before provider work; independent signing checks
 establish valid replacement versus intentionally invalid tampering.
