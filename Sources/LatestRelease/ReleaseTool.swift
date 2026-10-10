@@ -10,7 +10,15 @@ import LatestCore
     }
     static func run() throws {
         let arguments = CommandLine.arguments
-        guard arguments.count >= 3 else { throw LatestFailure.rejected("Usage: LatestRelease keygen <private-key-file> | public-key <key-file> | sign <key-file-or-dash> <input> | sign-feed <key-file-or-dash> <input> <output>") }
+        guard arguments.count >= 3 else { throw LatestFailure.rejected("Usage: LatestRelease keygen <private-key-file> | public-key <key-file> | sign <key-file-or-dash> <input> | sign-feed <key-file-or-dash> <input> <output> | verify-feed <public-key> <input>") }
+        if arguments[1] == "verify-feed", arguments.count == 4 {
+            let data = arguments[3] == "-" ? FileHandle.standardInput.readDataToEndOfFile()
+                : try Data(contentsOf: URL(fileURLWithPath: arguments[3]))
+            guard try ReleaseSigning.verifyFeed(data, publicKey: arguments[2]) else {
+                throw LatestFailure.rejected("The existing appcast signature or signed length is invalid.")
+            }
+            return
+        }
         if arguments[1] == "keygen" {
             let url = URL(fileURLWithPath: arguments[2])
             guard !FileManager.default.fileExists(atPath: url.path) else { throw LatestFailure.rejected("Refusing to replace an existing signing key.") }
