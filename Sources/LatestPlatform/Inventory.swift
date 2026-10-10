@@ -82,7 +82,10 @@ public actor AppInventory {
             throw LatestFailure.rejected("The selected app changed. Check for updates again.")
         }
         try CodeTrust.verifyPresentSignature(fresh.id.url)
-        return fresh
+        guard let verified = snapshot(at: expected.id.url), verified.fingerprint == fresh.fingerprint else {
+            throw LatestFailure.rejected("The selected app changed. Check for updates again.")
+        }
+        return verified
     }
 }
 
