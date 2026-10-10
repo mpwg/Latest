@@ -14,10 +14,10 @@ private struct GeneralSettings: View {
     @Bindable var model: AppModel
     var body: some View {
         Form {
-            Toggle("Show Up-to-date Apps", isOn: $model.preferences.showCurrent)
-            Toggle("Show Ignored and Skipped Apps", isOn: $model.preferences.showIgnored)
-            Toggle("Show Unknown and Incompatible Apps", isOn: $model.preferences.showUnknown)
-            Toggle("Sort by Source", isOn: $model.preferences.sortBySource)
+            Toggle("Show Up-to-date Apps", isOn: $model.preferences.showCurrent).accessibilityIdentifier("show-current")
+            Toggle("Show Ignored and Skipped Apps", isOn: $model.preferences.showIgnored).accessibilityIdentifier("show-ignored")
+            Toggle("Show Unknown and Incompatible Apps", isOn: $model.preferences.showUnknown).accessibilityIdentifier("show-unknown")
+            Toggle("Sort by Source", isOn: $model.preferences.sortBySource).accessibilityIdentifier("sort-by-source")
             Toggle("Show Informational Catalogue Hints", isOn: $model.preferences.showCatalogueHints)
             LabeledContent("Text Size") { Slider(value: $model.preferences.fontScale, in: 1...1.6).frame(width: 160) }
             Section("App Store Updates") {
