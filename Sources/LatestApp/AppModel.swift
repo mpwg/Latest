@@ -232,7 +232,7 @@ import LatestPlatform
             var jobToken: UUID?
             do {
                 let token = try await jobLedger.start(candidate.app.id); jobToken = token
-                let fresh = try AppInventory.validateForInstallation(candidate.app)
+                let fresh = try await AppInventory.validateForInstallation(candidate.app)
                 await accept(.init(.checking), candidate: candidate, token: token)
                 let context = CheckContext(apps: rows.map { $0.record.app }, preferences: preferences)
                 switch candidate.action {

@@ -77,7 +77,18 @@ public actor AppInventory {
         return [attributes[.systemNumber], attributes[.systemFileNumber], attributes[.size], attributes[.modificationDate], attributes[.creationDate]]
             .map { String(describing: $0 ?? "missing") }.joined(separator: "|")
     }
-    public static func validateForInstallation(_ expected: AppSnapshot) throws -> AppSnapshot {
+    public static func validateForInstallation(_ expected: AppSnapshot) async throws -> AppSnapshot {
+        let validation = Task.detached(priority: .userInitiated) { () throws -> AppSnapshot in
+            try Task.checkCancellation()
+            let result = try validateIdentityAndSignature(expected)
+            try Task.checkCancellation()
+            return result
+        }
+        return try await withTaskCancellationHandler {
+            try await validation.value
+        } onCancel: { validation.cancel() }
+    }
+    private static func validateIdentityAndSignature(_ expected: AppSnapshot) throws -> AppSnapshot {
         guard let fresh = snapshot(at: expected.id.url), fresh.fingerprint == expected.fingerprint else {
             throw LatestFailure.rejected("The selected app changed. Check for updates again.")
         }
