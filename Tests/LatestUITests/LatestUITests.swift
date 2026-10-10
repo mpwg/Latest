@@ -501,7 +501,9 @@ import XCTest
         let values = app.staticTexts.matching(identifier: "installed-version").allElementsBoundByIndex.map { "label=\($0.label), value=\(String(describing: $0.value))" }
         FileHandle.standardOutput.write(Data(("L17_INSTALLED_VALUES " + values.joined(separator: "; ") + "\n").utf8))
         let screenshot = app.windows["Latest"].screenshot()
-        try screenshot.pngRepresentation.write(to: URL(fileURLWithPath: root + "/evidence/l17/major-native-window.png"))
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = "L17 native major post-install metadata"; attachment.lifetime = .keepAlways
+        add(attachment)
         FileHandle.standardOutput.write(Data((app.debugDescription + "\n").utf8))
         assertNativeText(app.staticTexts["installed-version"], targetVersion, timeout: 5)
         app.terminate()
