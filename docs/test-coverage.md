@@ -1,5 +1,11 @@
 # Test coverage and evidence
 
+[L15](ui-filter-sort-acceptance.md) adds current native evidence on `b61f414`:
+every source/reset, combined status visibility, both stable sort orders and
+exact duplicate-instance selection across changed scan enumeration. The entire
+ordinary suite passes seven UI tests plus seven Swift contracts; real provider
+checks and installation cases retain their separate environments and evidence.
+
 `LatestVerification` executes production core/adapter code with controlled
 fixtures on macOS 27. It performs no root installation and no user-app update.
 `LatestCoreTests` provides the Xcode Swift Testing suite; `LatestUITests` uses
