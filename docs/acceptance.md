@@ -29,6 +29,12 @@ Overall acceptance: open.
 
 ## Subsequent native implementation evidence
 
+[L19](directory-acceptance.md) passed four actual native cases at
+`53dc1df`: native folder selection/exclusion/removal and normal restart, populated
+and empty test-volume ejection/recovery, and delayed real HTTPS scan supersession.
+It fixes the observed native removal crash and warning-only monitoring gap. The
+final generation guards also pass this complete native sequence.
+
 [#51](instance-integrity-acceptance.md) at `379cacc` adds actual native rejection
 of signed executable replacement and signed-code tampering despite unchanged
 Info.plist and restored times. Both fail before provider work and preserve altered
