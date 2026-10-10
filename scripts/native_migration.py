@@ -30,6 +30,18 @@ def file_digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
 
 
+def restore_legacy_check_time(before, snapshot):
+    after = legacy_values()
+    changed = {key for key in set(before or {}) | set(after or {}) if (before or {}).get(key) != (after or {}).get(key)}
+    if changed == {'SULastCheckTime'} and before is not None:
+        # Normal discovery checks the installed legacy app; preserve its prior runtime metadata.
+        subprocess.run(['defaults', 'import', 'com.max-langer.Latest', str(snapshot)], check=True, capture_output=True)
+        return True
+    if changed:
+        raise ValueError('Unexpected ordinary legacy changes; refusing to overwrite unrelated settings.')
+    return False
+
+
 def run_case(case):
     evidence = ROOT / 'evidence/l18' / case / uuid.uuid4().hex
     evidence.mkdir(parents=True, exist_ok=True)
@@ -94,10 +106,11 @@ def run_case(case):
         expected = 3 if case == 'valid' else 2
         if len(checkpoints) != expected:
             raise ValueError('A required actual migration/restart checkpoint did not execute.')
-        after_legacy = legacy_fingerprint()
         after_values = legacy_values()
         if after_values is not None:
             (evidence / 'ordinary-legacy-after.plist').write_bytes(plistlib.dumps(after_values))
+        timestamp_restored = restore_legacy_check_time(before_values, evidence / 'ordinary-legacy-before.plist')
+        after_legacy = legacy_fingerprint()
         after_host = file_digest(host_preferences)
         (evidence / 'after.json').write_text(json.dumps(dict(legacySHA256=after_legacy, hostFileSHA256=after_host), indent=2) + '\n')
         if before_legacy != after_legacy or before_host != after_host:
@@ -109,11 +122,13 @@ def run_case(case):
                       architecture='arm64', signingTeam=fixtures.manifest()['fixtures'][0]['team'], profile=str(profile), legacyDomain=domain,
                       launchMode='Normal signed app, no ui-testing or native-install-test-directory; filesystem home isolated and legacy CFPreferences suite aliased in Debug only.',
                       checkpoints=checkpoints, **outcome, ordinaryUserPreferencesUnchanged=True,
+                      ordinaryCheckTimestampRestored=timestamp_restored,
                       sourceSHA256={str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest()
                                     for path in [REPO / 'Sources/LatestApp/AppModel.swift', REPO / 'Sources/LatestCore/PreferencesStore.swift', REPO / 'Tests/LatestUITests/LatestUITests.swift', Path(__file__)]})
         (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(f'Native normal migration {case}: passed; normal quits/restarts and unchanged ordinary user preferences. Evidence: {evidence}')
     finally:
+        restore_legacy_check_time(before_values, evidence / 'ordinary-legacy-before.plist')
         subprocess.run(['defaults', 'delete', domain], check=True, capture_output=True)
 
 
