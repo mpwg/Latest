@@ -554,7 +554,10 @@ import XCTest
 
     private func migrationValue(_ name: String) throws -> String {
         let values = ProcessInfo.processInfo.environment
-        return try XCTUnwrap(values[name] ?? values["TEST_RUNNER_" + name], "An explicit isolated native migration profile is required.")
+        guard let value = values[name] ?? values["TEST_RUNNER_" + name] else {
+            throw XCTSkip("An explicit isolated native migration profile is required.")
+        }
+        return value
     }
     private func migrationApp() throws -> XCUIApplication {
         let app = XCUIApplication()
