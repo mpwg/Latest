@@ -13,7 +13,7 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | Swift 6 core and comparison contracts | passed | Compiled invariant suite, including symmetric source policies and hash/equality |
 | Canonical instances / scan generations | passed | Current metadata, registered/unowned apps, removed/late results |
 | HTTPS / status / bounds / cache | passed | Production client with deterministic URLProtocol transport fixtures |
-| Homebrew ownership / targeted updates | open | Local registered fixture and targeted process passed; real controlled cask update outstanding |
+| Homebrew ownership / targeted updates | open | L03 real native UI cask update 1.0.0 → 1.1.0 passed in an isolated Homebrew prefix; L04 native provenance-loss/changed-instance/failure checks remain open |
 | Bundled mas / restricted broker | open | Compiled/pinned tools, own/foreign signer checks, request and package policy passed; native privileged request/install outstanding |
 | Sparkle 2.10.0 / lifecycle | open | Pinned distribution and main-actor adapter build passed; controlled signed appcast install outstanding |
 | SwiftUI / filtering / ignore / channels / migration | open | Five native XCUITests passed on 2731361: search, selection/notes, ignore/restart, German labels, identifiers/screenshot. Source filters, sorting, channels, skip/major/bulk actions and normal signed-app migration remain open |
@@ -25,6 +25,17 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | README reflects current implementation | passed | Own fork, build/verification commands, features, restrictions and release status |
 
 Overall acceptance: open.
+
+## Subsequent native implementation evidence
+
+[L03](homebrew-native-acceptance.md) verifies `9cbec3d` on macOS 27.0.1 with
+local Xcode 27.0 / Swift 6.4: one actual Homebrew-update XCUITest passed, seven
+Swift tests and 84 compiled invariants passed. Real window screenshots and
+observed targeted brew arguments match the installed bundle before/after.
+The new optional installation test does not run against synthetic `--ui-testing`
+inventory. The earlier CI section below remains explicitly scoped to 2731361;
+the integrated L01/L02 main commit `a1903b8` also passed
+[run 38032841390](https://github.com/mpwg/Latest/actions/runs/38032841390).
 
 ## Current CI evidence for 2731361
 
