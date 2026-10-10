@@ -268,4 +268,42 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
         app.terminate()
     }
+
+    private func rejectedSparkle(_ reason: String, status: String) throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        let row = app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.Sparkle").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
+        XCTAssertTrue(app.staticTexts[root + "/applications/Latest Sparkle Fixture.app"].exists)
+        XCTAssertTrue(app.staticTexts[reason].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.staticTexts[status].firstMatch.exists)
+        XCTAssertFalse(app.buttons["update-selected"].isEnabled)
+        XCTAssertFalse(app.buttons["cancel-update"].exists)
+        app.terminate()
+    }
+
+    func testNativeSparkleArchitectureRejected() throws {
+        try rejectedSparkle("This Sparkle update targets a different architecture or insecure URL. Use the app's own updater.", status: "Status Unknown")
+    }
+    func testNativeSparkleMinimumOSRejected() throws {
+        try rejectedSparkle("The update requires a newer operating system.", status: "Incompatible Update")
+    }
+    func testNativeSparkleIncomparableVersion() throws {
+        try rejectedSparkle("The versions cannot be compared reliably.", status: "Status Unknown")
+    }
+    func testNativeSparkleBuildPolicy() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectNativeSparkle(app, root: root)
+        XCTAssertTrue(app.staticTexts["New version: 0.9.0 (2)"].exists)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["0.9.0 (2)"].firstMatch.waitForExistence(timeout: 120))
+        XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
+        app.terminate(); app.launch()
+        let row = app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.Sparkle").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
+        XCTAssertTrue(app.staticTexts["0.9.0 (2)"].firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
+        app.terminate()
+    }
 }
