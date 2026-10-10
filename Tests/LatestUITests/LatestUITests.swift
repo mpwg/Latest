@@ -601,7 +601,7 @@ import XCTest
         let pathField = app.textFields["PathTextField"]
         XCTAssertTrue(pathField.waitForExistence(timeout: 10))
         pathField.typeText(path); app.typeKey(.return, modifierFlags: [])
-        app.windows.descendants(matching: .button).matching(identifier: "Open").firstMatch.click()
+        app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue(directoryControl(settings, "enabled", path).waitForExistence(timeout: 10))
     }
     private func waitForNativeAbsence(_ app: XCUIApplication, identifier: String) {
@@ -615,10 +615,12 @@ import XCTest
         let app = nativeApp(root)
         let identifier = "app-row-io.github.mpwg.Latest.NativeFixture.L19.Initial"
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: identifier).firstMatch.waitForExistence(timeout: 30))
+        assertMatrixPaths(app, [initial + "/Latest L19 Initial Fixture.app"])
         let settings = directorySettings(app)
         assertToggle(settings, "directory-enabled-/Applications", false)
         directoryControl(settings, "enabled", initial).click()
         waitForNativeAbsence(app, identifier: identifier)
+        assertMatrixPaths(app, [])
         directoryStage("DISABLED", root: root)
         directoryControl(settings, "enabled", initial).click()
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: identifier).firstMatch.waitForExistence(timeout: 30))
@@ -626,6 +628,7 @@ import XCTest
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.L19.Added").firstMatch.waitForExistence(timeout: 30))
         directoryControl(settings, "remove", initial).click()
         waitForNativeAbsence(app, identifier: identifier)
+        assertMatrixPaths(app, [added + "/Latest L19 Added Fixture.app"])
         directoryStage("REMOVED", root: root)
         quitNormally(app); app.launch()
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.L19.Added").firstMatch.waitForExistence(timeout: 30))
@@ -634,6 +637,9 @@ import XCTest
         XCTAssertFalse(directoryControl(restarted, "enabled", initial).exists)
         assertToggle(restarted, "directory-enabled-/Applications", false)
         assertToggle(restarted, "directory-enabled-" + added, true)
+        assertMatrixPaths(app, [added + "/Latest L19 Added Fixture.app"])
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "L19 actual persisted directory settings"; attachment.lifetime = .keepAlways; add(attachment)
         directoryStage("PERSISTED", root: root)
         quitNormally(app)
     }
@@ -648,6 +654,8 @@ import XCTest
         assertNativeText(app.staticTexts["inventory-warnings"], "Cannot read directory: " + path, timeout: 30)
         waitForNativeAbsence(app, identifier: "app-row-io.github.mpwg.Latest.NativeFixture.L19.Volume")
         XCTAssertTrue(app.buttons["refresh"].isEnabled)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "L19 actual ejected-volume warning"; attachment.lifetime = .keepAlways; add(attachment)
         directoryStage("REMOUNT", root: root)
         let restored = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.staticTexts["inventory-warnings"])
         XCTAssertEqual(XCTWaiter.wait(for: [restored], timeout: 30), .completed)
