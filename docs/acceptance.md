@@ -13,7 +13,7 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | Swift 6 core and comparison contracts | passed | Compiled invariant suite, including symmetric source policies and hash/equality |
 | Canonical instances / scan generations | passed | Current metadata, registered/unowned apps, removed/late results |
 | HTTPS / status / bounds / cache | passed | Production client with deterministic URLProtocol transport fixtures |
-| Homebrew ownership / targeted updates | open | L03 real native UI cask update 1.0.0 → 1.1.0 passed in an isolated Homebrew prefix; L04 native provenance-loss/changed-instance/failure checks remain open |
+| Homebrew ownership / targeted updates | passed | L03 targeted real native update and L04 native provenance-loss, changed-instance, informational catalogue and real failure/retry checks passed; scoped to isolated arm64/Tier 3 prefix |
 | Bundled mas / restricted broker | open | Compiled/pinned tools, own/foreign signer checks, request and package policy passed; native privileged request/install outstanding |
 | Sparkle 2.10.0 / lifecycle | open | Pinned distribution and main-actor adapter build passed; controlled signed appcast install outstanding |
 | SwiftUI / filtering / ignore / channels / migration | open | Five native XCUITests passed on 2731361: search, selection/notes, ignore/restart, German labels, identifiers/screenshot. Source filters, sorting, channels, skip/major/bulk actions and normal signed-app migration remain open |
@@ -27,6 +27,12 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 Overall acceptance: open.
 
 ## Subsequent native implementation evidence
+
+[L04](homebrew-native-rejection.md) adds four real native rejection/recovery
+checks on `eec132b`, with no upgrade process for rejected provenance/instance/
+catalogue requests and a real failed checksum upgrade followed by successful
+rescan/retry. It preserves controls and records per-source hashes and xcresult
+paths. Other provider, accessibility and production release gates remain open.
 
 [L03](homebrew-native-acceptance.md) verifies `9cbec3d` on macOS 27.0.1 with
 local Xcode 27.0 / Swift 6.4: one actual Homebrew-update XCUITest passed, seven

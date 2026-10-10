@@ -45,6 +45,10 @@ passes through the real UI on an own signed client: it updates only the managed
 fixture from 1.0.0 to 1.1.0, verifies the installed bundle and preserves the
 equal-name unmanaged copy. Reproduction requires full Xcode 27 and the explicitly
 prepared fixture environment. Other installation and production gates remain open.
+The [L04 native rejection suite](docs/homebrew-native-rejection.md) also verifies
+lost registration, a replaced selected bundle, non-authorizing catalogue hints
+and an actual failed update followed by successful rescan/retry. Run it with
+`python3 scripts/native_homebrew_rejection.py all` against the disposable fixtures.
 
 ## Features and boundaries
 

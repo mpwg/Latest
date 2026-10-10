@@ -19,7 +19,7 @@ and HTTPS checks do not replace the remaining provider installation acceptance.
 | A07 reply lifecycle | Concurrent completion races, reply before waiter, late terminal events | Native XPC disconnect/timeout |
 | A08 cancellation | Reaped process groups, owned preflight cancellation, safe installer handoff | Controlled real package cancellation |
 | A09 progress | Monotonic phases and terminal-state protection; main-actor adapter build | Native Sparkle lifecycle |
-| A11 Homebrew | Real v2 JSON schema; exit-1/outdated regression; targeted actual native UI cask update 1.0.0 → 1.1.0, installed-bundle verification and unchanged controls | L04 real provenance-loss, changed-instance and failed-update cases; default-prefix/other-architecture coverage |
+| A11 Homebrew | Real v2 schema and exit-1 regression; actual native update, provenance loss, changed-instance rejection, informational catalogue and real failure/retry; unchanged controls | Default-prefix, arbitrary-cask and other-architecture coverage |
 | A12 network/cache | HTTP rejection, status, body bound, downgrade rejection, malformed body and stale good cache | Native TLS/server behaviour |
 | A13 inventory | Missing/disabled folders, current metadata, superseded generations | External volume/device events |
 | A14 UI | Five native XCUITests passed on 2731361; exact cases below | Source filtering/sorting, skip/channel/major/bulk interactions; VoiceOver, keyboard and large text |
@@ -38,6 +38,10 @@ Xcode 27 against the signed real fixtures. It is skipped when the explicit
 fixture environment is absent; the five earlier UI tests retain their original
 scope. [L03 evidence and criteria](homebrew-native-acceptance.md) describe the
 real update, its retained xcresult and its isolated-prefix limits.
+The four additional opt-in [L04 native cases](homebrew-native-rejection.md)
+exercise the real installation boundary and error recovery. All five native
+installation tests require explicit fixture setup; ordinary CI still checks the
+five standard UI behaviours and skips those installation cases.
 
 ## Native UI evidence for 2731361
 
