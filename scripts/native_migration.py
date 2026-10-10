@@ -59,8 +59,8 @@ def run_case(case):
     old.write_bytes(plistlib.dumps(legacy))
     preferences = profile / 'Library/Application Support/io.github.mpwg.Latest/preferences.json'
     host_preferences = Path.home() / 'Library/Application Support/io.github.mpwg.Latest/preferences.json'
-    before_legacy = legacy_fingerprint()
     before_values = legacy_values()
+    before_legacy = hashlib.sha256(plistlib.dumps(before_values, sort_keys=True)).hexdigest() if before_values is not None else None
     if before_values is not None:
         (evidence / 'ordinary-legacy-before.plist').write_bytes(plistlib.dumps(before_values))
     before_host = file_digest(host_preferences)
@@ -128,8 +128,10 @@ def run_case(case):
         (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(f'Native normal migration {case}: passed; normal quits/restarts and unchanged ordinary user preferences. Evidence: {evidence}')
     finally:
-        restore_legacy_check_time(before_values, evidence / 'ordinary-legacy-before.plist')
-        subprocess.run(['defaults', 'delete', domain], check=True, capture_output=True)
+        try:
+            restore_legacy_check_time(before_values, evidence / 'ordinary-legacy-before.plist')
+        finally:
+            subprocess.run(['defaults', 'delete', domain], check=True, capture_output=True)
 
 
 if __name__ == '__main__':
