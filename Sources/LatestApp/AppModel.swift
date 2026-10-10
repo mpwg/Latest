@@ -128,7 +128,7 @@ import LatestPlatform
                 guard let self, !self.scanning, self.activeUpdates == 0 else { continue }
                 let result = await self.inventory.scan(self.preferences.directories)
                 let next = Set(result.apps.map { "\($0.id.path)|\($0.fingerprint)" })
-                if next != self.fingerprints { self.refresh() }
+                if next != self.fingerprints || result.warnings != self.warnings { self.refresh() }
             }
         }
     }

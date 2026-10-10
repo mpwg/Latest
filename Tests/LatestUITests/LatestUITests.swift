@@ -573,6 +573,114 @@ import XCTest
         try verifyNativeExecutableChange("TAMPERED")
     }
 
+    private func directoryPaths(_ root: String) throws -> [String: String] {
+        let data = try Data(contentsOf: URL(fileURLWithPath: root + "/evidence/l19/paths.json"))
+        return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: String])
+    }
+    private func directoryControl(_ settings: XCUIElement, _ action: String, _ path: String) -> XCUIElement {
+        settings.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", "directory-" + action + "-" + path)).firstMatch
+    }
+    private func directoryStage(_ name: String, root: String) {
+        FileHandle.standardOutput.write(Data(("L19_READY_" + name + "\n").utf8))
+        let path = root + "/evidence/l19/" + name + "-ready"
+        let deadline = Date().addingTimeInterval(45)
+        while !FileManager.default.fileExists(atPath: path), Date() < deadline { Thread.sleep(forTimeInterval: 0.1) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path))
+    }
+    private func directorySettings(_ app: XCUIApplication) -> XCUIElement {
+        XCTAssertTrue(app.buttons["settings"].waitForExistence(timeout: 10)); app.buttons["settings"].click()
+        let settings = app.windows["Settings…"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        settings.buttons["Locations"].click()
+        XCTAssertTrue(settings.buttons["add-directory"].waitForExistence(timeout: 10))
+        return settings
+    }
+    private func addNativeDirectory(_ app: XCUIApplication, settings: XCUIElement, path: String) {
+        settings.buttons["add-directory"].click()
+        app.typeKey("g", modifierFlags: [.command, .shift])
+        let pathField = app.textFields.firstMatch
+        XCTAssertTrue(pathField.waitForExistence(timeout: 10))
+        pathField.typeText(path); app.typeKey(.return, modifierFlags: [])
+        app.buttons["Open"].firstMatch.click()
+        XCTAssertTrue(directoryControl(settings, "enabled", path).waitForExistence(timeout: 10))
+    }
+    private func waitForNativeAbsence(_ app: XCUIApplication, identifier: String) {
+        let row = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+        let absent = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: row)
+        XCTAssertEqual(XCTWaiter.wait(for: [absent], timeout: 30), .completed)
+    }
+    func testNativeDirectoryActionsAndPersistence() throws {
+        let root = try nativeRoot(), paths = try directoryPaths(root)
+        let initial = try XCTUnwrap(paths["initial"]), added = try XCTUnwrap(paths["added"])
+        let app = nativeApp(root)
+        let identifier = "app-row-io.github.mpwg.Latest.NativeFixture.L19.Initial"
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: identifier).firstMatch.waitForExistence(timeout: 30))
+        let settings = directorySettings(app)
+        assertToggle(settings, "directory-enabled-/Applications", false)
+        directoryControl(settings, "enabled", initial).click()
+        waitForNativeAbsence(app, identifier: identifier)
+        directoryStage("DISABLED", root: root)
+        directoryControl(settings, "enabled", initial).click()
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: identifier).firstMatch.waitForExistence(timeout: 30))
+        addNativeDirectory(app, settings: settings, path: added)
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.L19.Added").firstMatch.waitForExistence(timeout: 30))
+        directoryControl(settings, "remove", initial).click()
+        waitForNativeAbsence(app, identifier: identifier)
+        directoryStage("REMOVED", root: root)
+        quitNormally(app); app.launch()
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.L19.Added").firstMatch.waitForExistence(timeout: 30))
+        waitForNativeAbsence(app, identifier: identifier)
+        let restarted = directorySettings(app)
+        XCTAssertFalse(directoryControl(restarted, "enabled", initial).exists)
+        assertToggle(restarted, "directory-enabled-/Applications", false)
+        assertToggle(restarted, "directory-enabled-" + added, true)
+        directoryStage("PERSISTED", root: root)
+        quitNormally(app)
+    }
+    func testNativeVolumeLossAndRecovery() throws {
+        let root = try nativeRoot(), paths = try directoryPaths(root)
+        let path = try XCTUnwrap(paths["volume"])
+        let app = nativeApp(root)
+        let scanned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["refresh"])
+        XCTAssertEqual(XCTWaiter.wait(for: [scanned], timeout: 30), .completed)
+        XCTAssertFalse(app.staticTexts["inventory-warnings"].exists)
+        directoryStage("EJECT", root: root)
+        assertNativeText(app.staticTexts["inventory-warnings"], "Cannot read directory: " + path, timeout: 30)
+        waitForNativeAbsence(app, identifier: "app-row-io.github.mpwg.Latest.NativeFixture.L19.Volume")
+        XCTAssertTrue(app.buttons["refresh"].isEnabled)
+        directoryStage("REMOUNT", root: root)
+        let restored = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.staticTexts["inventory-warnings"])
+        XCTAssertEqual(XCTWaiter.wait(for: [restored], timeout: 30), .completed)
+        if paths["empty"] != "true" {
+            XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.L19.Volume").firstMatch.waitForExistence(timeout: 30))
+        }
+        directoryStage("RECOVERED", root: root)
+        quitNormally(app)
+    }
+    func testNativeSupersededVolumeScanCannotRestoreRemovedApps() throws {
+        let root = try nativeRoot(), paths = try directoryPaths(root)
+        let path = try XCTUnwrap(paths["volume"])
+        let app = nativeApp(root)
+        let identifier = "app-row-io.github.mpwg.Latest.NativeFixture.L19.Volume"
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: identifier).firstMatch.waitForExistence(timeout: 30))
+        XCTAssertFalse(app.buttons["refresh"].isEnabled)
+        directoryStage("HELD", root: root)
+        let settings = directorySettings(app)
+        directoryControl(settings, "remove", path).click()
+        waitForNativeAbsence(app, identifier: identifier)
+        let scanned = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["refresh"])
+        XCTAssertEqual(XCTWaiter.wait(for: [scanned], timeout: 30), .completed)
+        directoryStage("LATE", root: root)
+        // The driver releases the actual old HTTPS response only after the newer
+        // generation has removed its app. Observe beyond the monitoring interval.
+        Thread.sleep(forTimeInterval: 7)
+        XCTAssertFalse(app.descendants(matching: .any).matching(identifier: identifier).firstMatch.exists)
+        XCTAssertFalse(app.staticTexts["New version: 1.1.0 (2)"].exists)
+        XCTAssertFalse(app.staticTexts["inventory-warnings"].exists)
+        directoryStage("SUPERSEDED", root: root)
+        quitNormally(app)
+    }
+
     private func migrationValue(_ name: String) throws -> String {
         let values = ProcessInfo.processInfo.environment
         guard let value = values[name] ?? values["TEST_RUNNER_" + name] else {

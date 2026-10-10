@@ -11,13 +11,17 @@ public struct InventoryResult: Sendable {
 public actor AppInventory {
     public init() {}
     public func scan(_ directories: [DirectoryPreference]) async -> InventoryResult {
-        await Task.detached(priority: .utility) { Self.collect(directories) }.value
+        let collection = Task.detached(priority: .utility) { Self.collect(directories) }
+        return await withTaskCancellationHandler {
+            await collection.value
+        } onCancel: { collection.cancel() }
     }
 
     public static func collect(_ directories: [DirectoryPreference]) -> InventoryResult {
         var apps: [AppInstanceID: AppSnapshot] = [:]
         var warnings: [String] = []
         for directory in directories where directory.enabled {
+            if Task.isCancelled { break }
             let root = URL(fileURLWithPath: directory.path)
             guard FileManager.default.isReadableFile(atPath: root.path) else {
                 warnings.append("Cannot read directory: \(directory.path)"); continue

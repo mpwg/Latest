@@ -75,7 +75,7 @@ private struct InventoryFooter: View {
         VStack(alignment: .leading, spacing: 6) {
             if model.scanning { ProgressView(value: Double(model.checked), total: Double(max(1, model.total))); Text("Checking \(model.checked) of \(model.total)").font(.caption) }
             else { Text("\(model.visibleRows.count) apps").font(.caption) }
-            if !model.warnings.isEmpty { Text(model.warnings.joined(separator: "\n")).font(.caption).foregroundStyle(.orange) }
+            if !model.warnings.isEmpty { Text(model.warnings.joined(separator: "\n")).font(.caption).foregroundStyle(.orange).accessibilityIdentifier("inventory-warnings") }
         }.padding().frame(maxWidth: .infinity, alignment: .leading).background(.bar)
     }
 }

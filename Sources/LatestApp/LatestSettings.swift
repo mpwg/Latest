@@ -37,13 +37,14 @@ private struct DirectorySettings: View {
                 ForEach($model.preferences.directories) { $directory in
                     HStack {
                         Toggle(directory.path, isOn: $directory.enabled).lineLimit(2)
+                            .accessibilityIdentifier("directory-enabled-" + directory.path)
                         Button("Remove", systemImage: "minus.circle") {
                             model.preferences.directories.removeAll { $0.path == directory.path }; model.save(); model.refresh()
-                        }.labelStyle(.iconOnly)
+                        }.labelStyle(.iconOnly).accessibilityIdentifier("directory-remove-" + directory.path)
                     }
                 }
             }
-            Button("Add Folder…", systemImage: "plus") { model.addDirectory() }
+            Button("Add Folder…", systemImage: "plus") { model.addDirectory() }.accessibilityIdentifier("add-directory")
         }.onChange(of: model.preferences.directories) { _, _ in model.save(); model.refresh() }
     }
 }
