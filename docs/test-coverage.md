@@ -1,5 +1,14 @@
 # Test coverage and evidence
 
+## L19 native directory and volume evidence
+
+[Four controlled actual cases](directory-acceptance.md) passed at `53dc1df`,
+including the final generation guards. Native
+NSOpenPanel addition, toggles/removal, persisted exact exclusions and normal
+quit/restart accompany actual populated/empty image ejection and remount. A real
+held signed HTTPS response released after directory removal cannot restore a
+stale row. All scanned/control bundles stay unchanged and no install job starts.
+
 ## Native executable-instance integrity
 
 [#51](instance-integrity-acceptance.md) at `379cacc` verifies two real preflight

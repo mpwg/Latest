@@ -39,6 +39,12 @@ legacy directories/ignore/visibility migration once, native settings changes,
 normal quit/restart and malformed defaults on a signed client. Separate profile
 and test-domain isolation preserve existing user state.
 
+The [L19 native directory suite](docs/directory-acceptance.md) checks the real
+folder picker, exclusions, removal and persistence across normal quit/restart.
+Actual populated and empty test volumes verify automatic warning/recovery; a
+held HTTPS scan cannot restore an app after its directory is removed. Native
+acceptance found and fixed a directory-removal exclusivity crash.
+
 ## Build and verify
 
 Use Xcode 27 / Swift 6.4 and macOS 27 or newer:

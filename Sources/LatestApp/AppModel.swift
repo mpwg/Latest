@@ -128,7 +128,7 @@ import LatestPlatform
                 guard let self, !self.scanning, self.activeUpdates == 0 else { continue }
                 let result = await self.inventory.scan(self.preferences.directories)
                 let next = Set(result.apps.map { "\($0.id.path)|\($0.fingerprint)" })
-                if next != self.fingerprints { self.refresh() }
+                if next != self.fingerprints || result.warnings != self.warnings { self.refresh() }
             }
         }
     }
@@ -150,6 +150,7 @@ import LatestPlatform
         fingerprints = Set(result.apps.map { "\($0.id.path)|\($0.fingerprint)" })
         total = result.apps.count
         let ledgerToken = await scanLedger.begin(apps: result.apps)
+        guard generation == token, !Task.isCancelled else { return }
         let previous = Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         rows = result.apps.map { app in
             let row = previous[app.id] ?? AppRow(record: .init(app: app))
@@ -162,7 +163,8 @@ import LatestPlatform
             var iterator = result.apps.makeIterator()
             for _ in 0..<8 { if let app = iterator.next() { group.addTask { await Self.check(app, providers: providers, context: context) } } }
             while let record = await group.next() {
-                if generation == token, !Task.isCancelled, await scanLedger.accept(record, generation: ledgerToken) {
+                if generation == token, !Task.isCancelled, await scanLedger.accept(record, generation: ledgerToken),
+                   generation == token, !Task.isCancelled {
                     rows.first { $0.id == record.id }?.record = record
                     checked += 1; filter()
                 }
