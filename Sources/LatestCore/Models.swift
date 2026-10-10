@@ -49,18 +49,22 @@ public struct UpdateCandidate: Codable, Hashable, Sendable, Identifiable {
     public let releaseNotesURL: URL?
     public let releaseDate: Date?
     public let comparison: VersionOrder
+    public let explicitMajorUpgrade: Bool?
     public var id: String { "\(app.id.path)|\(source.rawValue)|\(version.description)" }
     public init(app: AppSnapshot, source: UpdateSource, version: AppVersion, action: UpdateAction,
                 authoritative: Bool, channel: ReleaseChannel = .stable, minimumOS: String? = nil,
                 architectures: Set<Architecture> = [], releaseNotes: String? = nil,
-                releaseNotesURL: URL? = nil, releaseDate: Date? = nil, comparison: VersionOrder? = nil) {
+                releaseNotesURL: URL? = nil, releaseDate: Date? = nil, comparison: VersionOrder? = nil,
+                explicitMajorUpgrade: Bool? = nil) {
         self.app = app; self.source = source; self.version = version; self.action = action
         self.authoritative = authoritative; self.channel = channel; self.minimumOS = minimumOS
         self.architectures = architectures; self.releaseNotes = releaseNotes
         self.releaseNotesURL = releaseNotesURL; self.releaseDate = releaseDate
         self.comparison = comparison ?? app.version.compare(to: version, policy: source == .sparkle ? .build : .display)
+        self.explicitMajorUpgrade = explicitMajorUpgrade
     }
     public var isMajorUpgrade: Bool {
+        if explicitMajorUpgrade == true { return true }
         if let a = app.version.major, let b = version.major { return b > a }
         return false
     }

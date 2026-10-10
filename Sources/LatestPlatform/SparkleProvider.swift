@@ -25,6 +25,7 @@ public struct SparkleProvider: UpdateProvider {
     private let channel: ReleaseChannel
     private let installing: Bool
     private let expectedVersion: AppVersion?
+    private let expectedMajorUpgrade: Bool?
     private var updater: SPUUpdater?
     private var completion: CheckedContinuation<UpdateCandidate?, Error>?
     private var cancellation: (() -> Void)?
@@ -36,9 +37,11 @@ public struct SparkleProvider: UpdateProvider {
     private var handedOff = false
 
     init(app: AppSnapshot, channel: ReleaseChannel, installing: Bool, expectedVersion: AppVersion? = nil,
+         expectedMajorUpgrade: Bool? = nil,
          event: (@MainActor @Sendable (UpdateEvent) -> Void)? = nil) {
         self.app = app; self.channel = channel; self.installing = installing
         self.expectedVersion = expectedVersion; self.event = event
+        self.expectedMajorUpgrade = expectedMajorUpgrade
     }
 
     static func check(_ app: AppSnapshot, channel: ReleaseChannel) async throws -> UpdateCandidate? {
@@ -48,7 +51,7 @@ public struct SparkleProvider: UpdateProvider {
     static func install(_ candidate: UpdateCandidate, channel: ReleaseChannel,
                         event: @escaping @MainActor @Sendable (UpdateEvent) -> Void) async throws {
         let session = SparkleSession(app: candidate.app, channel: channel, installing: true,
-                                    expectedVersion: candidate.version, event: event)
+                                    expectedVersion: candidate.version, expectedMajorUpgrade: candidate.isMajorUpgrade, event: event)
         _ = try await session.run()
     }
     private func run() async throws -> UpdateCandidate? {
@@ -96,7 +99,8 @@ public struct SparkleProvider: UpdateProvider {
         .init(app: app, source: .sparkle, version: .init(display: item.displayVersionString, build: item.versionString),
               action: .sparkle(app.feedURL!), authoritative: true,
               channel: channel, minimumOS: item.minimumSystemVersion,
-              releaseNotes: item.itemDescription, releaseNotesURL: item.releaseNotesURL ?? item.fullReleaseNotesURL, releaseDate: item.date)
+              releaseNotes: item.itemDescription, releaseNotesURL: item.releaseNotesURL ?? item.fullReleaseNotesURL, releaseDate: item.date,
+              explicitMajorUpgrade: item.isMajorUpgrade)
     }
     func show(_ request: SPUUpdatePermissionRequest, reply: @escaping (SUUpdatePermissionResponse) -> Void) {
         reply(.init(automaticUpdateChecks: false, sendSystemProfile: false))
@@ -114,6 +118,9 @@ public struct SparkleProvider: UpdateProvider {
         if installing {
             guard result.version == expectedVersion else {
                 reply(.dismiss); finish(.failure(LatestFailure.rejected("The Sparkle update changed; check for updates again."))); return
+            }
+            guard let expectedMajorUpgrade, result.isMajorUpgrade == expectedMajorUpgrade else {
+                reply(.dismiss); finish(.failure(LatestFailure.rejected("The Sparkle update's major-upgrade requirement changed. Check for updates again."))); return
             }
             reply(.install)
         } else { reply(.dismiss); finish(.success(result)) }

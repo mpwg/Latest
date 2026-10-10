@@ -98,4 +98,16 @@ import Testing
         #expect(await ledger.accept(.init(.downloading), app: app, token: retry))
         #expect(await ledger.event(for: app)?.phase == .downloading)
     }
+    @Test func providerDeclaredMajorRequiresConsentAndNeverBulk() throws {
+        let app = AppSnapshot(url: URL(fileURLWithPath: "/tmp/Major.app"), bundleID: "org.example.Major", name: "Major", version: .init(display: "1.0", build: "1"))
+        let minor = UpdateCandidate(app: app, source: .sparkle, version: .init(display: "1.1", build: "2"), action: .sparkle(URL(string: "https://example.org/feed")!), authoritative: true)
+        let declared = UpdateCandidate(app: app, source: .sparkle, version: minor.version, action: minor.action, authoritative: true, explicitMajorUpgrade: true)
+        #expect(minor.isMajorUpgrade == false)
+        #expect(Presentation.bulkEligible(minor, status: .available))
+        #expect(declared.isMajorUpgrade)
+        #expect(Presentation.bulkEligible(declared, status: .available) == false)
+        let legacy = try JSONDecoder().decode(UpdateCandidate.self, from: JSONEncoder().encode(minor))
+        #expect(legacy.explicitMajorUpgrade == nil)
+        #expect(legacy.isMajorUpgrade == false)
+    }
 }

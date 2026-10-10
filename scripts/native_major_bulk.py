@@ -112,7 +112,7 @@ def run_case(case):
     server_thread.start()
     evidence = ROOT / 'evidence/l17' / case
     evidence.mkdir(parents=True, exist_ok=True)
-    markers = ['CANCEL_MAJOR'] if case == 'major' else ['SCAN', 'BULK']
+    markers = ['SCAN', 'BULK'] if case == 'bulk' else (['CHANGED_MAJOR'] if case == 'changed-major' else ['CANCEL_MAJOR'])
     for name in markers:
         path = ROOT / f'evidence/l17/{name}-ready'
         if path.exists():
@@ -129,13 +129,15 @@ def run_case(case):
         enclosure.set('url', origin + '/selected.zip'); enclosure.set('length', str(archive.stat().st_size))
         enclosure.set(f'{{{NS}}}shortVersionString', version); enclosure.set(f'{{{NS}}}version', '2')
         enclosure.set(f'{{{NS}}}edSignature', signature)
+        if case == 'provider-major':
+            ET.SubElement(item, f'{{{NS}}}minimumAutoupdateVersion').text = '2'
         feed_path.write_bytes(signed_feed(item, prepared, 'selected'))
         preferences = dict(directories=[dict(path=str(ROOT / 'applications'), enabled=True)], showIgnored=True)
         if case == 'bulk':
             group.mkdir()
             skipped = {str(other): str(other) + '|sparkle|1.1.0 (2)'}
             ignored = []
-            variants = [('minor', '1.1.0', 2, '27.0'), ('major', '2.0.0', 2, '27.0'),
+            variants = [('minor', '1.1.0', 2, '27.0'), ('major', '2.0.0', 2, '27.0'), ('declared-major', '1.1.0', 2, '27.0'),
                         ('ignored', '1.1.0', 2, '27.0'), ('skipped', '1.1.0', 2, '27.0'),
                         ('incompatible', '1.1.0', 2, '99.0'), ('current', '1.0.0', 1, '27.0'),
                         ('unknown', '1.0.0', 1, '27.0')]
@@ -164,6 +166,8 @@ def run_case(case):
                 payloads['/' + key + '.zip'] = archive.read_bytes()
                 item = copy.deepcopy(template)
                 item.find(f'{{{NS}}}minimumSystemVersion').text = minimum
+                if key == 'declared-major':
+                    ET.SubElement(item, f'{{{NS}}}minimumAutoupdateVersion').text = '2'
                 enclosure = item.find('enclosure')
                 enclosure.set('url', origin + '/' + key + '.zip'); enclosure.set('length', str(archive.stat().st_size))
                 enclosure.set(f'{{{NS}}}shortVersionString', target_version); enclosure.set(f'{{{NS}}}version', str(build))
@@ -182,12 +186,16 @@ def run_case(case):
                     events = [json.loads(line) for line in journal.read_text().splitlines()]
                     if any(digest_app(targets[key]) != expected for key, expected in before_targets.items()):
                         raise ValueError('A target changed before native consent/gated bulk release.')
-                    if name in ['CANCEL_MAJOR', 'SCAN'] and events:
+                    if name in ['CANCEL_MAJOR', 'CHANGED_MAJOR', 'SCAN'] and events:
                         raise ValueError('Cancellation/active scan started an unauthorized job.')
                     if name == 'SCAN':
                         if not request_counts.get('/scan-gate.xml'):
                             raise ValueError('The actual provider scan did not reach its controlled gate.')
                         scan_gate.set()
+                    elif name == 'CHANGED_MAJOR':
+                        changed = ET.fromstring(feed_path.read_bytes()).find('./channel/item')
+                        ET.SubElement(changed, f'{{{NS}}}minimumAutoupdateVersion').text = '2'
+                        feed_path.write_bytes(signed_feed(changed, prepared, 'changed-major'))
                     elif name == 'BULK':
                         expected_paths = {str(targets[key]) for key in ['selected', 'minor']}
                         jobs = {entry['path']: entry['job'] for entry in events if entry['phase'] == 'checking'}
@@ -197,11 +205,13 @@ def run_case(case):
                     checkpoint[name] = events
                     marker.write_text('Native gated checkpoint verified.\n')
 
-        test = 'testNativeMajorConsentAndCancellation' if case == 'major' else 'testNativeBulkEligibilityAndDuplicateActivation'
+        tests = dict(major='testNativeMajorConsentAndCancellation', bulk='testNativeBulkEligibilityAndDuplicateActivation',
+                     **{'provider-major': 'testNativeProviderDeclaredMajorConsent', 'changed-major': 'testNativeChangedMajorRequirementIsRejected'})
+        test = tests[case]
         outcome = run_native_test(test, evidence, coordinate=coordinate)
         if set(checkpoint) != set(markers):
             raise ValueError('Not every required actual native checkpoint executed.')
-        expected_keys = ['selected'] if case == 'major' else ['selected', 'minor']
+        expected_keys = ['selected', 'minor'] if case == 'bulk' else ['selected']
         events = [json.loads(line) for line in journal.read_text().splitlines()]
         jobs = {}
         for entry in events:
@@ -211,20 +221,24 @@ def run_case(case):
         if {entries[0]['path'] for entries in jobs.values()} != {str(targets[key]) for key in expected_keys}:
             raise ValueError('An unselected/excluded application reached the installer.')
         for entries in jobs.values():
-            if [entry['phase'] for entry in entries if entry['phase'] in ['succeeded', 'failed', 'cancelled']] != ['succeeded']:
+            terminal = 'failed' if case == 'changed-major' else 'succeeded'
+            if [entry['phase'] for entry in entries if entry['phase'] in ['succeeded', 'failed', 'cancelled']] != [terminal]:
                 raise ValueError('Every authorized actual job must succeed exactly once.')
         installed = {}
         for key in expected_keys:
             app = targets[key]
             info = plistlib.loads((app / 'Contents/Info.plist').read_bytes())
-            expected_version = '2.0.0' if case == 'major' else '1.1.0'
-            if info['CFBundleShortVersionString'] != expected_version or info['CFBundleVersion'] != '2':
+            expected_version = '2.0.0' if case == 'major' else ('1.0.0' if case == 'changed-major' else '1.1.0')
+            expected_build = '1' if case == 'changed-major' else '2'
+            if info['CFBundleShortVersionString'] != expected_version or info['CFBundleVersion'] != expected_build:
                 raise ValueError('Actual installed target version is wrong.')
             fixtures.run(['codesign', '--verify', '--deep', '--strict', app])
             architecture = fixtures.run(['lipo', '-archs', app / 'Contents/MacOS/FixtureApp'], capture=True)
             if architecture != 'arm64':
                 raise ValueError('Actual installed executable architecture changed.')
-            installed[key] = dict(path=str(app), bundleID=info['CFBundleIdentifier'], version=expected_version, build='2', architecture=architecture)
+            installed[key] = dict(path=str(app), bundleID=info['CFBundleIdentifier'], version=expected_version, build=expected_build, architecture=architecture)
+        if case == 'changed-major' and (digest_app(selected) != before_targets['selected'] or request_counts.get('/selected.zip')):
+            raise ValueError('Changed major consent must fail before downloading or mutating the selected app.')
         if any(digest_app(app) != expected for app, expected in zip(controls, before_controls)):
             raise ValueError('An excluded or unrelated controlled application changed.')
         result = dict(case=case, sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
@@ -237,7 +251,7 @@ def run_case(case):
                       requestCounts=request_counts, excludedAndUnrelatedUnchanged=True,
                       retiredGroup=str(prepared / 'retired-installed-apps') if group.exists() else None)
         (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
-        print(f'Native {case}: passed; {len(jobs)} actual successful jobs and unchanged excluded/control apps.')
+        print(f'Native {case}: passed; {len(jobs)} actual jobs with expected terminal results and unchanged excluded/control apps.')
     finally:
         feed_path.write_bytes(original_feed)
         scan_gate.set(); download_gate.set()
@@ -248,8 +262,8 @@ def run_case(case):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('case', choices=['major', 'bulk', 'all'])
+    parser.add_argument('case', choices=['major', 'provider-major', 'changed-major', 'bulk', 'all'])
     args = parser.parse_args()
     fixtures.run(['swift', 'build', '--product', 'LatestRelease'])
-    for case in (['major', 'bulk'] if args.case == 'all' else [args.case]):
+    for case in (['major', 'provider-major', 'changed-major', 'bulk'] if args.case == 'all' else [args.case]):
         run_case(case)

@@ -478,6 +478,12 @@ import XCTest
     }
 
     func testNativeMajorConsentAndCancellation() throws {
+        try verifyNativeMajorConsent("2.0.0 (2)")
+    }
+    func testNativeProviderDeclaredMajorConsent() throws {
+        try verifyNativeMajorConsent("1.1.0 (2)")
+    }
+    private func verifyNativeMajorConsent(_ targetVersion: String) throws {
         let root = try nativeRoot()
         let app = nativeApp(root)
         selectNativeSparkle(app, root: root)
@@ -491,8 +497,21 @@ import XCTest
         assertNativeText(app.staticTexts["installed-version"], "1.0.0 (1)")
         app.buttons["update-selected"].click()
         consent.buttons["Install Major Upgrade"].click()
-        assertNativeText(app.staticTexts["installed-version"], "2.0.0 (2)", timeout: 120)
+        assertNativeText(app.staticTexts["installed-version"], targetVersion, timeout: 120)
         assertNativeText(app.staticTexts["selected-status"], "Up to Date")
+        app.terminate()
+    }
+
+    func testNativeChangedMajorRequirementIsRejected() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectNativeSparkle(app, root: root)
+        XCTAssertFalse(app.staticTexts["Major Upgrade"].exists)
+        majorBulkStage("CHANGED_MAJOR", root: root)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["Update Failed"].waitForExistence(timeout: 60))
+        XCTAssertTrue(app.staticTexts["The Sparkle update's major-upgrade requirement changed. Check for updates again."].exists)
+        assertNativeText(app.staticTexts["installed-version"], "1.0.0 (1)")
         app.terminate()
     }
 
