@@ -41,15 +41,26 @@ def run_native_test(test_name, evidence, coordinate=None):
     log_path = evidence / 'native-tests.log'
     with log_path.open('w') as log:
         process = subprocess.Popen(arguments, cwd=REPO, env=environment, stdout=log, stderr=subprocess.STDOUT)
-        while process.poll() is None:
-            if coordinate:
-                coordinate(log_path.read_text(errors='replace'))
-            commands = subprocess.run(['ps', '-axww', '-o', 'pid=,command='], check=True, capture_output=True, text=True).stdout.splitlines()
-            for line in commands:
-                pid, command = line.strip().split(None, 1)
-                if str(ROOT / 'homebrew') in command and f'upgrade --cask --no-ask {native_fixtures.TOKEN}' in command:
-                    observed.setdefault(pid, set()).add(command)
-            time.sleep(0.1)
+        deadline = time.monotonic() + 420
+        try:
+            while process.poll() is None:
+                if time.monotonic() > deadline:
+                    raise TimeoutError('The controlled native test exceeded its seven-minute deadline.')
+                if coordinate:
+                    coordinate(log_path.read_text(errors='replace'))
+                commands = subprocess.run(['ps', '-axww', '-o', 'pid=,command='], check=True, capture_output=True, text=True).stdout.splitlines()
+                for line in commands:
+                    pid, command = line.strip().split(None, 1)
+                    if str(ROOT / 'homebrew') in command and f'upgrade --cask --no-ask {native_fixtures.TOKEN}' in command:
+                        observed.setdefault(pid, set()).add(command)
+                time.sleep(0.1)
+        finally:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    process.kill(); process.wait()
     if process.returncode:
         print(log_path.read_text()[-7000:])
         raise subprocess.CalledProcessError(process.returncode, arguments)

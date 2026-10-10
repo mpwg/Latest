@@ -202,4 +202,70 @@ import XCTest
         XCTAssertFalse(app.staticTexts["Up to Date"].firstMatch.exists)
         app.terminate()
     }
+
+    private func sparkleStage(_ name: String, root: String) {
+        FileHandle.standardOutput.write(Data(("L06_READY_" + name + "\n").utf8))
+        let path = root + "/evidence/l06/" + name + "-ready"
+        let deadline = Date().addingTimeInterval(45)
+        while !FileManager.default.fileExists(atPath: path), Date() < deadline { Thread.sleep(forTimeInterval: 0.1) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path))
+    }
+
+    private func retrySparkle(_ app: XCUIApplication, root: String) {
+        app.buttons["refresh"].click()
+        selectNativeSparkle(app, root: root)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["1.1.0 (2)"].firstMatch.waitForExistence(timeout: 120))
+        XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
+        app.terminate(); app.launch()
+        let row = app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.Sparkle").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
+        XCTAssertTrue(app.staticTexts["1.1.0 (2)"].firstMatch.exists)
+        XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
+        app.terminate()
+    }
+
+    func testNativeSparkleCancellationThenRetry() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectNativeSparkle(app, root: root)
+        app.buttons["update-selected"].click()
+        let cancel = app.buttons["cancel-update"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 30))
+        XCTAssertTrue(app.staticTexts["Downloading"].waitForExistence(timeout: 30))
+        XCTAssertTrue(cancel.isEnabled); cancel.click()
+        XCTAssertTrue(app.buttons["update-selected"].waitForExistence(timeout: 30))
+        XCTAssertFalse(app.staticTexts["Update Failed"].exists)
+        XCTAssertTrue(app.staticTexts["1.0.0 (1)"].firstMatch.exists)
+        sparkleStage("CANCEL_RETRY", root: root)
+        app.terminate(); app.launch()
+        retrySparkle(app, root: root)
+    }
+
+    func testNativeSparkleDownloadFailureThenRetry() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectNativeSparkle(app, root: root)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["Update Failed"].waitForExistence(timeout: 90))
+        XCTAssertTrue(app.staticTexts["1.0.0 (1)"].firstMatch.exists)
+        sparkleStage("FAIL_RETRY", root: root)
+        app.windows.buttons["OK"].firstMatch.click()
+        retrySparkle(app, root: root)
+    }
+
+    func testNativeSparkleHandoffDisablesCancel() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectNativeSparkle(app, root: root)
+        app.buttons["update-selected"].click()
+        let cancel = app.buttons["cancel-update"]
+        let blocked = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND enabled == false"), object: cancel)
+        XCTAssertEqual(XCTWaiter.wait(for: [blocked], timeout: 60), .completed)
+        XCTAssertTrue(app.staticTexts["Installing"].exists)
+        sparkleStage("HANDOFF", root: root)
+        XCTAssertTrue(app.staticTexts["1.1.0 (2)"].firstMatch.waitForExistence(timeout: 120))
+        XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
+        app.terminate()
+    }
 }

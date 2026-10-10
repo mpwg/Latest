@@ -20,7 +20,7 @@ public struct SparkleProvider: UpdateProvider {
     }
 }
 
-@MainActor private final class SparkleSession: NSObject, SPUUserDriver, SPUUpdaterDelegate {
+@MainActor final class SparkleSession: NSObject, SPUUserDriver, SPUUpdaterDelegate {
     private let app: AppSnapshot
     private let channel: ReleaseChannel
     private let installing: Bool
@@ -33,6 +33,7 @@ public struct SparkleProvider: UpdateProvider {
     private var expectedBytes: UInt64 = 0
     private var receivedBytes: UInt64 = 0
     private var downloadPhase = false
+    private var handedOff = false
 
     init(app: AppSnapshot, channel: ReleaseChannel, installing: Bool, expectedVersion: AppVersion? = nil,
          event: (@MainActor @Sendable (UpdateEvent) -> Void)? = nil) {
@@ -54,7 +55,7 @@ public struct SparkleProvider: UpdateProvider {
         let limit = Duration.seconds(installing ? 1200 : 45)
         let timeout = Task { @MainActor [weak self] in
             try await Task.sleep(for: limit)
-            self?.finish(.failure(LatestFailure.timeout))
+            self?.expire()
         }
         defer { timeout.cancel() }
         return try await withTaskCancellationHandler {
@@ -79,11 +80,17 @@ public struct SparkleProvider: UpdateProvider {
         cancellation = nil; updater = nil; event = nil
         callback?.resume(with: result)
     }
-    private func cancel() {
-        guard !completed else { return }
+    func cancel() {
+        guard !completed, !handedOff else { return }
         let callback = cancellation; cancellation = nil
-        callback?()
         finish(.failure(CancellationError()))
+        callback?()
+    }
+    private func expire() {
+        guard !completed else { return }
+        let callback = handedOff ? nil : cancellation
+        finish(.failure(LatestFailure.timeout))
+        callback?()
     }
     private func candidate(_ item: SUAppcastItem) -> UpdateCandidate {
         .init(app: app, source: .sparkle, version: .init(display: item.displayVersionString, build: item.versionString),
@@ -94,7 +101,10 @@ public struct SparkleProvider: UpdateProvider {
     func show(_ request: SPUUpdatePermissionRequest, reply: @escaping (SUUpdatePermissionResponse) -> Void) {
         reply(.init(automaticUpdateChecks: false, sendSystemProfile: false))
     }
-    func showUserInitiatedUpdateCheck(cancellation: @escaping () -> Void) { self.cancellation = cancellation }
+    func showUserInitiatedUpdateCheck(cancellation: @escaping () -> Void) {
+        guard !completed else { cancellation(); return }
+        self.cancellation = cancellation
+    }
     func showUpdateFound(with appcastItem: SUAppcastItem, state: SPUUserUpdateState, reply: @escaping (SPUUserUpdateChoice) -> Void) {
         guard !completed else { reply(.dismiss); return }
         let result = candidate(appcastItem)
@@ -121,19 +131,30 @@ public struct SparkleProvider: UpdateProvider {
     func showUpdateInFocus() {}
     func showDownloadInitiated(cancellation: @escaping () -> Void) {
         guard !completed else { cancellation(); return }
-        self.cancellation = cancellation; downloadPhase = true; receivedBytes = 0; event?(.init(.downloading))
+        guard !handedOff else { return }
+        self.cancellation = cancellation; downloadPhase = true; receivedBytes = 0; expectedBytes = 0
+        event?(.init(.downloading))
     }
-    func showDownloadDidReceiveExpectedContentLength(_ expectedContentLength: UInt64) { expectedBytes = expectedContentLength }
+    func showDownloadDidReceiveExpectedContentLength(_ expectedContentLength: UInt64) {
+        guard !completed, downloadPhase else { return }
+        expectedBytes = expectedContentLength
+    }
     func showDownloadDidReceiveData(ofLength length: UInt64) {
         guard !completed, downloadPhase else { return }
         receivedBytes &+= length
         event?(.init(.downloading, progress: expectedBytes > 0 ? Double(receivedBytes) / Double(expectedBytes) : nil))
     }
-    func showDownloadDidStartExtractingUpdate() { downloadPhase = false; if !completed { event?(.init(.installing)) } }
+    func showDownloadDidStartExtractingUpdate() {
+        guard !completed else { return }
+        // Sparkle's download cancellation block is invalid from extraction onward.
+        handedOff = true; cancellation = nil; downloadPhase = false
+        event?(.init(.installing))
+    }
     func showExtractionReceivedProgress(_ progress: Double) {}
     func showReady(toInstallAndRelaunch reply: @escaping (SPUUserUpdateChoice) -> Void) { reply(completed ? .dismiss : .install) }
     func showInstallingUpdate(withApplicationTerminated applicationTerminated: Bool, retryTerminatingApplication: @escaping () -> Void) {
-        downloadPhase = false; cancellation = nil; if !completed { event?(.init(.installing)) }
+        guard !completed else { return }
+        handedOff = true; downloadPhase = false; cancellation = nil; event?(.init(.installing))
     }
     func showCanCheck(forUpdates canCheckForUpdates: Bool) {}
     func dismissUserInitiatedUpdateCheck() {}
