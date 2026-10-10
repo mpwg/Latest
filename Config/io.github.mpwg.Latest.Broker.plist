@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>Label</key><string>io.github.mpwg.Latest.Broker</string>
+<key>BundleProgram</key><string>Contents/Resources/LatestBroker</string>
+<key>MachServices</key><dict><key>io.github.mpwg.Latest.Broker</key><true/></dict>
+<key>RunAtLoad</key><false/>
+</dict></plist>
