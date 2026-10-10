@@ -185,7 +185,7 @@ import LatestPlatform
     }
     func confirmMajor() { if let pendingMajor { perform(pendingMajor) }; pendingMajor = nil }
     func updateAll() {
-        for row in rows where row.record.candidate.map { Presentation.bulkEligible($0, status: row.record.status) } == true { requestUpdate(row) }
+        for row in rows where row.record.candidate.map({ Presentation.bulkEligible($0, status: row.record.status) }) == true { requestUpdate(row) }
     }
     func cancel(_ row: AppRow) {
         guard row.event?.phase != .installing && row.event?.phase != .verifying else { return }

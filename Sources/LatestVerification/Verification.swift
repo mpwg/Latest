@@ -228,6 +228,18 @@ import LatestTrust
         try check(helper.exitCode != 0, "Broker cannot be launched as an ordinary unprivileged process")
         let verifier = try await runner.run(executable: URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/debug/LatestPackageVerifier"), arguments: ["/tmp/invalid.pkg", "123", claim.bundleID, claim.path], environment: CommandRunner.userEnvironment())
         try check(verifier.exitCode != 0, "Package verifier rejects unauthorized direct invocation")
+        if let path = ProcessInfo.processInfo.environment["LATEST_TEST_APP_BUNDLE"] {
+            let bundle = URL(fileURLWithPath: path)
+            let configuration = try BrokerConfiguration.load(appURL: bundle)
+            try CodeTrust.verify(bundle.appendingPathComponent("Contents/Resources/LatestBroker"), requirement: ForkIdentity.requirement(identifier: ForkIdentity.broker, team: configuration.team))
+            try check(true, "Own signed application and broker requirements verify")
+            let tool = bundle.appendingPathComponent("Contents/Resources/mas")
+            try CodeTrust.verify(tool, requirement: ForkIdentity.requirement(identifier: ForkIdentity.tool, team: configuration.team))
+            try check(try CodeTrust.sha256(tool) == configuration.masHash, "Bundled signed mas matches the app's sealed digest")
+            let gate = bundle.appendingPathComponent("Contents/Resources/LatestPackageVerifier")
+            try CodeTrust.verify(gate, requirement: ForkIdentity.requirement(identifier: ForkIdentity.verifier, team: configuration.team))
+            try check(try CodeTrust.sha256(gate) == configuration.verifierHash, "Bundled package verifier matches its sealed digest and identity")
+        }
         print("Verified \(count) core invariants.")
     }
 }

@@ -40,6 +40,8 @@ def package(configuration, identity, team, public_key, version):
         text = "\n".join(json.dumps(key, ensure_ascii=False) + " = " + json.dumps(value["localizations"][language]["stringUnit"]["value"], ensure_ascii=False) + ";" for key,value in catalogue["strings"].items())
         (folder / "Localizable.strings").write_text(text + "\n")
     shutil.copy2(ROOT / "LICENSE.md", contents / "Resources/LICENSE.md")
+    shutil.copy2(ROOT / "Vendor/mas/LICENSE", contents / "Resources/mas-LICENSE.txt")
+    shutil.copy2(ROOT / "Vendor/Sparkle/LICENSE", contents / "Resources/Sparkle-LICENSE.txt")
     info = plistlib.loads((ROOT / "Config/Info.plist").read_bytes())
     info.update({"CFBundleIdentifier": "io.github.mpwg.Latest", "CFBundleExecutable": "Latest", "CFBundleShortVersionString": version,
                  "CFBundleVersion": run(["git", "rev-list", "--count", "HEAD"], capture=True), "LatestSigningTeam": team,

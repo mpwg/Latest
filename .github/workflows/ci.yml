@@ -30,9 +30,12 @@ jobs:
         run: .build/debug/LatestVerification
       - name: Check repository and localization
         run: python3 scripts/validate.py
+      - name: Compile disposable native installation fixture
+        run: swiftc -swift-version 6 -warnings-as-errors -parse-as-library Tests/NativeFixtures/FixtureApp.swift -o .build/native-fixture-check
       - name: Run Swift Testing suite
         run: swift test --build-system native --enable-swift-testing --disable-xctest
       - name: Run native UI tests
+        if: success() || failure()
         run: |
           mkdir -p .build/ui-test-state
           xcodebuild -project Latest.xcodeproj -scheme Latest -destination 'platform=macOS' -derivedDataPath .build/xcode -resultBundlePath .build/native-tests.xcresult CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= test
