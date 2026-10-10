@@ -1,5 +1,12 @@
 # Test coverage and evidence
 
+## Native executable-instance integrity
+
+[#51](instance-integrity-acceptance.md) at `dbd576e` verifies two real preflight
+rejections with unchanged metadata/times and a real positive signed installation.
+Native journals prove rejection before provider work; independent signing checks
+establish valid replacement versus intentionally invalid tampering.
+
 ## L17 native major and bulk evidence
 
 [Four actual native cases](major-bulk-acceptance.md) at `11d08a6` verify major
