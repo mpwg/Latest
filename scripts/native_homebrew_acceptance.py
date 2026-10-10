@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Compile the actual application model/views and update only the disposable cask."""
+"""Update the disposable real cask via native XCUITest and verify other fixtures."""
 from pathlib import Path
 import hashlib
 import json
 import plistlib
+import re
 import shutil
 import subprocess
 import time
+import uuid
 import native_fixtures
 
 REPO = native_fixtures.REPO
@@ -25,7 +27,7 @@ def main():
     installed = ROOT / 'applications/Latest Homebrew Fixture.app'
     baseline = plistlib.loads((installed / 'Contents/Info.plist').read_bytes())
     if baseline['CFBundleShortVersionString'] != '1.0.0':
-        raise ValueError('Reset the disposable fixtures to 1.0.0 before running positive acceptance.')
+        raise ValueError('Reset the disposable cask to 1.0.0 before running positive acceptance.')
     sibling = ROOT / 'applications/Unmanaged/Latest Homebrew Fixture.app'
     sibling.parent.mkdir(exist_ok=True)
     if not sibling.exists():
@@ -34,51 +36,60 @@ def main():
     sparkle = ROOT / 'applications/Latest Sparkle Fixture.app'
     sparkle_before = digest_app(sparkle)
     host_casks = native_fixtures.run(['brew', 'list', '--cask'], capture=True)
-    native_fixtures.set_cask_version('1.1.0')
-    native_fixtures.run(['swift', 'build'])
-    binaries = Path(native_fixtures.run(['swift', 'build', '--show-bin-path'], capture=True))
-    framework = REPO / 'Vendor/Sparkle/Sparkle.xcframework/macos-arm64_x86_64'
-    directory = REPO / '.build/l03-native-acceptance'
-    directory.mkdir(exist_ok=True)
-    executable = directory / 'LatestNativeHomebrewAcceptance'
-    sources = [REPO / 'Tests/NativeFixtures/HomebrewAcceptance.swift']
-    sources += [REPO / 'Sources/LatestApp' / name for name in ['AppModel.swift', 'LatestWindow.swift', 'AppDetail.swift', 'LatestSettings.swift']]
-    objects = []
-    modules = binaries if (binaries / 'LatestCore.swiftmodule').exists() else binaries / 'Modules'
-    for module in ['LatestCore', 'LatestPlatform', 'LatestProcess', 'LatestTrust', 'LatestContracts']:
-        if (binaries / f'lib{module}.a').exists():
-            objects.append(binaries / f'lib{module}.a')
-        else:
-            objects += sorted((binaries / f'{module}.build').glob('*.o'))
-    native_fixtures.run(['swiftc', '-swift-version', '6', '-warnings-as-errors', '-parse-as-library',
-                         '-I', modules, '-F', framework, '-framework', 'Sparkle',
-                         '-Xlinker', '-rpath', '-Xlinker', framework, *sources, *objects, '-o', executable])
     environment = native_fixtures.brew_environment()
+    (ROOT / 'user-config').mkdir(exist_ok=True)
+    brew = ROOT / 'homebrew/bin/brew'
+    native_fixtures.run([brew, 'trust', '--cask', f'{native_fixtures.TAP}/{native_fixtures.TOKEN}'], env=environment)
+    native_fixtures.set_cask_version('1.1.0')
+    state = ROOT / 'preferences/l03'
+    state.mkdir(parents=True, exist_ok=True)
+    (state / 'preferences.json').write_text(json.dumps({'directories': [{'path': str(ROOT / 'applications'), 'enabled': True}]}))
+    evidence = ROOT / 'evidence/l03'
+    evidence.mkdir(parents=True, exist_ok=True)
+    result_bundle = evidence / f'native-tests-{uuid.uuid4().hex}.xcresult'
+    environment.update(LATEST_NATIVE_FIXTURE_ROOT=str(ROOT), TEST_RUNNER_LATEST_NATIVE_FIXTURE_ROOT=str(ROOT))
+    identities = native_fixtures.run(['security', 'find-identity', '-v', '-p', 'codesigning'], capture=True)
+    signer = manifest['fixtures'][0]['signer']
+    matching = [re.search(r'\b([A-F0-9]{40})\b', line).group(1) for line in identities.splitlines()
+                if signer in line and re.search(r'\b([A-F0-9]{40})\b', line)]
+    if len(matching) != 1:
+        raise ValueError('Exactly one available own signing identity must match the prepared fixtures.')
+    arguments = ['xcodebuild', '-project', str(REPO / 'Latest.xcodeproj'), '-scheme', 'Latest',
+                 '-destination', 'platform=macOS', '-derivedDataPath', str(REPO / '.build/l03-xcode'),
+                 '-resultBundlePath', str(result_bundle), '-only-testing:LatestUITests/LatestUITests/testNativeHomebrewUpdate',
+                 'CODE_SIGN_STYLE=Manual', 'CODE_SIGN_IDENTITY=' + matching[0],
+                 'DEVELOPMENT_TEAM=' + manifest['fixtures'][0]['team'], 'test']
     observed = set()
-    process = subprocess.Popen([str(executable), str(ROOT)], cwd=REPO, env=environment)
-    while process.poll() is None:
-        commands = subprocess.run(['ps', '-axww', '-o', 'command='], check=True, capture_output=True, text=True).stdout.splitlines()
-        for command in commands:
-            if str(ROOT / 'homebrew') in command and f'upgrade --cask --no-ask {native_fixtures.TOKEN}' in command:
-                observed.add(command.strip())
-        time.sleep(0.05)
+    log_path = evidence / 'native-tests.log'
+    with log_path.open('w') as log:
+        process = subprocess.Popen(arguments, cwd=REPO, env=environment, stdout=log, stderr=subprocess.STDOUT)
+        while process.poll() is None:
+            commands = subprocess.run(['ps', '-axww', '-o', 'command='], check=True, capture_output=True, text=True).stdout.splitlines()
+            for command in commands:
+                if str(ROOT / 'homebrew') in command and f'upgrade --cask --no-ask {native_fixtures.TOKEN}' in command:
+                    observed.add(command.strip())
+            time.sleep(0.1)
     if process.returncode:
-        raise subprocess.CalledProcessError(process.returncode, [str(executable), str(ROOT)])
+        print(log_path.read_text()[-7000:])
+        raise subprocess.CalledProcessError(process.returncode, arguments)
     if not observed:
-        raise ValueError('The real targeted brew invocation was not observed; repeat with fresh baselines.')
+        raise ValueError('No real targeted brew invocation was observed; check for skipped native tests.')
+    after = plistlib.loads((installed / 'Contents/Info.plist').read_bytes())
+    if after['CFBundleShortVersionString'] != '1.1.0' or after['CFBundleIdentifier'] != baseline['CFBundleIdentifier']:
+        raise ValueError('The selected installed bundle does not match the expected update.')
     if sibling_before != digest_app(sibling) or sparkle_before != digest_app(sparkle):
         raise ValueError('An unrelated fixture app changed during the targeted update.')
     if host_casks != native_fixtures.run(['brew', 'list', '--cask'], capture=True):
         raise ValueError('The normal Homebrew cask registry changed.')
-    result_path = ROOT / 'evidence/l03/result.json'
-    result = json.loads(result_path.read_text())
-    result.update(sourceRevision=native_fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
+    result = dict(before='1.0.0 (1)', after='1.1.0 (2)', bundleID=after['CFBundleIdentifier'], path=str(installed),
+                  sourceRevision=native_fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
                   applicationModelSHA256=hashlib.sha256((REPO / 'Sources/LatestApp/AppModel.swift').read_bytes()).hexdigest(),
-                  unrelatedFixturesUnchanged=True, hostCasksUnchanged=True,
-                  observedUpgradeProcesses=sorted(observed),
+                  nativeTest='LatestUITests/testNativeHomebrewUpdate', resultBundle=str(result_bundle),
+                  unrelatedFixturesUnchanged=True, hostCasksUnchanged=True, observedUpgradeProcesses=sorted(observed),
                   upgradeArguments=['upgrade', '--cask', '--no-ask', native_fixtures.TOKEN])
-    result_path.write_text(json.dumps(result, indent=2) + '\n')
-    print('Verified unrelated signed fixtures and the normal Homebrew cask registry remain unchanged.')
+    (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+    print('Native Homebrew XCUITest passed: actual UI update action, installed 1.1.0, post-verification current status and retained screenshots.')
+    print('Result bundle:', result_bundle)
 
 
 if __name__ == '__main__':

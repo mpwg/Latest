@@ -39,6 +39,7 @@ def brew_environment():
     # Keep the real user's HOME; all mutable Homebrew fixture paths are explicit.
     return dict(os.environ, HOMEBREW_NO_AUTO_UPDATE='1', HOMEBREW_NO_ANALYTICS='1',
                 HOMEBREW_NO_INSTALL_CLEANUP='1', HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK='1',
+                XDG_CONFIG_HOME=str(ROOT / 'user-config'),
                 HOMEBREW_CACHE=str(ROOT / 'brew-cache'), HOMEBREW_LOGS=str(ROOT / 'brew-logs'),
                 HOMEBREW_TEMP=str(ROOT / 'brew-temp'))
 
@@ -156,7 +157,7 @@ def prepare_homebrew():
             destination.symlink_to(vendor, target_is_directory=True)
     brew = prefix / 'bin/brew'
     env = brew_environment()
-    for directory in ['brew-cache', 'brew-logs', 'brew-temp']:
+    for directory in ['brew-cache', 'brew-logs', 'brew-temp', 'user-config']:
         (ROOT / directory).mkdir(exist_ok=True)
     if Path(run([brew, '--prefix'], capture=True, env=env)) != prefix:
         raise ValueError('Refusing to use a Homebrew prefix outside the disposable root.')
@@ -167,6 +168,7 @@ def prepare_homebrew():
     run(['git', '-C', tap, '-c', 'user.name=Latest Native Fixtures', '-c', 'user.email=native-fixtures@example.invalid',
          'commit', '--quiet', '-m', 'Prepare disposable fixture cask'])
     run([brew, 'tap', TAP, tap], env=env)
+    run([brew, 'trust', '--cask', f'{TAP}/{TOKEN}'], env=env)
     run([brew, 'install', '--cask', '--no-ask', f'--appdir={ROOT / "applications"}', f'{TAP}/{TOKEN}'], env=env)
     value['brewPrefix'] = str(prefix)
     save(value)

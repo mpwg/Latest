@@ -66,8 +66,13 @@ import LatestPlatform
         #endif
         let arguments = ProcessInfo.processInfo.arguments
         let testRoot = arguments.firstIndex(of: "--ui-test-directory").flatMap { $0 + 1 < arguments.count ? URL(fileURLWithPath: arguments[$0+1]) : nil }
-        let root = preferencesDirectory ?? (uiTesting ? (testRoot ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/ui-test-state")) : support.appendingPathComponent("io.github.mpwg.Latest"))
-        brew = HomebrewProvider(executable: homebrewExecutable)
+        #if DEBUG
+        let nativeRoot = arguments.firstIndex(of: "--native-install-test-directory").flatMap { $0 + 1 < arguments.count ? URL(fileURLWithPath: arguments[$0+1]) : nil }
+        #else
+        let nativeRoot: URL? = nil
+        #endif
+        let root = preferencesDirectory ?? nativeRoot?.appendingPathComponent("preferences/l03") ?? (uiTesting ? (testRoot ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/ui-test-state")) : support.appendingPathComponent("io.github.mpwg.Latest"))
+        brew = HomebrewProvider(executable: homebrewExecutable ?? nativeRoot?.appendingPathComponent("homebrew/bin/brew"))
         store = PreferencesStore(url: root.appendingPathComponent("preferences.json"))
         diagnosticURL = root.appendingPathComponent("diagnostics.log")
         http = BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("Cache"))

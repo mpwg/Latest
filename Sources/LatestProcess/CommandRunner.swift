@@ -84,9 +84,15 @@ public actor CommandRunner {
     }
 
     public static func userEnvironment(home: URL = FileManager.default.homeDirectoryForCurrentUser) -> [String: String] {
-        ["HOME": home.path, "USER": NSUserName(), "LOGNAME": NSUserName(),
+        var environment = ["HOME": home.path, "USER": NSUserName(), "LOGNAME": NSUserName(),
          "PATH": "/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin",
          "LANG": "en_US.UTF-8", "MAS_NO_AUTO_INDEX": "1", "HOMEBREW_NO_AUTO_UPDATE": "1",
          "HOMEBREW_NO_ANALYTICS": "1", "HOMEBREW_NO_INSTALL_CLEANUP": "1"]
+        // Homebrew 7 stores custom-tap trust in the user's configured XDG directory.
+        // Keep that location; never replace the user's explicit trust decisions.
+        if let configuration = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"], configuration.hasPrefix("/") {
+            environment["XDG_CONFIG_HOME"] = configuration
+        }
+        return environment
     }
 }
