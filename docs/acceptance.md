@@ -16,7 +16,7 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | Homebrew ownership / targeted updates | passed | L03 targeted real native update and L04 native provenance-loss, changed-instance, informational catalogue and real failure/retry checks passed; scoped to isolated arm64/Tier 3 prefix |
 | Bundled mas / restricted broker | open | Compiled/pinned tools, own/foreign signer checks, request and package policy passed; native privileged request/install outstanding |
 | Sparkle 2.10.0 / lifecycle | passed | L05 signed installation and tamper rejection; L06 at ffb4ea0 adds real download cancellation, HTTP 503, signed retry/restart and native disabled cancellation at installer handoff; late callback/job-token contracts pass |
-| SwiftUI / filtering / ignore / channels / migration | open | L15 source/visibility/order/selection and L16 actual ignore/skip/later-version plus per-instance Stable/Beta persistence pass; major/bulk and normal signed-app migration remain open |
+| SwiftUI / filtering / ignore / channels / migration | open | L15 filtering/order, L16 instance-scoped preferences and L17 actual major/bulk/scan/duplicate protection pass; normal signed-app legacy migration remains open |
 | English/German string catalogues | passed | 74 keys, translated states and placeholder parity |
 | Shared schemes / GitHub Actions | passed | Both linked runs on 2731361 passed bootstrap, app build, 83 compiled invariants, validation, seven Swift Testing tests, five native UI tests and debug packaging |
 | Native installation / receipts / architecture | open | Actual Homebrew/Sparkle installations and L07 signed-bundle OS/architecture/version matrix pass on arm64; authentic App Store receipt/package installation still needs a controlled Store target |
@@ -28,6 +28,13 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 Overall acceptance: open.
 
 ## Subsequent native implementation evidence
+
+[L17](major-bulk-acceptance.md) at `11d08a6` adds four actual native cases for
+major cancellation/consent, provider-declared major, changed-consent rejection
+before download and two-target scoped bulk installation. Real gated scans and
+downloads prove action/job protection; independent bundle/signature/architecture
+checks and unchanged controls accompany the UI. Eleven Swift contracts cover
+provider-major policy and compatibility with older candidate JSON.
 
 [L16](app-preferences-acceptance.md) at `2743f68` adds two actual native tests
 with real signed same-ID instances and signed HTTPS feeds: ignore/reversal,
