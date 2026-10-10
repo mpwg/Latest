@@ -35,6 +35,9 @@ passed on `b61f414`; 84 invariants and warnings-as-errors Release build passed.
 The read-only inventory never establishes a provider installation result.
 Both filter/sort tests also pass after integration at `4e77913`, with current
 Release build, 84 invariants, seven Swift contracts and seven appcast regressions.
+At combined L15/L06 `271adc9`, both native filter/sort tests and all three actual
+Sparkle lifecycle cases pass again; current ten Swift contracts, 84 invariants,
+seven appcast regressions and warnings-as-errors Release build also pass.
 
 [L06](sparkle-lifecycle-acceptance.md) at `ffb4ea0` records three actual native
 Sparkle lifecycle tests, exact-instance/unchanged-control checks and accepted

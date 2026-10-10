@@ -23,6 +23,14 @@ appcast/signature regressions passed on that integrated source. The appcast
 regression requires building the current LatestRelease Debug tool first;
 an existing binary from another branch is not current evidence.
 
+After integrating L06, `271adc9` passed both native filter/sort tests again
+(`.build/l15-current/filter-sort-with-l06.xcresult`, accompanying native log).
+The complete three-case real Sparkle lifecycle driver also passed on that
+same combined source, preserving controls and exactly one terminal result per
+job. Current supporting checks: 84 compiled invariants, ten Swift Testing
+contracts, seven appcast regressions, warnings-as-errors Release build and
+74 localization keys. This verifies both implementations coexist.
+
 ## Reproduce
 
 With full Xcode 27 and an own Apple Development identity/team:
