@@ -29,6 +29,11 @@ consent requirement. Bulk updates include only available eligible minor targets.
 Scan-time and repeated starts are guarded, and selected version accessibility
 values stay current after installation.
 
+The [native instance-integrity checks](docs/instance-integrity-acceptance.md)
+reject executable replacement and signature tampering despite preserved metadata
+and times. Installation compares filesystem, architecture, receipt and signing
+identity, validates present signatures and rechecks identity before provider work.
+
 The [L18 normal-start migration suite](docs/migration-acceptance.md) verifies
 legacy directories/ignore/visibility migration once, native settings changes,
 normal quit/restart and malformed defaults on a signed client. Separate profile

@@ -1,5 +1,12 @@
 # Test coverage and evidence
 
+## Native executable-instance integrity
+
+[#51](instance-integrity-acceptance.md) at `379cacc` verifies two real preflight
+rejections with unchanged metadata/times and a real positive signed installation.
+Native journals prove rejection before provider work; independent signing checks
+establish valid replacement versus intentionally invalid tampering.
+
 ## L18 normal signed migration evidence
 
 [Two actual normal-start cases](migration-acceptance.md) at `253eafa` use a

@@ -29,6 +29,11 @@ Overall acceptance: open.
 
 ## Subsequent native implementation evidence
 
+[#51](instance-integrity-acceptance.md) at `379cacc` adds actual native rejection
+of signed executable replacement and signed-code tampering despite unchanged
+Info.plist and restored times. Both fail before provider work and preserve altered
+target/control bytes. A valid target still installs through the actual UI.
+
 [L18](migration-acceptance.md) at `253eafa` passes two actual signed normal-start
 tests without synthetic inventory: real legacy CFPreferences values migrate,
 native settings changes survive Command-Q/relaunch, changed legacy values cannot

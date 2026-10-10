@@ -232,9 +232,7 @@ import LatestPlatform
             var jobToken: UUID?
             do {
                 let token = try await jobLedger.start(candidate.app.id); jobToken = token
-                guard let fresh = AppInventory.snapshot(at: candidate.app.id.url), fresh.fingerprint == candidate.app.fingerprint else {
-                    throw LatestFailure.rejected("The selected app changed. Check for updates again.")
-                }
+                let fresh = try await AppInventory.validateForInstallation(candidate.app)
                 await accept(.init(.checking), candidate: candidate, token: token)
                 let context = CheckContext(apps: rows.map { $0.record.app }, preferences: preferences)
                 switch candidate.action {

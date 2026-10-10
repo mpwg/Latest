@@ -551,6 +551,27 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Major Upgrade"].exists)
         app.terminate()
     }
+    private func verifyNativeExecutableChange(_ name: String) throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root, holdScans: true)
+        selectNativeSparkle(app, root: root)
+        FileHandle.standardOutput.write(Data(("L51_READY_" + name + "\n").utf8))
+        let path = root + "/evidence/l51/" + name + "-ready"
+        let deadline = Date().addingTimeInterval(45)
+        while !FileManager.default.fileExists(atPath: path), Date() < deadline { Thread.sleep(forTimeInterval: 0.1) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path))
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["Update Failed"].waitForExistence(timeout: 30))
+        let reason = app.staticTexts.matching(NSPredicate(format: "value == %@ OR value == %@ OR label == %@ OR label == %@", "The selected app changed. Check for updates again.", "Code signature verification failed.", "The selected app changed. Check for updates again.", "Code signature verification failed.")).firstMatch
+        XCTAssertTrue(reason.exists)
+        app.terminate()
+    }
+    func testNativeSignedExecutableReplacementIsRejected() throws {
+        try verifyNativeExecutableChange("REPLACED")
+    }
+    func testNativeExecutableTamperingWithPreservedTimesIsRejected() throws {
+        try verifyNativeExecutableChange("TAMPERED")
+    }
 
     private func migrationValue(_ name: String) throws -> String {
         let values = ProcessInfo.processInfo.environment
