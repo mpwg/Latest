@@ -49,6 +49,11 @@ The [L04 native rejection suite](docs/homebrew-native-rejection.md) also verifie
 lost registration, a replaced selected bundle, non-authorizing catalogue hints
 and an actual failed update followed by successful rescan/retry. Run it with
 `python3 scripts/native_homebrew_rejection.py all` against the disposable fixtures.
+The [L05 native Sparkle acceptance](docs/sparkle-native-acceptance.md) verifies
+an actual signed 1.0.0-to-1.1.0 update of the selected instance and rejection of
+both a modified archive and an invalid enclosure signature. The other instance
+and provider fixture remain unchanged. Reproduce with
+`python3 scripts/native_sparkle_acceptance.py all` against the same environment.
 
 ## Features and boundaries
 

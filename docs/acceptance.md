@@ -15,7 +15,7 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | HTTPS / status / bounds / cache | passed | Production client with deterministic URLProtocol transport fixtures |
 | Homebrew ownership / targeted updates | passed | L03 targeted real native update and L04 native provenance-loss, changed-instance, informational catalogue and real failure/retry checks passed; scoped to isolated arm64/Tier 3 prefix |
 | Bundled mas / restricted broker | open | Compiled/pinned tools, own/foreign signer checks, request and package policy passed; native privileged request/install outstanding |
-| Sparkle 2.10.0 / lifecycle | open | Pinned distribution and main-actor adapter build passed; controlled signed appcast install outstanding |
+| Sparkle 2.10.0 / lifecycle | open | L05 actual signed installation, exact instance and archive/signature rejection passed on f262a29; native cancellation/error/lifecycle checks remain open |
 | SwiftUI / filtering / ignore / channels / migration | open | Five native XCUITests passed on 2731361: search, selection/notes, ignore/restart, German labels, identifiers/screenshot. Source filters, sorting, channels, skip/major/bulk actions and normal signed-app migration remain open |
 | English/German string catalogues | passed | 74 keys, translated states and placeholder parity |
 | Shared schemes / GitHub Actions | passed | Both linked runs on 2731361 passed bootstrap, app build, 83 compiled invariants, validation, seven Swift Testing tests, five native UI tests and debug packaging |
@@ -35,6 +35,11 @@ the warnings-as-errors build. [Release instructions](releasing.md) document
 mandatory explicit history selection and authenticated merging. This does not
 establish notarization, self-update or publication acceptance; the owner deferred
 release credentials on 2026-10-10.
+
+[L05](sparkle-native-acceptance.md) verifies three actual Sparkle UI outcomes on
+`f262a29`: signed installation to 1.1.0 and two rejected modifications that
+preserve the selected 1.0.0 bundle. Other same-ID instance and Homebrew control
+remain byte-for-byte unchanged. Result bundles and source hashes are retained.
 
 [L04](homebrew-native-rejection.md) adds four real native rejection/recovery
 checks on `eec132b`, with no upgrade process for rejected provenance/instance/
