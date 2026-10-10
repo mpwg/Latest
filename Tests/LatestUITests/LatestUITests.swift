@@ -704,7 +704,7 @@ import XCTest
         return app
     }
     private func assertToggle(_ window: XCUIElement, _ name: String, _ enabled: Bool) {
-        let value = window.descendants(matching: .any).matching(identifier: name).firstMatch.value
+        let value = window.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", name)).firstMatch.value
         if let number = value as? NSNumber { XCTAssertEqual(number.boolValue, enabled) }
         else { XCTAssertEqual(value as? String, enabled ? "1" : "0") }
     }
