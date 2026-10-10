@@ -591,17 +591,17 @@ import XCTest
         XCTAssertTrue(app.buttons["settings"].waitForExistence(timeout: 10)); app.buttons["settings"].click()
         let settings = app.windows["Settings…"]
         XCTAssertTrue(settings.waitForExistence(timeout: 10))
-        settings.buttons["Locations"].click()
+        settings.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR value == %@ OR identifier == %@", "Locations", "Locations", "Locations")).firstMatch.click()
         XCTAssertTrue(settings.buttons["add-directory"].waitForExistence(timeout: 10))
         return settings
     }
     private func addNativeDirectory(_ app: XCUIApplication, settings: XCUIElement, path: String) {
         settings.buttons["add-directory"].click()
         app.typeKey("g", modifierFlags: [.command, .shift])
-        let pathField = app.textFields.firstMatch
+        let pathField = app.textFields["PathTextField"]
         XCTAssertTrue(pathField.waitForExistence(timeout: 10))
         pathField.typeText(path); app.typeKey(.return, modifierFlags: [])
-        app.buttons["Open"].firstMatch.click()
+        app.windows.descendants(matching: .button).matching(identifier: "Open").firstMatch.click()
         XCTAssertTrue(directoryControl(settings, "enabled", path).waitForExistence(timeout: 10))
     }
     private func waitForNativeAbsence(_ app: XCUIApplication, identifier: String) {
