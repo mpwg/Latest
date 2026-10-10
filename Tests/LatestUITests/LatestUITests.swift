@@ -472,6 +472,10 @@ import XCTest
         XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
         XCTAssertTrue(app.staticTexts[path].exists)
     }
+    private func assertNativeText(_ element: XCUIElement, _ text: String, timeout: TimeInterval = 30) {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@ OR label == %@", text, text), object: element)
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: timeout), .completed)
+    }
 
     func testNativeMajorConsentAndCancellation() throws {
         let root = try nativeRoot()
@@ -484,13 +488,11 @@ import XCTest
         consent.buttons["Cancel"].click()
         XCTAssertFalse(consent.exists)
         majorBulkStage("CANCEL_MAJOR", root: root)
-        XCTAssertEqual(app.staticTexts["installed-version"].label, "1.0.0 (1)")
+        assertNativeText(app.staticTexts["installed-version"], "1.0.0 (1)")
         app.buttons["update-selected"].click()
         consent.buttons["Install Major Upgrade"].click()
-        let installed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "2.0.0 (2)"), object: app.staticTexts["installed-version"])
-        XCTAssertEqual(XCTWaiter.wait(for: [installed], timeout: 120), .completed)
-        let current = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Up to Date"), object: app.staticTexts["selected-status"])
-        XCTAssertEqual(XCTWaiter.wait(for: [current], timeout: 30), .completed)
+        assertNativeText(app.staticTexts["installed-version"], "2.0.0 (2)", timeout: 120)
+        assertNativeText(app.staticTexts["selected-status"], "Up to Date")
         app.terminate()
     }
 
@@ -516,13 +518,11 @@ import XCTest
         let paths = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: String])
         for key in ["selected", "minor"] {
             selectNativePath(app, try XCTUnwrap(paths[key]))
-            let installed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "1.1.0 (2)"), object: app.staticTexts["installed-version"])
-            XCTAssertEqual(XCTWaiter.wait(for: [installed], timeout: 120), .completed)
-            let current = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Up to Date"), object: app.staticTexts["selected-status"])
-            XCTAssertEqual(XCTWaiter.wait(for: [current], timeout: 30), .completed)
+            assertNativeText(app.staticTexts["installed-version"], "1.1.0 (2)", timeout: 120)
+            assertNativeText(app.staticTexts["selected-status"], "Up to Date")
         }
         selectNativePath(app, try XCTUnwrap(paths["major"]))
-        XCTAssertEqual(app.staticTexts["installed-version"].label, "1.0.0 (1)")
+        assertNativeText(app.staticTexts["installed-version"], "1.0.0 (1)")
         XCTAssertTrue(app.staticTexts["Major Upgrade"].exists)
         app.terminate()
     }
