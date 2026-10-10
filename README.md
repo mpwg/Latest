@@ -13,6 +13,11 @@ ignores late completion callbacks. Positive App Store installation still needs
 a controlled Store target; production signing, notarization and self-update
 require the deferred release credentials.
 
+The [L07 native compatibility matrix](docs/sparkle-compatibility-acceptance.md)
+also checks explicit architecture/OS rejection and real signed bundle versions.
+It verifies the actual installed executable on an arm64 Mac; no Intel-host
+acceptance is inferred.
+
 ## Build and verify
 
 Use Xcode 27 / Swift 6.4 and macOS 27 or newer:

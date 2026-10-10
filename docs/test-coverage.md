@@ -6,6 +6,15 @@ exact duplicate-instance selection across changed scan enumeration. The entire
 ordinary suite passes seven UI tests plus seven Swift contracts; real provider
 checks and installation cases retain their separate environments and evidence.
 
+## L07 native compatibility evidence
+
+[Four actual native cases](sparkle-compatibility-acceptance.md) at `776c4b2`
+check a signed x86_64 archive on arm64, target minimum OS 99, a real signed
+incomparable build, and Sparkle build ordering with display-version disagreement.
+Rejected cases start no job and preserve exact selected app bytes. The successful
+case independently verifies installed bundle identity/version, signature and
+actual Mach-O architecture, plus native restart and unchanged control instances.
+
 ## L06 native Sparkle lifecycle evidence
 
 At `ffb4ea0`, [three opt-in native cases](sparkle-lifecycle-acceptance.md) exercise

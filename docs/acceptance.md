@@ -19,7 +19,7 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | SwiftUI / filtering / ignore / channels / migration | open | L15 seven native XCUITests passed on b61f414, including every source, state visibility, stable name/path/source order and selected canonical instance across scans; channels, skip/major/bulk and normal signed-app migration remain open |
 | English/German string catalogues | passed | 74 keys, translated states and placeholder parity |
 | Shared schemes / GitHub Actions | passed | Both linked runs on 2731361 passed bootstrap, app build, 83 compiled invariants, validation, seven Swift Testing tests, five native UI tests and debug packaging |
-| Native installation / receipts / architecture | not verifiable | Xcode / controlled signed test apps |
+| Native installation / receipts / architecture | open | Actual Homebrew/Sparkle installations and L07 signed-bundle OS/architecture/version matrix pass on arm64; authentic App Store receipt/package installation still needs a controlled Store target |
 | Keyboard / VoiceOver / large text | not verifiable | Native interaction |
 | Release signing / notarization / self-update | not verifiable | Own Developer ID / notarization / feed |
 | Appcast history and complete-feed signatures | passed | L28 seven regressions on 3ba5c3d: preserved history/notes, ordering, first/empty feed, invalid/duplicate metadata and actual complete-feed signing/tamper rejection |
@@ -38,6 +38,13 @@ Release build, 84 invariants, seven Swift contracts and seven appcast regression
 At combined L15/L06 `271adc9`, both native filter/sort tests and all three actual
 Sparkle lifecycle cases pass again; current ten Swift contracts, 84 invariants,
 seven appcast regressions and warnings-as-errors Release build also pass.
+
+[L07](sparkle-compatibility-acceptance.md) at `776c4b2` passes four actual native
+cases: explicit signed x86_64 target rejected on arm64, minimum OS 99 rejected,
+real incomparable signed build stays unknown, and signed 0.9.0 (2) replaces
+1.0.0 (1) using the Sparkle build policy. Independent post-install signature,
+bundle identity/version and lipo checks pass; control instances stay unchanged.
+Evidence is explicitly scoped to the arm64 host.
 
 [L06](sparkle-lifecycle-acceptance.md) at `ffb4ea0` records three actual native
 Sparkle lifecycle tests, exact-instance/unchanged-control checks and accepted
