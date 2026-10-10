@@ -1,5 +1,14 @@
 # Test coverage and evidence
 
+## L18 normal signed migration evidence
+
+[Two actual normal-start cases](migration-acceptance.md) at `253eafa` use a
+separate filesystem home and real isolated CFPreferences suite. They verify
+first migration, native settings switches, normal Command-Q/relaunch, nonrepeated
+migration and malformed/missing defaults. No synthetic inventory or native
+installation mode is used; all source/isolation limits and cleanup hashes are
+documented explicitly.
+
 ## L17 native major and bulk evidence
 
 [Four actual native cases](major-bulk-acceptance.md) at `11d08a6` verify major

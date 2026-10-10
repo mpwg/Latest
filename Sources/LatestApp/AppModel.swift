@@ -66,6 +66,7 @@ import LatestPlatform
     @ObservationIgnored private var fixtureOrderReversed = false
     #endif
     private let nativeJobJournal: URL?
+    private let legacyPreferencesDomain: String
 
     init(preferencesDirectory: URL? = nil, homebrewExecutable: URL? = nil) {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
@@ -76,6 +77,12 @@ import LatestPlatform
         uiTesting = false
         #endif
         let arguments = ProcessInfo.processInfo.arguments
+        #if DEBUG
+        let migrationDomain = arguments.firstIndex(of: "--native-migration-test-domain").flatMap { $0 + 1 < arguments.count ? arguments[$0+1] : nil }
+        legacyPreferencesDomain = migrationDomain.flatMap { $0.hasPrefix("io.github.mpwg.Latest.NativeMigration.") ? $0 : nil } ?? "com.max-langer.Latest"
+        #else
+        legacyPreferencesDomain = "com.max-langer.Latest"
+        #endif
         let testRoot = arguments.firstIndex(of: "--ui-test-directory").flatMap { $0 + 1 < arguments.count ? URL(fileURLWithPath: arguments[$0+1]) : nil }
         #if DEBUG
         let nativeRoot = arguments.firstIndex(of: "--native-install-test-directory").flatMap { $0 + 1 < arguments.count ? URL(fileURLWithPath: arguments[$0+1]) : nil }
@@ -102,7 +109,7 @@ import LatestPlatform
         guard !started else { return }
         started = true
         do {
-            let legacy = UserDefaults.standard.persistentDomain(forName: "com.max-langer.Latest") ?? [:]
+            let legacy = UserDefaults.standard.persistentDomain(forName: legacyPreferencesDomain) ?? [:]
             var values: [String: PreferenceValue] = [:]
             for key in ["directoryPaths", "IgnoredAppsKey"] { if let value = legacy[key] as? [String] { values[key] = .strings(value) } }
             for key in ["ShowInstalledUpdatesKey", "ShowIgnoredUpdatesKey", "ShowUnsupportedUpdatesKey"] { if let value = legacy[key] as? Bool { values[key] = .bool(value) } }
