@@ -163,7 +163,8 @@ import LatestPlatform
             var iterator = result.apps.makeIterator()
             for _ in 0..<8 { if let app = iterator.next() { group.addTask { await Self.check(app, providers: providers, context: context) } } }
             while let record = await group.next() {
-                if generation == token, !Task.isCancelled, await scanLedger.accept(record, generation: ledgerToken) {
+                if generation == token, !Task.isCancelled, await scanLedger.accept(record, generation: ledgerToken),
+                   generation == token, !Task.isCancelled {
                     rows.first { $0.id == record.id }?.record = record
                     checked += 1; filter()
                 }
