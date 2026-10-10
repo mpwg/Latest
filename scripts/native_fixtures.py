@@ -130,6 +130,7 @@ def prepare(identity, port, include_homebrew):
          '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1'], capture=True)
     (ROOT / 'private/tls.key').chmod(0o600)
     value = dict(format=1, root=str(ROOT), sourceRevision=run(['git', 'rev-parse', 'HEAD'], capture=True),
+                 fixtureSourceSHA256=hashlib.sha256((REPO / 'Tests/NativeFixtures/FixtureApp.swift').read_bytes()).hexdigest(),
                  macOS=run(['sw_vers', '-productVersion'], capture=True),
                  swift=run(['swift', '--version'], capture=True), port=port, publicKey=public_key,
                  fixtures=fixtures, brewPrefix=None, tlsTrust='explicit fixture certificate only; system trust unchanged',
@@ -214,6 +215,39 @@ def serve():
         server.server_close()
 
 
+def trust_localhost():
+    value = manifest()
+    if value.get('trustedKeychain'):
+        raise ValueError('This fixture certificate is already recorded as trusted.')
+    keychain = run(['security', 'default-keychain', '-d', 'user'], capture=True).strip('"')
+    # The explicit command opts into user-domain SSL trust for localhost only.
+    value['trustedKeychain'] = keychain
+    save(value)
+    run(['security', 'add-trusted-cert', '-r', 'trustRoot', '-p', 'ssl', '-s', 'localhost',
+         '-k', keychain, ROOT / 'tls.crt'])
+    value['tlsTrust'] = 'user-domain SSL trust constrained to localhost; remove after tests'
+    save(value)
+
+
+def untrust_localhost():
+    value = manifest()
+    keychain = value.get('trustedKeychain')
+    if not keychain:
+        return
+    certificate = ROOT / 'tls.crt'
+    fingerprint = run(['openssl', 'x509', '-in', certificate, '-noout', '-fingerprint', '-sha256'], capture=True)
+    fingerprint = fingerprint.split('=', 1)[1].replace(':', '')
+    # A failed initial trust operation may have left no trust setting/certificate.
+    for arguments in [['security', 'remove-trusted-cert', certificate],
+                      ['security', 'delete-certificate', '-Z', fingerprint, keychain]]:
+        result = subprocess.run([str(value) for value in arguments], capture_output=True, text=True)
+        if result.returncode and 'could not be found' not in result.stderr.lower() and 'no trust settings' not in result.stderr.lower():
+            raise RuntimeError(result.stderr.strip())
+    value.pop('trustedKeychain')
+    value['tlsTrust'] = 'explicit fixture certificate only; system trust unchanged'
+    save(value)
+
+
 def cleanup():
     value = manifest()
     if ROOT.is_symlink() or value['format'] != 1 or value['root'] != str(ROOT):
@@ -223,6 +257,7 @@ def cleanup():
         if prefix != ROOT / 'homebrew' or prefix.is_symlink():
             raise ValueError('Unexpected Homebrew prefix; refusing cleanup.')
         run([prefix / 'bin/brew', 'uninstall', '--cask', TOKEN], env=brew_environment())
+    untrust_localhost()
     shutil.rmtree(ROOT)
     print('Removed only the generated native fixture root; host Homebrew and production apps unchanged.')
 
@@ -234,7 +269,7 @@ if __name__ == '__main__':
     preparation.add_argument('--identity', required=True)
     preparation.add_argument('--port', type=int, default=8443)
     preparation.add_argument('--homebrew', action='store_true')
-    for name in ['verify', 'serve', 'cleanup', 'prepare-homebrew']:
+    for name in ['verify', 'serve', 'cleanup', 'prepare-homebrew', 'trust-localhost', 'untrust-localhost']:
         commands.add_parser(name)
     version = commands.add_parser('set-cask-version')
     version.add_argument('version', choices=['1.0.0', '1.1.0'])
@@ -246,4 +281,5 @@ if __name__ == '__main__':
     elif arguments.command == 'set-cask-version':
         set_cask_version(arguments.version)
     else:
-        {'verify': verify, 'serve': serve, 'cleanup': cleanup}[arguments.command]()
+        {'verify': verify, 'serve': serve, 'cleanup': cleanup,
+         'trust-localhost': trust_localhost, 'untrust-localhost': untrust_localhost}[arguments.command]()

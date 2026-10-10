@@ -35,6 +35,12 @@ broker and cannot load non-platform frameworks under production library
 validation. Developer-signed bundles keep hardened runtime and library validation.
 No packaging command registers a helper or modifies installed applications.
 
+For controlled installation acceptance, use the
+[disposable native fixtures](docs/native-fixtures.md). They provide two own
+signed app versions, separate preferences, a local HTTPS feed and a real cask
+inside an isolated Homebrew prefix, with explicit cleanup instructions. Fixture
+preparation is separate from successfully updating an app through Latest.
+
 ## Features and boundaries
 
 - Native SwiftUI inventory, search, source filtering, stable name/path sorting,
