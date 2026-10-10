@@ -4,6 +4,9 @@
 fixtures on macOS 27. It performs no root installation and no user-app update.
 `LatestCoreTests` provides the Xcode Swift Testing suite; `LatestUITests` uses
 the real native SwiftUI views with an isolated debug fixture inventory.
+The separate [native installation fixtures](native-fixtures.md) prepare signed
+baseline/target bundles and an isolated real Homebrew cask. Their preparation
+and HTTPS checks do not replace the remaining provider installation acceptance.
 
 | Behaviour / audit finding | Automated evidence | Remaining acceptance |
 |---|---|---|
