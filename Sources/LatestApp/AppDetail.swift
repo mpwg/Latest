@@ -66,11 +66,14 @@ private struct AppDetailMetadata: View {
             Picker("Release Channel", selection: Binding(get: { model.preferences.channels[row.id.path, default: .stable] }, set: { model.preferences.channels[row.id.path] = $0; model.save(); model.refresh() })) {
                 Text("Stable").tag(ReleaseChannel.stable)
                 Text("Beta").tag(ReleaseChannel.beta)
-            }.pickerStyle(.segmented).frame(maxWidth: 260)
+            }.pickerStyle(.segmented).frame(maxWidth: 260).accessibilityIdentifier("release-channel")
             HStack {
                 Button(model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) ? "Stop Ignoring" : "Ignore App") { model.ignore(row) }.accessibilityIdentifier("ignore-selected")
                 Button("Skip This Version") { model.skip(row) }.disabled(row.record.candidate == nil)
-                if row.record.status == .skipped { Button("Clear Skipped Version") { model.clearSkip(row) } }
+                    .accessibilityIdentifier("skip-selected")
+                if row.record.status == .skipped {
+                    Button("Clear Skipped Version") { model.clearSkip(row) }.accessibilityIdentifier("clear-skip-selected")
+                }
             }
         }
     }

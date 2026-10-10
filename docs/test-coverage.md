@@ -1,5 +1,13 @@
 # Test coverage and evidence
 
+## L16 native preference evidence
+
+[Two actual native cases](app-preferences-acceptance.md) at `2743f68` cover
+ignore/reversal, concrete skip/clear/restart, a later real appcast version and
+instance-scoped Stable/Beta checks across relaunch/refresh. The driver verifies
+saved canonical-path keys independently and unchanged selected/secondary/other-
+provider bundles. These are production provider checks, with no injected inventory.
+
 [L15](ui-filter-sort-acceptance.md) adds current native evidence on `b61f414`:
 every source/reset, combined status visibility, both stable sort orders and
 exact duplicate-instance selection across changed scan enumeration. The entire
