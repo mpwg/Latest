@@ -26,6 +26,7 @@ generated lives under `.build/native-install-tests/`, with an owner-only root:
 | `applications/` | Disposable Sparkle baseline and Homebrew-managed baseline |
 | `preferences/` | Separate preferences for controlled Latest launches |
 | `homebrew/` | Isolated real brew repository, tap and Caskroom |
+| `user-config/` | Isolated XDG Homebrew trust/configuration, including explicit trust for only the disposable cask |
 | `web/` | Signed appcast and four signed-app ZIP archives only |
 | `private/` | Independent fixture-only Ed25519 key and local TLS key |
 | `manifest.json` | Source revision/hash, versions, IDs, paths, architecture, signing team/authority and archive digests |
@@ -36,7 +37,7 @@ its actual bundle metadata with `--fixture-metadata`.
 
 Homebrew is cloned locally from the installed brew repository and may reuse its
 portable Ruby runtime. The fixture prefix, tap, Caskroom, app destination, cache,
-logs and temporary files remain under the generated root. The host's installed
+logs, XDG trust/configuration and temporary files remain under the generated root. The host's installed
 casks and its prefix are not used as installation targets. This nonstandard
 prefix is a Homebrew Tier 3 test configuration; results must name that limit.
 The cask downloads the prepared local ZIP with its exact SHA-256. No mock brew
@@ -50,6 +51,8 @@ python3 scripts/native_fixtures.py set-cask-version 1.1.0
 
 This changes the test tap, not the installed baseline. Let the real provider
 perform the subsequent update in its separately recorded acceptance test.
+The [L03 native Homebrew test](homebrew-native-acceptance.md) exercises the actual
+application through a locally signed XCUITest runner with full Xcode 27.
 
 ## Controlled HTTPS
 

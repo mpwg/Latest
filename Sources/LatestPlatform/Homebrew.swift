@@ -39,8 +39,14 @@ public actor HomebrewProvider: UpdateProvider {
         guard owned.count == 1, let cask = owned.first, let executable else { return nil }
         if cask.autoUpdates, app.feedURL != nil { return nil }
         let result = try await runner.run(executable: executable, arguments: ["outdated", "--cask", "--json=v2", cask.token], environment: CommandRunner.userEnvironment())
-        guard result.exitCode == 0 else { throw LatestFailure.process("Cannot check the installed cask.") }
-        let outdated = try Metadata.outdatedCaskTokens(result.output).contains(cask.token)
+        // A named `brew outdated` exits 1 when that cask has an update.
+        // Accept it only with valid JSON identifying the requested cask.
+        guard result.exitCode == 0 || result.exitCode == 1 else { throw LatestFailure.process("Cannot check the installed cask.") }
+        let outdatedTokens = try Metadata.outdatedCaskTokens(result.output)
+        guard result.exitCode == 0 || outdatedTokens == [cask.token] else {
+            throw LatestFailure.process("Homebrew returned an unsuccessful check without the expected outdated cask.")
+        }
+        let outdated = outdatedTokens.contains(cask.token)
         guard cask.version != "latest" else { return nil }
         let version = AppVersion(display: cask.version.split(separator: ",").first.map(String.init))
         return .init(app: app, source: .homebrew, version: version, action: .homebrew(cask.token),

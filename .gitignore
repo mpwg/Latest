@@ -6,6 +6,7 @@
 .build/
 .swiftpm/
 .release/
+__pycache__/
 Vendor/
 
 ## Build generated

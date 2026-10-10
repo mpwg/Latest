@@ -42,7 +42,7 @@ import LatestPlatform
     private let inventory = AppInventory()
     private let scanLedger = ScanLedger()
     private let jobLedger = JobLedger()
-    private let brew = HomebrewProvider()
+    private let brew: HomebrewProvider
     private let appStore: AppStoreProvider
     private let sparkle = SparkleProvider()
     private let broker = BrokerClient()
@@ -56,7 +56,7 @@ import LatestPlatform
     private var fingerprints = Set<String>()
     private let uiTesting: Bool
 
-    init() {
+    init(preferencesDirectory: URL? = nil, homebrewExecutable: URL? = nil) {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         #if DEBUG
@@ -66,7 +66,13 @@ import LatestPlatform
         #endif
         let arguments = ProcessInfo.processInfo.arguments
         let testRoot = arguments.firstIndex(of: "--ui-test-directory").flatMap { $0 + 1 < arguments.count ? URL(fileURLWithPath: arguments[$0+1]) : nil }
-        let root = uiTesting ? (testRoot ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/ui-test-state")) : support.appendingPathComponent("io.github.mpwg.Latest")
+        #if DEBUG
+        let nativeRoot = arguments.firstIndex(of: "--native-install-test-directory").flatMap { $0 + 1 < arguments.count ? URL(fileURLWithPath: arguments[$0+1]) : nil }
+        #else
+        let nativeRoot: URL? = nil
+        #endif
+        let root = preferencesDirectory ?? nativeRoot?.appendingPathComponent("preferences/l03") ?? (uiTesting ? (testRoot ?? URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent(".build/ui-test-state")) : support.appendingPathComponent("io.github.mpwg.Latest"))
+        brew = HomebrewProvider(executable: homebrewExecutable ?? nativeRoot?.appendingPathComponent("homebrew/bin/brew"))
         store = PreferencesStore(url: root.appendingPathComponent("preferences.json"))
         diagnosticURL = root.appendingPathComponent("diagnostics.log")
         http = BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("Cache"))

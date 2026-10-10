@@ -40,6 +40,11 @@ For controlled installation acceptance, use the
 signed app versions, separate preferences, a local HTTPS feed and a real cask
 inside an isolated Homebrew prefix, with explicit cleanup instructions. Fixture
 preparation is separate from successfully updating an app through Latest.
+The [L03 native Homebrew acceptance](docs/homebrew-native-acceptance.md) now
+passes through the real UI on an own signed client: it updates only the managed
+fixture from 1.0.0 to 1.1.0, verifies the installed bundle and preserves the
+equal-name unmanaged copy. Reproduction requires full Xcode 27 and the explicitly
+prepared fixture environment. Other installation and production gates remain open.
 
 ## Features and boundaries
 
