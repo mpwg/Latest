@@ -29,6 +29,11 @@ consent requirement. Bulk updates include only available eligible minor targets.
 Scan-time and repeated starts are guarded, and selected version accessibility
 values stay current after installation.
 
+The [L18 normal-start migration suite](docs/migration-acceptance.md) verifies
+legacy directories/ignore/visibility migration once, native settings changes,
+normal quit/restart and malformed defaults on a signed client. Separate profile
+and test-domain isolation preserve existing user state.
+
 ## Build and verify
 
 Use Xcode 27 / Swift 6.4 and macOS 27 or newer:
