@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import plistlib
+import re
 import shutil
 import uuid
 import xml.etree.ElementTree as ET
@@ -19,7 +20,13 @@ NS = fixtures.NAMESPACE
 
 
 def sign(app):
-    fixtures.run(['codesign', '--force', '--sign', fixtures.manifest()['fixtures'][0]['signer'],
+    identities = fixtures.run(['security', 'find-identity', '-v', '-p', 'codesigning'], capture=True)
+    signer = fixtures.manifest()['fixtures'][0]['signer']
+    matches = [re.search(r'\b([A-F0-9]{40})\b', line).group(1) for line in identities.splitlines()
+               if signer in line and re.search(r'\b([A-F0-9]{40})\b', line)]
+    if len(matches) != 1:
+        raise ValueError('Exactly one available signing identity must match the controlled fixtures.')
+    fixtures.run(['codesign', '--force', '--sign', matches[0],
                   '--options', 'runtime', '--timestamp=none', app])
     fixtures.run(['codesign', '--verify', '--deep', '--strict', app])
 
@@ -68,8 +75,6 @@ def run_case(case):
     fixtures.run(['ditto', '-c', '-k', '--keepParent', target, archive])
     tool = REPO / '.build/debug/LatestRelease'
     signature = fixtures.run([tool, 'sign', ROOT / 'private/fixture-ed25519.key', archive], capture=True)
-    url = fixtures.manifest()['fixtures'][0]['path']
-    del url  # Archive URLs come from the existing controlled feed, never app paths.
     from urllib.parse import urlsplit, urlunsplit
     original = urlsplit(enclosure.get('url'))
     enclosure.set('url', urlunsplit((original.scheme, original.netloc, '/' + archive.name, '', '')))
