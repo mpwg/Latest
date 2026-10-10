@@ -379,4 +379,84 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
         app.terminate()
     }
+
+    private func selectSparkleInstance(_ app: XCUIApplication, path: String) {
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@ AND value == %@", "app-row-io.github.mpwg.Latest.NativeFixture.Sparkle", path)).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
+        XCTAssertTrue(app.staticTexts[path].exists)
+    }
+    private func assertUpdateEnabled(_ app: XCUIApplication, _ enabled: Bool) {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == %@", NSNumber(value: enabled)), object: app.buttons["update-selected"])
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 30), .completed)
+    }
+    private func preferenceStage(_ name: String, root: String) {
+        FileHandle.standardOutput.write(Data(("L16_READY_" + name + "\n").utf8))
+        let path = root + "/evidence/l16/" + name + "-ready"
+        let deadline = Date().addingTimeInterval(45)
+        while !FileManager.default.fileExists(atPath: path), Date() < deadline { Thread.sleep(forTimeInterval: 0.1) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path))
+    }
+
+    func testNativeIgnoreSkipAndNewVersion() throws {
+        let root = try nativeRoot()
+        let top = root + "/applications/Latest Sparkle Fixture.app"
+        let other = root + "/applications/Secondary/Latest Sparkle Fixture.app"
+        let app = nativeApp(root)
+        selectSparkleInstance(app, path: top); assertUpdateEnabled(app, true)
+        app.buttons["ignore-selected"].click()
+        XCTAssertTrue(app.staticTexts["Ignored"].firstMatch.waitForExistence(timeout: 30))
+        assertUpdateEnabled(app, false)
+        app.terminate(); app.launch()
+        selectSparkleInstance(app, path: top)
+        XCTAssertTrue(app.buttons["ignore-selected"].label == "Stop Ignoring")
+        assertUpdateEnabled(app, false)
+        app.buttons["ignore-selected"].click(); assertUpdateEnabled(app, true)
+        app.buttons["skip-selected"].click()
+        XCTAssertTrue(app.staticTexts["Version Skipped"].firstMatch.waitForExistence(timeout: 30))
+        assertUpdateEnabled(app, false)
+        app.terminate(); app.launch()
+        selectSparkleInstance(app, path: top)
+        XCTAssertTrue(app.staticTexts["Version Skipped"].firstMatch.waitForExistence(timeout: 30))
+        assertUpdateEnabled(app, false)
+        selectSparkleInstance(app, path: other); assertUpdateEnabled(app, true)
+        selectSparkleInstance(app, path: top)
+        app.buttons["clear-skip-selected"].click(); assertUpdateEnabled(app, true)
+        app.buttons["skip-selected"].click()
+        XCTAssertTrue(app.staticTexts["Version Skipped"].firstMatch.waitForExistence(timeout: 30))
+        preferenceStage("NEXT", root: root)
+        app.buttons["refresh"].click()
+        XCTAssertTrue(app.staticTexts["New version: 1.2.0 (3)"].waitForExistence(timeout: 30))
+        assertUpdateEnabled(app, true)
+        app.terminate(); app.launch()
+        selectSparkleInstance(app, path: top)
+        XCTAssertTrue(app.staticTexts["New version: 1.2.0 (3)"].waitForExistence(timeout: 30))
+        assertUpdateEnabled(app, true)
+        app.terminate()
+    }
+
+    func testNativeChannelsAreInstanceScopedAndPersistent() throws {
+        let root = try nativeRoot()
+        let top = root + "/applications/Latest Sparkle Fixture.app"
+        let other = root + "/applications/Secondary/Latest Sparkle Fixture.app"
+        let app = nativeApp(root)
+        selectSparkleInstance(app, path: top)
+        XCTAssertTrue(app.staticTexts["New version: 1.1.0 (2)"].waitForExistence(timeout: 30))
+        app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Beta")).firstMatch.click()
+        XCTAssertTrue(app.staticTexts["New version: 1.2.0 (3)"].waitForExistence(timeout: 30))
+        app.terminate(); app.launch()
+        selectSparkleInstance(app, path: top)
+        XCTAssertTrue(app.staticTexts["New version: 1.2.0 (3)"].waitForExistence(timeout: 30))
+        app.buttons["refresh"].click()
+        XCTAssertTrue(app.staticTexts["New version: 1.2.0 (3)"].waitForExistence(timeout: 30))
+        selectSparkleInstance(app, path: other)
+        XCTAssertTrue(app.staticTexts["New version: 1.1.0 (2)"].waitForExistence(timeout: 30))
+        preferenceStage("CHANNELS", root: root)
+        selectSparkleInstance(app, path: top)
+        app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Stable")).firstMatch.click()
+        XCTAssertTrue(app.staticTexts["New version: 1.1.0 (2)"].waitForExistence(timeout: 30))
+        app.terminate(); app.launch()
+        selectSparkleInstance(app, path: top)
+        XCTAssertTrue(app.staticTexts["New version: 1.1.0 (2)"].waitForExistence(timeout: 30))
+        app.terminate()
+    }
 }
