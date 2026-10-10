@@ -244,4 +244,35 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 20))
         app.terminate()
     }
+
+    private func selectNativeSparkle(_ app: XCUIApplication, root: String) {
+        let row = app.descendants(matching: .any).matching(identifier: "app-row-io.github.mpwg.Latest.NativeFixture.Sparkle").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 30)); row.click()
+        XCTAssertTrue(app.staticTexts[root + "/applications/Latest Sparkle Fixture.app"].exists)
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["update-selected"])
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed)
+    }
+
+    func testNativeSparkleSelectedInstanceUpdate() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectNativeSparkle(app, root: root)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["1.1.0 (2)"].firstMatch.waitForExistence(timeout: 120))
+        XCTAssertTrue(app.staticTexts["Up to Date"].firstMatch.waitForExistence(timeout: 30))
+        let attachment = XCTAttachment(screenshot: app.windows["Latest"].screenshot())
+        attachment.name = "L05 exact selected Sparkle instance updated"; attachment.lifetime = .keepAlways
+        add(attachment)
+        app.terminate()
+    }
+
+    func testNativeSparkleRejectsTamperedUpdate() throws {
+        let root = try nativeRoot()
+        let app = nativeApp(root)
+        selectNativeSparkle(app, root: root)
+        app.buttons["update-selected"].click()
+        XCTAssertTrue(app.staticTexts["Update Failed"].waitForExistence(timeout: 90))
+        XCTAssertFalse(app.staticTexts["Up to Date"].firstMatch.exists)
+        app.terminate()
+    }
 }

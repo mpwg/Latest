@@ -15,13 +15,14 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | HTTPS / status / bounds / cache | passed | Production client with deterministic URLProtocol transport fixtures |
 | Homebrew ownership / targeted updates | passed | L03 targeted real native update and L04 native provenance-loss, changed-instance, informational catalogue and real failure/retry checks passed; scoped to isolated arm64/Tier 3 prefix |
 | Bundled mas / restricted broker | open | Compiled/pinned tools, own/foreign signer checks, request and package policy passed; native privileged request/install outstanding |
-| Sparkle 2.10.0 / lifecycle | open | Pinned distribution and main-actor adapter build passed; controlled signed appcast install outstanding |
+| Sparkle 2.10.0 / lifecycle | open | L05 actual signed installation, exact instance and archive/signature rejection passed on f262a29; native cancellation/error/lifecycle checks remain open |
 | SwiftUI / filtering / ignore / channels / migration | open | L15 seven native XCUITests passed on b61f414, including every source, state visibility, stable name/path/source order and selected canonical instance across scans; channels, skip/major/bulk and normal signed-app migration remain open |
 | English/German string catalogues | passed | 74 keys, translated states and placeholder parity |
 | Shared schemes / GitHub Actions | passed | Both linked runs on 2731361 passed bootstrap, app build, 83 compiled invariants, validation, seven Swift Testing tests, five native UI tests and debug packaging |
 | Native installation / receipts / architecture | not verifiable | Xcode / controlled signed test apps |
 | Keyboard / VoiceOver / large text | not verifiable | Native interaction |
 | Release signing / notarization / self-update | not verifiable | Own Developer ID / notarization / feed |
+| Appcast history and complete-feed signatures | passed | L28 seven regressions on 3ba5c3d: preserved history/notes, ordering, first/empty feed, invalid/duplicate metadata and actual complete-feed signing/tamper rejection |
 | README reflects current implementation | passed | Own fork, build/verification commands, features, restrictions and release status |
 
 Overall acceptance: open.
@@ -32,6 +33,18 @@ Overall acceptance: open.
 fixes the Unknown Source filter. Seven native UI tests and seven Swift contracts
 passed on `b61f414`; 84 invariants and warnings-as-errors Release build passed.
 The read-only inventory never establishes a provider installation result.
+
+L28 at `3ba5c3d` passes seven Python regressions including actual Swift Ed25519
+signing/verification, seven Swift Testing contracts, 84 compiled invariants and
+the warnings-as-errors build. [Release instructions](releasing.md) document
+mandatory explicit history selection and authenticated merging. This does not
+establish notarization, self-update or publication acceptance; the owner deferred
+release credentials on 2026-10-10.
+
+[L05](sparkle-native-acceptance.md) verifies three actual Sparkle UI outcomes on
+`f262a29`: signed installation to 1.1.0 and two rejected modifications that
+preserve the selected 1.0.0 bundle. Other same-ID instance and Homebrew control
+remain byte-for-byte unchanged. Result bundles and source hashes are retained.
 
 [L04](homebrew-native-rejection.md) adds four real native rejection/recovery
 checks on `eec132b`, with no upgrade process for rejected provenance/instance/

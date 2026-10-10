@@ -49,6 +49,11 @@ The [L04 native rejection suite](docs/homebrew-native-rejection.md) also verifie
 lost registration, a replaced selected bundle, non-authorizing catalogue hints
 and an actual failed update followed by successful rescan/retry. Run it with
 `python3 scripts/native_homebrew_rejection.py all` against the disposable fixtures.
+The [L05 native Sparkle acceptance](docs/sparkle-native-acceptance.md) verifies
+an actual signed 1.0.0-to-1.1.0 update of the selected instance and rejection of
+both a modified archive and an invalid enclosure signature. The other instance
+and provider fixture remain unchanged. Reproduce with
+`python3 scripts/native_sparkle_acceptance.py all` against the same environment.
 
 ## Features and boundaries
 
@@ -101,6 +106,12 @@ The fork's public update key and feed are in Config/updates.json. The private ke
 is excluded under .release/ and must be backed up securely. Release packaging
 requires your own Developer ID, notarization credentials and the matching
 Ed25519 seed. Never commit or print a private signing key.
+
+Release preparation requires either `--first-release` or `--existing-feed`.
+Existing feed signatures and metadata are checked before notarization, historical
+entries are retained and the complete result is signed again. Run
+`python3 -m unittest discover -s Tests/ReleaseTests -v` after `swift build` for
+the independent feed-history/signing checks. See [release procedure](docs/releasing.md).
 
 See [architecture](docs/modernization.md), [beta audit](docs/audit-2026-10-09.md),
 [test coverage](docs/test-coverage.md) and [security boundary](docs/security-boundary.md).
