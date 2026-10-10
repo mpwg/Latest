@@ -20,9 +20,22 @@ ROOT = fixtures.ROOT
 REPO = fixtures.REPO
 
 
+def stop_selected_fixture(selected):
+    executable = str(selected / 'Contents/MacOS/FixtureApp')
+    for line in fixtures.run(['ps', '-axww', '-o', 'pid=,command='], capture=True).splitlines():
+        pid, command = line.strip().split(None, 1)
+        if command == executable:
+            try:
+                os.kill(int(pid), signal.SIGCONT)
+                os.kill(int(pid), signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+
+
 def run_case(case):
     selected = ROOT / 'applications/Latest Sparkle Fixture.app'
     other = ROOT / 'applications/Secondary/Latest Sparkle Fixture.app'
+    stop_selected_fixture(selected)
     reset_sparkle(selected); reset_sparkle(other)
     controls = [other, ROOT / 'applications/Latest Homebrew Fixture.app']
     before = digest_app(selected)
@@ -116,14 +129,7 @@ def run_case(case):
             fixture_process.wait(timeout=10)
         if case == 'handoff':
             # Sparkle can relaunch the updated disposable app with a different PID.
-            executable = str(selected / 'Contents/MacOS/FixtureApp')
-            for line in fixtures.run(['ps', '-axww', '-o', 'pid=,command='], capture=True).splitlines():
-                pid, command = line.strip().split(None, 1)
-                if command == executable:
-                    try:
-                        os.kill(int(pid), signal.SIGTERM)
-                    except ProcessLookupError:
-                        pass
+            stop_selected_fixture(selected)
     if not requested.is_set() or not checkpoint:
         raise ValueError('Native download/checkpoint did not execute.')
     info = plistlib.loads((selected / 'Contents/Info.plist').read_bytes())
