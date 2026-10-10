@@ -6,6 +6,13 @@ Homebrew or a restricted App Store helper. The modernization starts from
 upstream 0.12-beta2. This fork is an independent project; releases and support
 belong to [mpwg/Latest](https://github.com/mpwg/Latest).
 
+The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
+checks actual download cancellation, failure, installer handoff and successful
+retry/restart. The adapter rejects cancellation from extraction onward and
+ignores late completion callbacks. Positive App Store installation still needs
+a controlled Store target; production signing, notarization and self-update
+require the deferred release credentials.
+
 ## Build and verify
 
 Use Xcode 27 / Swift 6.4 and macOS 27 or newer:

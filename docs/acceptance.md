@@ -15,7 +15,7 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | HTTPS / status / bounds / cache | passed | Production client with deterministic URLProtocol transport fixtures |
 | Homebrew ownership / targeted updates | passed | L03 targeted real native update and L04 native provenance-loss, changed-instance, informational catalogue and real failure/retry checks passed; scoped to isolated arm64/Tier 3 prefix |
 | Bundled mas / restricted broker | open | Compiled/pinned tools, own/foreign signer checks, request and package policy passed; native privileged request/install outstanding |
-| Sparkle 2.10.0 / lifecycle | open | L05 actual signed installation, exact instance and archive/signature rejection passed on f262a29; native cancellation/error/lifecycle checks remain open |
+| Sparkle 2.10.0 / lifecycle | passed | L05 signed installation and tamper rejection; L06 at ffb4ea0 adds real download cancellation, HTTP 503, signed retry/restart and native disabled cancellation at installer handoff; late callback/job-token contracts pass |
 | SwiftUI / filtering / ignore / channels / migration | open | Five native XCUITests passed on 2731361: search, selection/notes, ignore/restart, German labels, identifiers/screenshot. Source filters, sorting, channels, skip/major/bulk actions and normal signed-app migration remain open |
 | English/German string catalogues | passed | 74 keys, translated states and placeholder parity |
 | Shared schemes / GitHub Actions | passed | Both linked runs on 2731361 passed bootstrap, app build, 83 compiled invariants, validation, seven Swift Testing tests, five native UI tests and debug packaging |
@@ -27,6 +27,18 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 Overall acceptance: open.
 
 ## Subsequent native implementation evidence
+
+[L06](sparkle-lifecycle-acceptance.md) at `ffb4ea0` records three actual native
+Sparkle lifecycle tests, exact-instance/unchanged-control checks and accepted
+job journals with one terminal outcome per job. Ten Swift Testing contracts
+include actual adapter late-callback and handoff checks. Compatibility, Store
+and production release gates remain separate.
+
+The owner confirmed on 2026-10-10 that no controlled App Store test target is
+available. L11/L12 positive installation needs an explicitly authorized Store
+app with authentic receipt/account/update; L12 also needs a suitable authentic
+Apple-signed fallback package. No ordinary app or fabricated receipt is
+substituted. Release credentials remain deferred; overall acceptance is open.
 
 [L05](sparkle-native-acceptance.md) verifies three actual Sparkle UI outcomes on
 `f262a29`: signed installation to 1.1.0 and two rejected modifications that
