@@ -99,6 +99,11 @@ German; legacy translation resources remain as references for future migrations.
 
 ## Release status
 
+The [L15 native UI matrix](docs/ui-filter-sort-acceptance.md) verifies every source
+filter, state visibility, stable name/path/source ordering and selected-instance
+retention through repeated scans. Its read-only inventory establishes native
+view behaviour, with provider installation and accessibility covered separately.
+
 **The modernization is not fully accepted for production.** See
 [acceptance](docs/acceptance.md) for current evidence and remaining native
 installation, accessibility, signing, notarization and self-update gates.

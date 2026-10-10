@@ -16,7 +16,7 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 | Homebrew ownership / targeted updates | passed | L03 targeted real native update and L04 native provenance-loss, changed-instance, informational catalogue and real failure/retry checks passed; scoped to isolated arm64/Tier 3 prefix |
 | Bundled mas / restricted broker | open | Compiled/pinned tools, own/foreign signer checks, request and package policy passed; native privileged request/install outstanding |
 | Sparkle 2.10.0 / lifecycle | passed | L05 signed installation and tamper rejection; L06 at ffb4ea0 adds real download cancellation, HTTP 503, signed retry/restart and native disabled cancellation at installer handoff; late callback/job-token contracts pass |
-| SwiftUI / filtering / ignore / channels / migration | open | Five native XCUITests passed on 2731361: search, selection/notes, ignore/restart, German labels, identifiers/screenshot. Source filters, sorting, channels, skip/major/bulk actions and normal signed-app migration remain open |
+| SwiftUI / filtering / ignore / channels / migration | open | L15 seven native XCUITests passed on b61f414, including every source, state visibility, stable name/path/source order and selected canonical instance across scans; channels, skip/major/bulk and normal signed-app migration remain open |
 | English/German string catalogues | passed | 74 keys, translated states and placeholder parity |
 | Shared schemes / GitHub Actions | passed | Both linked runs on 2731361 passed bootstrap, app build, 83 compiled invariants, validation, seven Swift Testing tests, five native UI tests and debug packaging |
 | Native installation / receipts / architecture | open | Actual Homebrew/Sparkle installations and L07 signed-bundle OS/architecture/version matrix pass on arm64; authentic App Store receipt/package installation still needs a controlled Store target |
@@ -28,6 +28,16 @@ Statuses: passed, open, not verifiable. Evidence must match current code.
 Overall acceptance: open.
 
 ## Subsequent native implementation evidence
+
+[L15](ui-filter-sort-acceptance.md) adds a nine-record native view matrix and
+fixes the Unknown Source filter. Seven native UI tests and seven Swift contracts
+passed on `b61f414`; 84 invariants and warnings-as-errors Release build passed.
+The read-only inventory never establishes a provider installation result.
+Both filter/sort tests also pass after integration at `4e77913`, with current
+Release build, 84 invariants, seven Swift contracts and seven appcast regressions.
+At combined L15/L06 `271adc9`, both native filter/sort tests and all three actual
+Sparkle lifecycle cases pass again; current ten Swift contracts, 84 invariants,
+seven appcast regressions and warnings-as-errors Release build also pass.
 
 [L07](sparkle-compatibility-acceptance.md) at `776c4b2` passes four actual native
 cases: explicit signed x86_64 target rejected on arm64, minimum OS 99 rejected,

@@ -1,5 +1,11 @@
 # Test coverage and evidence
 
+[L15](ui-filter-sort-acceptance.md) adds current native evidence on `b61f414`:
+every source/reset, combined status visibility, both stable sort orders and
+exact duplicate-instance selection across changed scan enumeration. The entire
+ordinary suite passes seven UI tests plus seven Swift contracts; real provider
+checks and installation cases retain their separate environments and evidence.
+
 ## L07 native compatibility evidence
 
 [Four actual native cases](sparkle-compatibility-acceptance.md) at `776c4b2`
