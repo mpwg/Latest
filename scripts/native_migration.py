@@ -44,6 +44,7 @@ def run_case(case):
     host_preferences = Path.home() / 'Library/Application Support/io.github.mpwg.Latest/preferences.json'
     before_legacy = legacy_fingerprint()
     before_host = file_digest(host_preferences)
+    (evidence / 'before.json').write_text(json.dumps(dict(legacySHA256=before_legacy, hostFileSHA256=before_host), indent=2) + '\n')
     checkpoints = {}
     subprocess.run(['defaults', 'import', domain, str(old)], check=True, capture_output=True)
 
@@ -85,7 +86,10 @@ def run_case(case):
         expected = 3 if case == 'valid' else 2
         if len(checkpoints) != expected:
             raise ValueError('A required actual migration/restart checkpoint did not execute.')
-        if before_legacy != legacy_fingerprint() or before_host != file_digest(host_preferences):
+        after_legacy = legacy_fingerprint()
+        after_host = file_digest(host_preferences)
+        (evidence / 'after.json').write_text(json.dumps(dict(legacySHA256=after_legacy, hostFileSHA256=after_host), indent=2) + '\n')
+        if before_legacy != after_legacy or before_host != after_host:
             raise ValueError('An ordinary user preference domain or file changed during isolated migration.')
         result = dict(case=case, sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
                       macOS=fixtures.run(['sw_vers', '-productVersion'], capture=True), xcode=fixtures.run(['xcodebuild', '-version'], capture=True),
