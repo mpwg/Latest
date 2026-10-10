@@ -30,6 +30,8 @@ jobs:
         run: .build/debug/LatestVerification
       - name: Check repository and localization
         run: python3 scripts/validate.py
+      - name: Verify appcast history and whole-feed signatures
+        run: python3 -m unittest discover -s Tests/ReleaseTests -v
       - name: Compile disposable native installation fixture
         run: swiftc -swift-version 6 -warnings-as-errors -parse-as-library Tests/NativeFixtures/FixtureApp.swift -o .build/native-fixture-check
       - name: Run Swift Testing suite
