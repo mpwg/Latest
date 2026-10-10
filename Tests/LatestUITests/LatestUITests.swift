@@ -497,8 +497,13 @@ import XCTest
         assertNativeText(app.staticTexts["installed-version"], "1.0.0 (1)")
         app.buttons["update-selected"].click()
         consent.buttons["Install Major Upgrade"].click()
-        assertNativeText(app.staticTexts["installed-version"], targetVersion, timeout: 120)
-        assertNativeText(app.staticTexts["selected-status"], "Up to Date")
+        assertNativeText(app.staticTexts["selected-status"], "Up to Date", timeout: 120)
+        let values = app.staticTexts.matching(identifier: "installed-version").allElementsBoundByIndex.map { "label=\($0.label), value=\(String(describing: $0.value))" }
+        FileHandle.standardOutput.write(Data(("L17_INSTALLED_VALUES " + values.joined(separator: "; ") + "\n").utf8))
+        let screenshot = app.windows["Latest"].screenshot()
+        try screenshot.pngRepresentation.write(to: URL(fileURLWithPath: root + "/evidence/l17/major-native-window.png"))
+        FileHandle.standardOutput.write(Data((app.debugDescription + "\n").utf8))
+        assertNativeText(app.staticTexts["installed-version"], targetVersion, timeout: 5)
         app.terminate()
     }
 
