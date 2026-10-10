@@ -14,11 +14,16 @@ REPO = fixtures.REPO
 ROOT = fixtures.ROOT
 
 
-def legacy_fingerprint():
+def legacy_values():
     result = subprocess.run(['defaults', 'export', 'com.max-langer.Latest', '-'], capture_output=True)
     if result.returncode:
         return None
-    return hashlib.sha256(plistlib.dumps(plistlib.loads(result.stdout), sort_keys=True)).hexdigest()
+    return plistlib.loads(result.stdout)
+
+
+def legacy_fingerprint():
+    values = legacy_values()
+    return hashlib.sha256(plistlib.dumps(values, sort_keys=True)).hexdigest() if values is not None else None
 
 
 def file_digest(path):
@@ -43,6 +48,9 @@ def run_case(case):
     preferences = profile / 'Library/Application Support/io.github.mpwg.Latest/preferences.json'
     host_preferences = Path.home() / 'Library/Application Support/io.github.mpwg.Latest/preferences.json'
     before_legacy = legacy_fingerprint()
+    before_values = legacy_values()
+    if before_values is not None:
+        (evidence / 'ordinary-legacy-before.plist').write_bytes(plistlib.dumps(before_values))
     before_host = file_digest(host_preferences)
     (evidence / 'before.json').write_text(json.dumps(dict(legacySHA256=before_legacy, hostFileSHA256=before_host), indent=2) + '\n')
     checkpoints = {}
@@ -87,9 +95,14 @@ def run_case(case):
         if len(checkpoints) != expected:
             raise ValueError('A required actual migration/restart checkpoint did not execute.')
         after_legacy = legacy_fingerprint()
+        after_values = legacy_values()
+        if after_values is not None:
+            (evidence / 'ordinary-legacy-after.plist').write_bytes(plistlib.dumps(after_values))
         after_host = file_digest(host_preferences)
         (evidence / 'after.json').write_text(json.dumps(dict(legacySHA256=after_legacy, hostFileSHA256=after_host), indent=2) + '\n')
         if before_legacy != after_legacy or before_host != after_host:
+            changed_keys = [key for key in set(before_values or {}) | set(after_values or {}) if (before_values or {}).get(key) != (after_values or {}).get(key)]
+            print('Changed ordinary legacy keys:', changed_keys)
             raise ValueError('An ordinary user preference domain or file changed during isolated migration.')
         result = dict(case=case, sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
                       macOS=fixtures.run(['sw_vers', '-productVersion'], capture=True), xcode=fixtures.run(['xcodebuild', '-version'], capture=True),
