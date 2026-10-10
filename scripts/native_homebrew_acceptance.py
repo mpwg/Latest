@@ -20,10 +20,13 @@ def digest_app(app):
             for path in sorted(app.rglob('*')) if path.is_file() and not path.is_symlink()}
 
 
-def run_native_test(test_name, evidence, coordinate=None):
+def run_native_test(test_name, evidence, coordinate=None, extra_environment=None):
     manifest = native_fixtures.manifest()
     environment = native_fixtures.brew_environment()
     environment.update(LATEST_NATIVE_FIXTURE_ROOT=str(ROOT), TEST_RUNNER_LATEST_NATIVE_FIXTURE_ROOT=str(ROOT))
+    for name, value in (extra_environment or {}).items():
+        environment[name] = str(value)
+        environment['TEST_RUNNER_' + name] = str(value)
     identities = native_fixtures.run(['security', 'find-identity', '-v', '-p', 'codesigning'], capture=True)
     signer = manifest['fixtures'][0]['signer']
     matching = [re.search(r'\b([A-F0-9]{40})\b', line).group(1) for line in identities.splitlines()

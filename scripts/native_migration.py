@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""Verify normal signed startup migration with isolated filesystem and CFPreferences data."""
+import argparse
+import hashlib
+import json
+import plistlib
+import subprocess
+import uuid
+from pathlib import Path
+import native_fixtures as fixtures
+from native_homebrew_acceptance import run_native_test
+
+REPO = fixtures.REPO
+ROOT = fixtures.ROOT
+
+
+def legacy_fingerprint():
+    result = subprocess.run(['defaults', 'export', 'com.max-langer.Latest', '-'], capture_output=True)
+    if result.returncode:
+        return None
+    return hashlib.sha256(plistlib.dumps(plistlib.loads(result.stdout), sort_keys=True)).hexdigest()
+
+
+def file_digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
+
+
+def run_case(case):
+    evidence = ROOT / 'evidence/l18' / case / uuid.uuid4().hex
+    evidence.mkdir(parents=True, exist_ok=True)
+    profile = evidence / 'profile'
+    profile.mkdir()
+    domain = 'io.github.mpwg.Latest.NativeMigration.' + evidence.name
+    migrated_directory = profile / 'Ältere Apps'
+    migrated_directory.mkdir()
+    legacy = (dict(directoryPaths=[str(migrated_directory), str(migrated_directory), 'relative'],
+                   IgnoredAppsKey=['io.github.mpwg.Latest.LegacyIgnored'], ShowInstalledUpdatesKey=False,
+                   ShowIgnoredUpdatesKey=True, ShowUnsupportedUpdatesKey=False) if case == 'valid'
+              else dict(directoryPaths=['relative'], IgnoredAppsKey='invalid-array',
+                        ShowInstalledUpdatesKey='invalid-boolean', ShowUnsupportedUpdatesKey='invalid-boolean'))
+    old = evidence / 'legacy.plist'
+    old.write_bytes(plistlib.dumps(legacy))
+    preferences = profile / 'Library/Application Support/io.github.mpwg.Latest/preferences.json'
+    host_preferences = Path.home() / 'Library/Application Support/io.github.mpwg.Latest/preferences.json'
+    before_legacy = legacy_fingerprint()
+    before_host = file_digest(host_preferences)
+    checkpoints = {}
+    subprocess.run(['defaults', 'import', domain, str(old)], check=True, capture_output=True)
+
+    def coordinate(log):
+        names = ['MIGRATED', 'EDITED', 'RESTARTED'] if case == 'valid' else ['MALFORMED', 'MALFORMED_RESTART']
+        for name in names:
+            marker = evidence / (name + '-ready')
+            if 'L18_READY_' + name not in log or marker.exists():
+                continue
+            if not preferences.exists():
+                raise ValueError('The actual signed app did not use its isolated normal Application Support directory.')
+            value = json.loads(preferences.read_text())
+            if name == 'MIGRATED':
+                paths = [item['path'] for item in value['directories']]
+                if paths.count(str(migrated_directory)) != 1 or 'relative' in paths:
+                    raise ValueError('Legacy directories were not migrated uniquely and safely.')
+                if value['ignoredBundleIDs'] != legacy['IgnoredAppsKey'] or [value['showCurrent'], value['showIgnored'], value['showUnknown']] != [False, True, False]:
+                    raise ValueError('Legacy visibility/ignore values were not migrated by the normal signed app.')
+            elif name in ['EDITED', 'RESTARTED']:
+                if [value['showCurrent'], value['showIgnored'], value['showUnknown'], value['sortBySource']] != [True, False, True, True]:
+                    return  # Native save is asynchronous; wait for its actual persisted result.
+                if name == 'EDITED':
+                    changed = evidence / 'changed-legacy.plist'
+                    changed.write_bytes(plistlib.dumps(dict(directoryPaths=[str(profile / 'Should Not Migrate')], IgnoredAppsKey=['io.github.mpwg.Latest.ShouldNotReplace'], ShowInstalledUpdatesKey=False, ShowIgnoredUpdatesKey=True, ShowUnsupportedUpdatesKey=False)))
+                    subprocess.run(['defaults', 'import', domain, str(changed)], check=True, capture_output=True)
+                else:
+                    if value['ignoredBundleIDs'] != legacy['IgnoredAppsKey'] or any(item['path'].endswith('Should Not Migrate') for item in value['directories']):
+                        raise ValueError('A second normal start repeated legacy migration.')
+            else:
+                if [value['showCurrent'], value['showIgnored'], value['showUnknown']] != [True, False, True] or value['ignoredBundleIDs'] or any(item['path'] == 'relative' for item in value['directories']):
+                    raise ValueError('Malformed/missing legacy fields did not use documented defaults.')
+            checkpoints[name] = value
+            marker.write_text('Actual normal-start migration state verified.\n')
+
+    try:
+        test = 'testNativeNormalMigrationAndPersistence' if case == 'valid' else 'testNativeMalformedLegacyFieldsUseDefaults'
+        outcome = run_native_test(test, evidence, coordinate=coordinate,
+                                  extra_environment=dict(LATEST_MIGRATION_PROFILE=str(profile), LATEST_MIGRATION_DOMAIN=domain, LATEST_MIGRATION_EVIDENCE=str(evidence)))
+        expected = 3 if case == 'valid' else 2
+        if len(checkpoints) != expected:
+            raise ValueError('A required actual migration/restart checkpoint did not execute.')
+        if before_legacy != legacy_fingerprint() or before_host != file_digest(host_preferences):
+            raise ValueError('An ordinary user preference domain or file changed during isolated migration.')
+        result = dict(case=case, sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
+                      macOS=fixtures.run(['sw_vers', '-productVersion'], capture=True), xcode=fixtures.run(['xcodebuild', '-version'], capture=True),
+                      architecture='arm64', signingTeam=fixtures.manifest()['fixtures'][0]['team'], profile=str(profile), legacyDomain=domain,
+                      launchMode='Normal signed app, no ui-testing or native-install-test-directory; filesystem home isolated and legacy CFPreferences suite aliased in Debug only.',
+                      checkpoints=checkpoints, **outcome, ordinaryUserPreferencesUnchanged=True,
+                      sourceSHA256={str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest()
+                                    for path in [REPO / 'Sources/LatestApp/AppModel.swift', REPO / 'Sources/LatestCore/PreferencesStore.swift', REPO / 'Tests/LatestUITests/LatestUITests.swift', Path(__file__)]})
+        (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+        print(f'Native normal migration {case}: passed; normal quits/restarts and unchanged ordinary user preferences. Evidence: {evidence}')
+    finally:
+        subprocess.run(['defaults', 'delete', domain], check=True, capture_output=True)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('case', choices=['valid', 'malformed', 'all'])
+    args = parser.parse_args()
+    for case in (['valid', 'malformed'] if args.case == 'all' else [args.case]):
+        run_case(case)

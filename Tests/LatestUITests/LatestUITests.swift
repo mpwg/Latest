@@ -551,4 +551,72 @@ import XCTest
         XCTAssertTrue(app.staticTexts["Major Upgrade"].exists)
         app.terminate()
     }
+
+    private func migrationValue(_ name: String) throws -> String {
+        let values = ProcessInfo.processInfo.environment
+        return try XCTUnwrap(values[name] ?? values["TEST_RUNNER_" + name], "An explicit isolated native migration profile is required.")
+    }
+    private func migrationApp() throws -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["--native-migration-test-domain", try migrationValue("LATEST_MIGRATION_DOMAIN"), "-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launchEnvironment["CFFIXED_USER_HOME"] = try migrationValue("LATEST_MIGRATION_PROFILE")
+        app.launch()
+        return app
+    }
+    private func assertToggle(_ window: XCUIElement, _ name: String, _ enabled: Bool) {
+        let value = window.descendants(matching: .any).matching(identifier: name).firstMatch.value
+        if let number = value as? NSNumber { XCTAssertEqual(number.boolValue, enabled) }
+        else { XCTAssertEqual(value as? String, enabled ? "1" : "0") }
+    }
+    private func migrationStage(_ name: String) throws {
+        let root = try migrationValue("LATEST_MIGRATION_EVIDENCE")
+        FileHandle.standardOutput.write(Data(("L18_READY_" + name + "\n").utf8))
+        let path = root + "/" + name + "-ready"
+        let deadline = Date().addingTimeInterval(45)
+        while !FileManager.default.fileExists(atPath: path), Date() < deadline { Thread.sleep(forTimeInterval: 0.1) }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: path))
+    }
+    private func quitNormally(_ app: XCUIApplication) {
+        app.typeKey("q", modifierFlags: .command)
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
+    }
+    func testNativeNormalMigrationAndPersistence() throws {
+        let app = try migrationApp()
+        XCTAssertTrue(app.buttons["settings"].waitForExistence(timeout: 10)); app.buttons["settings"].click()
+        let settings = app.windows["Settings…"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        assertToggle(settings, "show-current", false)
+        assertToggle(settings, "show-ignored", true)
+        assertToggle(settings, "show-unknown", false)
+        try migrationStage("MIGRATED")
+        for name in ["show-current", "show-ignored", "show-unknown", "sort-by-source"] {
+            settings.descendants(matching: .any).matching(identifier: name).firstMatch.click()
+        }
+        try migrationStage("EDITED")
+        quitNormally(app); app.launch()
+        XCTAssertTrue(app.buttons["settings"].waitForExistence(timeout: 10)); app.buttons["settings"].click()
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        assertToggle(settings, "show-current", true)
+        assertToggle(settings, "show-ignored", false)
+        assertToggle(settings, "show-unknown", true)
+        assertToggle(settings, "sort-by-source", true)
+        try migrationStage("RESTARTED")
+        quitNormally(app)
+    }
+    func testNativeMalformedLegacyFieldsUseDefaults() throws {
+        let app = try migrationApp()
+        XCTAssertTrue(app.buttons["settings"].waitForExistence(timeout: 10)); app.buttons["settings"].click()
+        let settings = app.windows["Settings…"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        assertToggle(settings, "show-current", true)
+        assertToggle(settings, "show-ignored", false)
+        assertToggle(settings, "show-unknown", true)
+        try migrationStage("MALFORMED")
+        quitNormally(app); app.launch()
+        XCTAssertTrue(app.buttons["settings"].waitForExistence(timeout: 10)); app.buttons["settings"].click()
+        XCTAssertTrue(settings.waitForExistence(timeout: 10))
+        assertToggle(settings, "show-current", true)
+        try migrationStage("MALFORMED_RESTART")
+        quitNormally(app)
+    }
 }
