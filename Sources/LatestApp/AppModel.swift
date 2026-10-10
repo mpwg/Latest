@@ -150,6 +150,7 @@ import LatestPlatform
         fingerprints = Set(result.apps.map { "\($0.id.path)|\($0.fingerprint)" })
         total = result.apps.count
         let ledgerToken = await scanLedger.begin(apps: result.apps)
+        guard generation == token, !Task.isCancelled else { return }
         let previous = Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         rows = result.apps.map { app in
             let row = previous[app.id] ?? AppRow(record: .init(app: app))

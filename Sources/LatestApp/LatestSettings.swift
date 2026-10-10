@@ -39,7 +39,9 @@ private struct DirectorySettings: View {
                         Toggle(directory.path, isOn: $directory.enabled).lineLimit(2)
                             .accessibilityIdentifier("directory-enabled-" + directory.path)
                         Button("Remove", systemImage: "minus.circle") {
-                            model.preferences.directories.removeAll { $0.path == directory.path }; model.save(); model.refresh()
+                            // Read the binding before mutating its containing preferences.
+                            let path = directory.path
+                            model.preferences.directories.removeAll { $0.path == path }
                         }.labelStyle(.iconOnly).accessibilityIdentifier("directory-remove-" + directory.path)
                     }
                 }
