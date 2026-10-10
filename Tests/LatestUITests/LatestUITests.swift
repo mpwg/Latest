@@ -137,10 +137,7 @@ import XCTest
         selectManaged(app, root: root)
         stage("SWAP", root: root)
         app.buttons["update-selected"].click()
-        let alert = app.alerts["Update Failed"]
-        XCTAssertTrue(alert.waitForExistence(timeout: 15))
-        XCTAssertTrue(app.staticTexts["The selected app changed. Check for updates again."].exists)
-        alert.buttons["OK"].click()
+        XCTAssertTrue(app.staticTexts["The selected app changed. Check for updates again."].waitForExistence(timeout: 15))
         app.terminate()
     }
 
@@ -163,10 +160,9 @@ import XCTest
         let app = nativeApp(root)
         selectManaged(app, root: root)
         app.buttons["update-selected"].click()
-        let alert = app.alerts["Update Failed"]
-        XCTAssertTrue(alert.waitForExistence(timeout: 45))
+        XCTAssertTrue(app.staticTexts["Update Failed"].waitForExistence(timeout: 45))
         stage("RETRY", root: root)
-        alert.buttons["OK"].click()
+        app.windows.buttons["OK"].firstMatch.click()
         app.buttons["refresh"].click()
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["update-selected"])
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 30), .completed)

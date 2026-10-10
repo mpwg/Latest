@@ -6,6 +6,7 @@ import json
 import plistlib
 import shutil
 import subprocess
+import uuid
 from pathlib import Path
 import native_fixtures as fixtures
 from native_homebrew_acceptance import digest_app, run_native_test
@@ -26,6 +27,13 @@ def run_case(name):
     fixtures.set_cask_version('1.0.0')
     result = subprocess.run([str(brew), 'list', '--cask'], check=True, capture_output=True, text=True, env=environment)
     verb = 'reinstall' if fixtures.TOKEN in result.stdout.splitlines() else 'install'
+    if verb == 'install' and fixture.exists():
+        info = plistlib.loads((fixture / 'Contents/Info.plist').read_bytes())
+        if info['CFBundleIdentifier'] != 'io.github.mpwg.Latest.NativeFixture.Homebrew':
+            raise ValueError('Refusing to replace an unexpected app at the disposable fixture path.')
+        backups = ROOT / 'evidence/l04/reset-backups'
+        backups.mkdir(parents=True, exist_ok=True)
+        shutil.move(fixture, backups / f'{uuid.uuid4().hex}.app')
     fixtures.run([brew, verb, '--cask', '--no-ask', f'--appdir={ROOT / "applications"}', f'{fixtures.TAP}/{fixtures.TOKEN}'], env=environment)
     fixtures.set_cask_version('1.1.0')
     sibling = ROOT / 'applications/Unmanaged/Latest Homebrew Fixture.app'
@@ -62,9 +70,7 @@ def run_case(name):
             fixtures.run([brew, 'uninstall', '--cask', fixtures.TOKEN], env=environment)
             shutil.copytree(ROOT / 'versions/homebrew/1.0.0/Latest Homebrew Fixture.app', fixture)
         elif name == 'swap':
-            backup = evidence / 'selected-before-swap.app'
-            if backup.exists():
-                raise ValueError('Preserve or explicitly reset the previous swap backup before repeating.')
+            backup = evidence / f'selected-before-swap-{uuid.uuid4().hex}.app'
             shutil.move(fixture, backup)
             shutil.copytree(ROOT / 'versions/homebrew/1.1.0/Latest Homebrew Fixture.app', fixture)
         elif name == 'retry':
@@ -89,6 +95,9 @@ def run_case(name):
         raise ValueError('The host cask registry changed.')
     after = plistlib.loads((fixture / 'Contents/Info.plist').read_bytes())
     result = dict(case=name, nativeTest=CASES[name], sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
+                  sourceHashes={str(path.relative_to(fixtures.REPO)): hashlib.sha256(path.read_bytes()).hexdigest()
+                                for path in [fixtures.REPO/'Sources/LatestApp/AppModel.swift', fixtures.REPO/'Sources/LatestPlatform/Catalogue.swift',
+                                             fixtures.REPO/'Sources/LatestProcess/CommandRunner.swift', fixtures.REPO/'Tests/LatestUITests/LatestUITests.swift']},
                   finalVersion=after['CFBundleShortVersionString'], failedAttemptVersion=failure_version,
                   unrelatedFixturesUnchanged=True, hostCasksUnchanged=True, **outcome)
     (evidence / name / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
