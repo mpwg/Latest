@@ -48,6 +48,20 @@ python3 -m unittest discover -s Tests/ReleaseTests -v
 The tests create temporary independent Ed25519 keys and remove them afterwards.
 They neither package/notarize nor publish or read the production private seed.
 
+## L28 criteria matrix (#33)
+
+Verified implementation `3ba5c3d`, 2026-10-10, macOS 27.0.1 / Swift 6.4:
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| First/empty channel and historical entry preservation | passed | Initial/empty-channel regression and three-version merge preserve old notes/metadata and descending build order |
+| Duplicate, malformed and inconsistent metadata handling | passed | Version/build duplicates, regressions, foreign URLs, lengths, signatures, XML/DTD/size errors and conflicting historical ordering all rejected |
+| Entire merged feed correctly signed | passed | Actual LatestRelease signs/validates old and merged feeds with independent temporary keys; changed old content, changed length, appended bytes, missing/duplicate envelope and foreign key all rejected |
+| Current evidence, regression automation and README | passed | Seven release regressions, seven Swift Testing contracts, 84 compiled invariants and warnings-as-errors build passed; release regression suite added to CI and README updated |
+
+This closes feed construction acceptance only. Release credentials, packaging,
+notarization and real self-update retain their separate criteria.
+
 Review .release/<version>/ before creating an own-repository release. Publish the
 archive and corresponding source, then publish the signed appcast at the own
 GitHub Pages URL in Config/updates.json. Preserve existing feed history for
