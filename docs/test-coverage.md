@@ -1,5 +1,27 @@
 # Test coverage and evidence
 
+## Current headless application verification
+
+At `78c4548`, 23 deterministic Swift test functions pass without GUI automation,
+including 12 application workflows. One additional native Sparkle test is
+explicitly skipped in default/CI runs; it is executed separately in the
+[actual four-case native suite](headless-native-acceptance.md). Each native case
+also passes in a newly spawned restart process. Current checks include 84
+compiled invariants, seven feed/signature regressions, 74 English/German keys and
+warnings-as-errors Debug/Release builds. Xcode MCP reports 23 passing selected
+LatestCoreTests and zero failures/skips; it does not run the UI target.
+
+Application policy and jobs live in LatestApplication, with a SwiftUI wrapper
+and a shared native runtime for the future CLI. CI builds/packages the wrapper
+and tests the core without XCUITest. The source-boundary validator forbids GUI/
+platform imports in LatestCore and LatestApplication. Native installation tests
+use real adapters; injected workflow tests do not stand in for installations.
+
+The sections below retain historical UI/provider evidence from before this
+extraction. Their result bundles remain useful, but fresh final acceptance of
+remaining scenarios must use the shared API or a separate manual native check.
+
+
 ## L19 native directory and volume evidence
 
 [Four controlled actual cases](directory-acceptance.md) passed at `53dc1df`,

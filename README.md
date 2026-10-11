@@ -12,6 +12,14 @@ The native interface renders shared state and forwards commands; a later CLI
 will use the same session and platform runtime. Automated application tests and
 CI run without GUI automation. Xcode project changes use Xcode MCP.
 
+The [direct native Sparkle suite](docs/headless-native-acceptance.md) now checks
+actual signed installation, archive/signature rejection and successful retry
+through that same core, without GUI automation. A separate process restart
+checks every outcome; other controlled app instances retain identical bytes.
+Run `python3 scripts/native_headless_sparkle.py all` after preparing the fixtures
+and compiling the opt-in Swift test. Its fixture certificate is reused until
+natural expiry, without changing trust between test runs.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and

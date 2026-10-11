@@ -1,5 +1,38 @@
 # Acceptance matrix
 
+
+## Current run: shared core, no GUI automation
+
+Owner amendments on 2026-10-11: application logic belongs in a GUI-independent
+core shared with a later CLI; automated tests run without GUI automation;
+direct work/commits on main are authorized, without PRs yet. Reuse the approved
+localhost certificate/trust until its natural expiry on 2026-10-17.
+
+Checked application/runtime code: `78c4548`, macOS 27.0.1 / Xcode 27.0 /
+Swift 6.4 / arm64. The final docs may have a later revision; native JSON source
+maps must still match every relevant source file. Current CI is pending.
+
+| Criterion | Status | Current evidence / next step |
+|---|---|---|
+| GUI-independent application core and shared future CLI API | passed | LatestApplication depends only on LatestCore; source-boundary validator; GUI forwards ID commands and renders core state |
+| Complete default workflow testing without GUI automation | passed | 23 deterministic Swift test functions (12 application workflows); separate native opt-in is skipped by default; Xcode MCP selected core run has 23 passes, zero failures/skips |
+| Scans, exact selection, preferences, migration and consent | passed | Direct core tests include supersession, ordered persistence/restart, ignored/skipped direct mutations, channel settings, stale major consent and bulk eligibility |
+| Jobs, rejection, duplicate starts, cancellation, handoff and quit policy | passed | Direct core tests exercise the actual session and job transitions; provider-side signed lifecycle scenarios still need their own native rerun |
+| Actual signed Sparkle update/rejection/retry/process restart | passed | headless-native-acceptance.md: four actual native outcomes and four new process restarts; signature/architecture, exact-instance journal and unchanged controls |
+| Remaining native Homebrew/Sparkle/volume/compatibility scenarios | open | Adapt/rerun the historical scopes through the shared runtime on current code; injected tests are not native installation proof |
+| Native broker/XPC/Store/package scope | open | Headless native broker scopes remain; controlled authentic Store target/package/account/update is still unavailable |
+| Keyboard, VoiceOver, large text and full EN/DE view interaction | open | Separate manual native acceptance; headless logic and catalogue parity do not establish these criteria |
+| Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
+| Current local build/regression checks | passed | Warnings-as-errors Debug/Release, 84 invariants, seven feed/signature regressions, 74 localized keys |
+| Final main CI | open | Wait for the exact final main revision and inspect workflow evidence |
+| Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
+
+**Overall goal remains open.** No release has been published. The following
+baseline matrix and subsequent older sections are retained historical evidence;
+they do not supersede this current-run matrix after the application extraction.
+
+## Historical baseline
+
 Baseline: beta 4c1e111; local platform macOS 27.0.1 / Swift 6.4 Command Line Tools.
 Verified implementation: modernization PR stack in mpwg/Latest, commit
 `273136101412f767c02d40291bc08a456c2200b8`.

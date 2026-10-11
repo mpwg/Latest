@@ -21,7 +21,8 @@ rows, provider records, job events or scan state. Update and cancellation button
 eligibility comes from `canUpdate` / `canCancel`; closing/quit eligibility comes
 from `canQuit`. Major confirmation checks the exact candidate again. Preferences
 save in mutation order. Changing directories/channels refreshes from the core;
-selection changes fetch/sanitize release notes from the core. A requested external
+selection changes fetch/sanitize release notes from the core. Direct ignored/
+skipped preference changes also refresh eligibility without any view hook. A requested external
 updater is an `externalURL` effect consumed by the front end, without starting
 an installation job. Broker registration returns approval state without opening
 System Settings from the shared runtime.
@@ -74,8 +75,10 @@ transitively; no external project regeneration is needed.
 Current checked revision/results are recorded in acceptance.md. Local evidence
 lives under `.build/headless-*`; Xcode MCP also returns its unit-test xcresult.
 A successful headless test of an injected installer establishes workflow policy,
-not a real provider installation. Actual signed native provider flows must be
-rerun through the shared runtime on controlled apps after this extraction.
+not a real provider installation. [Four actual signed Sparkle outcomes](headless-native-acceptance.md) now pass
+through the shared runtime, including a separate process restart after each and
+retry without resetting the rejected bundle. Remaining native provider/lifecycle
+scopes must be rerun through the shared runtime after this extraction.
 Manual keyboard, VoiceOver, large-text and English/German view acceptance remain
 separate release criteria. App Store receipts/account/update and production
 Developer ID/notarization/self-update prerequisites remain open. No release
