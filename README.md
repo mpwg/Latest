@@ -16,6 +16,8 @@ CI run without GUI automation. Xcode project changes use Xcode MCP.
 release tests and repository/localization checks onto Ubuntu 24.04. The native
 macOS job keeps the real signing integration, Swift tests, locked adapters,
 Xcode build and packaging, and starts only after the portable checks pass.
+Both jobs pass at [2971c3c](https://github.com/mpwg/Latest/actions/runs/38170949526);
+the platform-boundary document records commands, scope and retained evidence.
 
 The [direct native Sparkle suite](docs/headless-native-acceptance.md) now checks
 actual signed installation, archive/signature rejection and successful retry

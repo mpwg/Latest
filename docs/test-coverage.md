@@ -2,7 +2,8 @@
 
 ## Ubuntu CI split
 
-At `4bee7bf`, the [portable Ubuntu job](ci-platforms.md) passes thirteen Python
+At `2971c3c`, [both CI jobs](https://github.com/mpwg/Latest/actions/runs/38170949526)
+pass. The [portable Ubuntu job](ci-platforms.md) passes thirteen Python
 tests and source/localization/resource checks on actual Ubuntu 24.04 with
 CPython 3.14.8. Six history tests and seven source/artifact contracts require no
 Apple SDK. The actual signed-feed test remains in macOS CI; local full discovery

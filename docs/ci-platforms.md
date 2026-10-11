@@ -5,7 +5,17 @@ The Ubuntu job runs first; the macOS job depends on its success. No GUI automati
 is used by either job. This division changes the test location, not the native
 acceptance requirements.
 
-Observed at `4bee7bf5396c8eef56efd939431e6c2bbf5ce1c9` on 2026-10-11:
+Current proof at `2971c3cfa61404b1c53227bd575c89e34fb48011`, checked on
+2026-10-11: [Ubuntu job 114563260517](https://github.com/mpwg/Latest/actions/runs/38170949526/job/114563260517)
+and [macOS job 114563294554](https://github.com/mpwg/Latest/actions/runs/38170949526/job/114563294554)
+both succeeded. Ubuntu ran resource/localization/source validation and all
+thirteen source/artifact/history tests; macOS then passed the real signing
+integration, Swift suites, native wrapper build and debug packaging. The retained
+Ubuntu log is `.build/ubuntu-portable-current-ci.log`. The same three portable
+commands below were rerun locally at this revision and also passed. This is CI
+evidence, not manual native or production release acceptance.
+
+Initial split proof at `4bee7bf5396c8eef56efd939431e6c2bbf5ce1c9` on 2026-10-11:
 [Ubuntu job 114545497751](https://github.com/mpwg/Latest/actions/runs/38164941252/job/114545497751)
 completed successfully on Ubuntu 24.04 / CPython 3.14.8. Its logs show seven
 frozen-source tests, six appcast-history tests and all 74 EN/DE keys passing.
