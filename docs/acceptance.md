@@ -9,7 +9,8 @@ direct work/commits on main are authorized, without PRs yet. Reuse the approved
 localhost certificate/trust until its natural expiry on 2026-10-17.
 
 Checked application/runtime/test code: `ead2e13`, macOS 27.0.1 / Xcode 27.0 /
-Swift 6.4 / arm64. The final docs may have a later revision; native JSON source
+Swift 6.4 / arm64. Native GUI repairs are separately checked at `44c6958` in
+native-ui-acceptance.md. The final docs may have a later revision; native JSON source
 maps must still match every relevant source file. Both Ubuntu and macOS main CI
 on `2971c3c` passed, including the shared Store queue package. Later changes still
 require corresponding current CI and relevant source-map checks.
@@ -31,12 +32,12 @@ require corresponding current CI and relevant source-map checks.
 | Native broker/XPC/Store/package scope | open | Headless native broker scopes remain; controlled authentic Store target/package/account/update is still unavailable |
 | Native signed broker client/tool rejection and missing-service retry | passed | headless-broker-boundary-acceptance.md: nine actual cases, real signature/hash/symlink checks and two absent-service XPC attempts; observed callback isolation crash fixed; no root-service registration or privileged execution proof is implied |
 | App Store bulk job serialization in shared core | passed | store-queue-acceptance.md: six actual production-session tests with injected exclusive runtime, ownership through verification, registered queue cancellation, failure/retry, fresh offer/ignore rejection and parallel other providers; native privileged Store bulk remains open |
-| Keyboard, VoiceOver, large text and full EN/DE view interaction | open | Separate manual native acceptance; headless logic and catalogue parity do not establish these criteria |
+| Keyboard, VoiceOver, large text and full EN/DE view interaction | open | native-ui-acceptance.md: actual EN/DE shortcuts, exact-instance AX, default-window 100%/160% content/control fonts and five reliable selector focus cycles pass; spoken VoiceOver, minimum/narrow windows, long notes and update/major/error/progress dialogs remain open |
 | Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 56a593b: 14 contracts, actual clean archive rebuild and development-signed version/build/source/licence checks; production artifact set remains open |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
-| Current local build/regression checks | passed | Warnings-as-errors Debug/Release, 84 invariants, 14 source/feed regressions, 74 localized keys |
+| Current local build/regression checks | passed | Warnings-as-errors Debug/Release, Xcode MCP GUI build, 31 regular Swift functions plus nine explicit default native skips, 84 invariants, 14 source/feed regressions, 84 localized keys; 37 native core maps still match |
 | Portable CI on actual Ubuntu | passed | ci-platforms.md at 2971c3c: actual Ubuntu 24.04; thirteen Python source/history tests and resource/source/localization validation pass; native Mac checks remain required |
-| Verified implementation main CI | passed | [2971c3c / 38170949526](https://github.com/mpwg/Latest/actions/runs/38170949526): Ubuntu and macOS jobs pass, including the shared Store queue; final whole-goal CI must match its final head |
+| Verified implementation main CI | passed | [71d88c4 / 38173445248](https://github.com/mpwg/Latest/actions/runs/38173445248): Ubuntu and macOS jobs pass, including native UI compilation; subsequent focus repair and final whole-goal CI must match their respective heads |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following

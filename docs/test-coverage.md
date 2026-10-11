@@ -1,5 +1,24 @@
 # Test coverage and evidence
 
+## Native interactive UI repairs
+
+[Native UI acceptance](native-ui-acceptance.md) records actual signed macOS
+English/German interactions, repaired selected-instance AX, shortcuts, 100%/160%
+ordinary content/control fonts and five channel keyboard cycles at `44c6958`.
+Two cycles preserve native focus across a real refresh; one also crosses the
+production monitor interval. Read-only JSON proves primary-only Beta/Stable
+persistence; all four signed fixture byte maps remain unchanged. This is
+interactive acceptance, separate from GUI-free correctness tests. VoiceOver,
+narrow/minimum windows, long notes and update dialogs remain open.
+
+Current relevant local checks pass: Debug/Release with warnings as errors,
+Xcode MCP build, 31 regular Swift functions with nine explicit native default
+skips, fourteen Python source/feed tests and 84 English/German keys. All 37
+current native core result source maps still match; GUI changes did not modify
+those implementation/test sources. Actual Ubuntu/macOS CI passes at
+[71d88c4](https://github.com/mpwg/Latest/actions/runs/38173445248); the later
+focused native adapter change requires its own current CI.
+
 ## Ubuntu CI split
 
 At `2971c3c`, [both CI jobs](https://github.com/mpwg/Latest/actions/runs/38170949526)

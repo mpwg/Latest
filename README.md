@@ -21,8 +21,10 @@ the platform-boundary document records commands, scope and retained evidence.
 
 [Native interactive UI acceptance](docs/native-ui-acceptance.md) records actual
 English/German search and window shortcuts, selected-instance accessibility and
-large-text repairs. Native source/channel/settings controls forward shared
-bindings and preserve keyboard behavior. Full VoiceOver, narrow-window, long
+large-text repairs. Five native selector keyboard cycles pass at `44c6958`,
+including real refresh without losing arrow focus; only the selected primary's
+channel changes in persisted JSON. Native source/channel/settings controls
+forward shared bindings. Full VoiceOver, narrow-window, long
 release-note and update-dialog acceptance remains separate and open.
 
 The [direct native Sparkle suite](docs/headless-native-acceptance.md) now checks

@@ -108,10 +108,43 @@ native adapters now avoid reapplying unchanged selection, labels, font, size or
 enabled state during scan-driven render updates; a focused native retry of the
 failure sequence is required before accepting that repair.
 
+## Current focused proof at 44c6958
+
+Five actual native keyboard cycles now pass: three English and two German.
+They repeat Beta selection, Command-F search/clear, Settings opening/Escape
+dismissal, fresh Tab traversal and Left/Space restoration to Stable. Real
+Command-R refresh between arrow focus and Space preserves the focused unselected
+segment and the exact primary instance in both locales. One English cycle also
+crosses the six-second production monitoring interval. No click fallback was
+needed. German read-only Beta/Stable JSON snapshots independently match only
+the primary canonical path; the secondary has no channel entry.
+
+All four fixture byte maps still match their pre-interaction values, and their
+strict signatures verify. The current GUI bundle's strict development signature,
+source revision and team are verified. Keyboard Navigation is restored to its
+original mode 0, VoiceOver remains off, the native process is quit and the saved
+isolated preferences are restored. Certificate/trust were never changed.
+
+The private `result.json` records the actual GUI source SHA-256 map, revision,
+environment, bundle, observed cycles, JSON checkpoints and explicit remaining
+scopes. The source map must still match when reusing this proof. Default-size
+content/font proofs at `71d88c4` remain applicable to unchanged relevant views;
+the final focus run verifies those selectors still render/read correctly.
+
+Current local checks: warnings-as-errors Debug/Release and Xcode MCP build,
+31 regular Swift functions (nine native opt-ins skipped by default), fourteen
+source/feed tests including the actual signer, 84 EN/DE keys, and 37 matching
+native core source maps. [CI at 71d88c4](https://github.com/mpwg/Latest/actions/runs/38173445248)
+passes both actual Ubuntu and macOS jobs; the subsequent focus change still
+requires its corresponding CI run. No production or full UI acceptance follows
+from these scoped checks.
+
 | Criterion | Status | Evidence / next step |
 |---|---|---|
 | Native baseline interaction and concrete defects | passed | Actual signed app screenshots/AX and keyboard sequences above |
 | Repaired search, close commands, source label and selected-instance AX | passed | Actual EN/DE interaction at b0dff78; retained fresh AX captures for three selected instances |
+| Native selectors and channel focus across settings/refresh | passed | Five EN/DE cycles at 44c6958; exact primary Beta/Stable JSON checkpoints |
+| Default-window ordinary content and control fonts at 100%/160% | passed | Actual EN/DE screenshots at 71d88c4, current focused selector proof at 44c6958; unchanged view sources |
 | Full keyboard, large text and German/English flows | open | Include narrow window, settings, release notes and update/major/error dialogs |
 | Actual VoiceOver reading/navigation | not verifiable | Need observable reader navigation and spoken output on the native host |
 
