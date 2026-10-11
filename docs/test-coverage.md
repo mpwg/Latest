@@ -22,6 +22,18 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
+## Frozen release source verification
+
+[source-release-acceptance.md](source-release-acceptance.md) records the actual
+archive rebuild at 56a593b and its green main CI. Seven additional source/binding
+contracts bring the Python release suite to 14. They execute real temporary Git
+exports and reject dirty/staged/untracked/private input, changed original HEAD,
+source modification/injection, external symlinks, mismatched metadata and a
+nonaccepted notary report. The production release orchestration test simulates
+its external signer/notary commands; it does not prove real notarization.
+Actual build, existing development signature, licence bytes, source hash
+preservation and pinned dependency/patch restoration are checked separately.
+
 ## L19 native directory and volume evidence
 
 [Four controlled actual cases](directory-acceptance.md) passed at `53dc1df`,

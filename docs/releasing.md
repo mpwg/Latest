@@ -116,3 +116,7 @@ already-shipped clients. Do not publish an unsigned or unnotarized substitute.
 The local Apple Development certificate permits debug launch and signature
 checks; it does not establish Developer ID/notarization acceptance. A successful
 Ed25519 unit test does not establish a native Sparkle self-update.
+
+Current frozen-source evidence and open production prerequisites are recorded in
+[source-release-acceptance.md](source-release-acceptance.md). L30/#35 remains open
+until the real Developer ID/notarized artifact set is prepared and verified.

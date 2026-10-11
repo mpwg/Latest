@@ -10,7 +10,9 @@ localhost certificate/trust until its natural expiry on 2026-10-17.
 
 Checked application/runtime code: `78c4548`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. The final docs may have a later revision; native JSON source
-maps must still match every relevant source file. Current CI is pending.
+maps must still match every relevant source file. Core CI on 14d8e3c and
+source-release CI on 56a593b passed; documentation-only follow-up CI is tracked
+separately.
 
 | Criterion | Status | Current evidence / next step |
 |---|---|---|
@@ -22,9 +24,10 @@ maps must still match every relevant source file. Current CI is pending.
 | Remaining native Homebrew/Sparkle/volume/compatibility scenarios | open | Adapt/rerun the historical scopes through the shared runtime on current code; injected tests are not native installation proof |
 | Native broker/XPC/Store/package scope | open | Headless native broker scopes remain; controlled authentic Store target/package/account/update is still unavailable |
 | Keyboard, VoiceOver, large text and full EN/DE view interaction | open | Separate manual native acceptance; headless logic and catalogue parity do not establish these criteria |
+| Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 56a593b: 14 contracts, actual clean archive rebuild and development-signed version/build/source/licence checks; production artifact set remains open |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
-| Current local build/regression checks | passed | Warnings-as-errors Debug/Release, 84 invariants, seven feed/signature regressions, 74 localized keys |
-| Final main CI | open | Wait for the exact final main revision and inspect workflow evidence |
+| Current local build/regression checks | passed | Warnings-as-errors Debug/Release, 84 invariants, 14 source/feed regressions, 74 localized keys |
+| Verified implementation main CI | passed | [14d8e3c / 38151975428](https://github.com/mpwg/Latest/actions/runs/38151975428) and [56a593b / 38153797844](https://github.com/mpwg/Latest/actions/runs/38153797844); final whole-goal CI still must match the eventual release head |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following

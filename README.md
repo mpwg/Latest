@@ -165,7 +165,9 @@ Ed25519 seed. Never commit or print a private signing key.
 Release preparation builds one clean immutable Git export and records source,
 archive, feed, dependency/patch and toolchain metadata in hash manifests.
 `python3 scripts/release.py --version 1.0.0 --prepare-source-only` prepares the
-source archive independently of signing credentials. The signed production path
+source archive independently of signing credentials. The
+[actual source rebuild](docs/source-release-acceptance.md) passes with pinned
+dependencies, explicit metadata and existing development signing. The signed production path
 still requires Developer ID/notarization and current native acceptance.
 
 Signed release preparation requires either `--first-release` or `--existing-feed`.
