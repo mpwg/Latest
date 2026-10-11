@@ -3,6 +3,25 @@ import Foundation
 import Sparkle
 import LatestCore
 
+/// Own-host SDK presentation and lifecycle stay in the native adapter, never a front end.
+@MainActor final class HostSelfUpdates {
+    private var controller: SPUStandardUpdaterController?
+    func configure() throws -> Bool {
+        if controller != nil { return true }
+        guard Bundle.main.bundleIdentifier == "io.github.mpwg.Latest",
+              let key = Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String,
+              !key.isEmpty else { return false }
+        let value = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
+        try value.updater.start()
+        controller = value
+        return true
+    }
+    func check() throws {
+        guard let controller else { throw LatestFailure.rejected("Latest self-updates are unavailable in this runtime.") }
+        controller.checkForUpdates(nil)
+    }
+}
+
 public struct SparkleProvider: UpdateProvider {
     public init() {}
     public func check(_ app: AppSnapshot, context: CheckContext) async throws -> UpdateCandidate? {

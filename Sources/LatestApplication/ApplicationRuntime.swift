@@ -19,4 +19,12 @@ public protocol ApplicationRuntime: Sendable {
     func releaseNotes(_ url: URL) async throws -> String
     /// Returns whether explicit system approval is still required.
     func enableBroker() async throws -> Bool
+    /// Configure the host's native self-updater, if this runtime supports it.
+    func configureSelfUpdates() async throws -> Bool
+    func checkSelfUpdates() async throws
+}
+
+public extension ApplicationRuntime {
+    func configureSelfUpdates() async throws -> Bool { false }
+    func checkSelfUpdates() async throws { throw LatestFailure.rejected("Latest self-updates are unavailable in this runtime.") }
 }

@@ -35,6 +35,22 @@ ending a short-lived CLI session. Monitoring is optional and can be stopped.
 Native runtime installation retains signature/fingerprint preflight, provider
 freshness checks, bounded subprocesses and installed-version/architecture checks.
 
+The host self-update entry also goes through the shared session. `start()`
+configures the runtime's optional self-update capability once;
+`canCheckForLatestUpdates` and `checkForLatestUpdates()` handle availability,
+reentrant command ownership, active ordinary-update exclusion and errors.
+The native runtime owns Sparkle's standard host controller and its vendor
+presentation/lifecycle. GUI menus forward the shared command and validate against
+shared eligibility; they neither import Sparkle nor instantiate an updater.
+A non-host/headless runtime defaults to an unavailable capability. A future CLI
+uses the same command/capability rather than another policy implementation.
+
+Four deterministic tests cover unavailable capability, once-only startup,
+reentrant checks, exclusion during an ordinary installation, configuration/check
+failure and retry, without a real SDK controller or GUI. Actual native host SDK
+startup/check/installation remains distinct and still needs the native/release
+prerequisites; these injected tests do not prove a production self-update.
+
 The GUI composition root supplies paths and native adapters. Its Debug-only,
 read-only inventory fixture support preserves reproduction of historical view
 checks; it does not authorize or establish native provider installation.

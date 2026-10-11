@@ -1,13 +1,11 @@
 import SwiftUI
-import Sparkle
 import AppKit
 
 /// AppKit owns the macOS lifecycle; all application content uses SwiftUI views.
-@MainActor final class LatestApplicationDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
+@MainActor final class LatestApplicationDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuItemValidation {
     let model = makeApplicationSession()
     private var mainWindow: NSWindow?
     private var settingsWindow: NSWindow?
-    private var selfUpdater: SPUStandardUpdaterController?
 
     override init() {
         super.init()
@@ -27,9 +25,6 @@ import AppKit
         mainWindow = window
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()
-        if let key = Bundle.main.object(forInfoDictionaryKey: "SUPublicEDKey") as? String, !key.isEmpty {
-            selfUpdater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
-        }
     }
     private func installMenu() {
         let menu = NSMenu()
@@ -65,7 +60,12 @@ import AppKit
         mainWindow?.makeKeyAndOrderFront(nil)
         NotificationCenter.default.post(name: .latestFocusSearch, object: nil)
     }
-    @objc private func updateSelf() { selfUpdater?.checkForUpdates(nil) }
+    @objc private func updateSelf() { Task { await model.checkForLatestUpdates() } }
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(updateSelf) { return model.canCheckForLatestUpdates }
+        if menuItem.action == #selector(refresh) { return !model.scanning }
+        return true
+    }
     private func showSettings() {
         if let settingsWindow { settingsWindow.makeKeyAndOrderFront(nil); return }
         let window = LatestSettingsWindow(contentViewController: NSHostingController(rootView: LatestSettings(model: model)))

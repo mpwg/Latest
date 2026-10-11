@@ -94,6 +94,9 @@ import LatestCore
     private var jobs: [AppInstanceID: Task<Void, Never>] = [:]
     private var generation: UInt64 = 0
     private var started = false
+    public private(set) var selfUpdatesAvailable = false
+    public private(set) var checkingLatestUpdates = false
+    public var canCheckForLatestUpdates: Bool { selfUpdatesAvailable && canQuit && !checkingLatestUpdates }
     private var preferencesLoaded = false
     private var fingerprints = Set<String>()
 
@@ -115,6 +118,8 @@ import LatestCore
             preferences = try await store.load(legacy: legacy)
         } catch { fail(error) }
         preferencesLoaded = true
+        do { selfUpdatesAvailable = try await runtime.configureSelfUpdates() }
+        catch { fail(error) }
         refresh()
         guard fixtureRecords == nil, let monitoringInterval else { return }
         monitoringTask = Task { [weak self] in
@@ -309,6 +314,13 @@ import LatestCore
     }
     public func enableBroker() {
         Task { do { needsBrokerApproval = try await runtime.enableBroker() } catch { fail(error) } }
+    }
+    public func checkForLatestUpdates() async {
+        guard canCheckForLatestUpdates else { return }
+        checkingLatestUpdates = true
+        defer { checkingLatestUpdates = false }
+        do { try await runtime.checkSelfUpdates() }
+        catch { fail(error) }
     }
     public func addDirectory(_ url: URL) {
         let path = url.resolvingSymlinksInPath().path

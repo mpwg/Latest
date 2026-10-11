@@ -30,6 +30,8 @@ for source in (ROOT / "Sources").rglob("*.swift"):
 for layer in ["LatestCore", "LatestApplication"]:
     for source in (ROOT / "Sources" / layer).glob("*.swift"):
         assert not re.search(r"^import (?:AppKit|SwiftUI|Sparkle|LatestPlatform)\b", source.read_text(), re.MULTILINE), source
+for source in (ROOT / "Sources/LatestApp").glob("*.swift"):
+    assert not re.search(r"^import Sparkle\b", source.read_text(), re.MULTILINE), source
 info=(ROOT / "Config/Info.plist").read_text()
 assert "NSAllowsArbitraryLoads" not in info and "max.codes" not in info and "DSAKey" not in info
 for path in (ROOT / "Config").glob("*.plist"):

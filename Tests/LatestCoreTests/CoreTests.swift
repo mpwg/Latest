@@ -382,6 +382,14 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
     let checkStarted = CompletionGate<Void>()
     let releaseCheck = CompletionGate<Void>()
     var holdChecks = false
+    var selfUpdateEnabled = false
+    var selfUpdateConfigurationFailure = false
+    var selfUpdateCheckFailure = false
+    var holdSelfUpdateCheck = false
+    var selfUpdateConfigurationCalls = 0
+    var selfUpdateChecks = 0
+    let selfUpdateStarted = CompletionGate<Void>()
+    let releaseSelfUpdate = CompletionGate<Void>()
     var savedCallback: (@MainActor @Sendable (UpdateEvent) -> Void)?
     init(_ candidates: [UpdateCandidate]) {
         self.apps = candidates.map(\.app)
@@ -393,6 +401,20 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
     func setApps(_ apps: [AppSnapshot]) { self.apps = apps }
     func setCandidate(_ candidate: UpdateCandidate) { candidates[candidate.app.id] = candidate }
     func holdProviderCheck() { holdChecks = true }
+    func configureSelfUpdate(enabled: Bool, configurationFailure: Bool = false, checkFailure: Bool = false, hold: Bool = false) {
+        selfUpdateEnabled = enabled; selfUpdateConfigurationFailure = configurationFailure
+        selfUpdateCheckFailure = checkFailure; holdSelfUpdateCheck = hold
+    }
+    func configureSelfUpdates() throws -> Bool {
+        selfUpdateConfigurationCalls += 1
+        if selfUpdateConfigurationFailure { throw LatestFailure.process("Controlled self-update configuration failure.") }
+        return selfUpdateEnabled
+    }
+    func checkSelfUpdates() async throws {
+        selfUpdateChecks += 1; await selfUpdateStarted.finish(.success(()))
+        if holdSelfUpdateCheck { try await releaseSelfUpdate.wait() }
+        if selfUpdateCheckFailure { throw LatestFailure.network("Controlled self-update check failure.") }
+    }
     func scan(_ directories: [DirectoryPreference]) -> ApplicationInventory { .init(apps: apps) }
     func check(_ app: AppSnapshot, context: CheckContext) async -> AppRecord {
         let candidate = candidates[app.id]
@@ -437,6 +459,49 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
 }
 
 @MainActor @Suite("Headless application workflows") struct ApplicationTests {
+    @Test func selfUpdateCapabilityIsConfiguredOnceAndUnavailableChecksAreNotDispatched() async {
+        let runtime = ApplicationTestRuntime([]); let app = await session(runtime)
+        await app.start(); await app.checkForLatestUpdates()
+        #expect(await runtime.selfUpdateConfigurationCalls == 1)
+        #expect(!app.selfUpdatesAvailable && !app.canCheckForLatestUpdates)
+        #expect(await runtime.selfUpdateChecks == 0)
+        #expect(!app.showingError)
+    }
+    @Test func selfUpdateRequestOwnershipRejectsReentrantChecks() async throws {
+        let runtime = ApplicationTestRuntime([]); await runtime.configureSelfUpdate(enabled: true, hold: true)
+        let app = await session(runtime); #expect(app.canCheckForLatestUpdates)
+        let request = Task { await app.checkForLatestUpdates() }
+        try await runtime.selfUpdateStarted.wait()
+        #expect(app.checkingLatestUpdates && !app.canCheckForLatestUpdates)
+        await app.checkForLatestUpdates(); #expect(await runtime.selfUpdateChecks == 1)
+        await runtime.releaseSelfUpdate.finish(.success(())); await request.value
+        #expect(!app.checkingLatestUpdates && app.canCheckForLatestUpdates)
+    }
+    @Test func selfUpdateChecksCannotInterruptAnOrdinaryInstallation() async throws {
+        let offer = candidate(); let runtime = ApplicationTestRuntime([offer])
+        await runtime.configureSelfUpdate(enabled: true)
+        await runtime.configure(installation: .downloadGate)
+        let app = await session(runtime); app.requestUpdate(offer.app.id)
+        _ = try await runtime.started.wait()
+        await app.checkForLatestUpdates(); #expect(await runtime.selfUpdateChecks == 0)
+        #expect(!app.canCheckForLatestUpdates)
+        app.cancel(offer.app.id); await app.waitForUpdates()
+        await app.checkForLatestUpdates(); #expect(await runtime.selfUpdateChecks == 1)
+    }
+    @Test func selfUpdateConfigurationAndCheckErrorsRemainRecoverable() async {
+        let invalid = ApplicationTestRuntime([])
+        await invalid.configureSelfUpdate(enabled: true, configurationFailure: true)
+        let unavailable = await session(invalid)
+        #expect(!unavailable.selfUpdatesAvailable && unavailable.showingError)
+        #expect(unavailable.errorMessage == "Controlled self-update configuration failure.")
+        let runtime = ApplicationTestRuntime([]); await runtime.configureSelfUpdate(enabled: true, checkFailure: true)
+        let app = await session(runtime); await app.checkForLatestUpdates()
+        #expect(app.showingError && app.canCheckForLatestUpdates && !app.checkingLatestUpdates)
+        #expect(app.errorMessage == "Controlled self-update check failure.")
+        await runtime.configureSelfUpdate(enabled: true); app.showingError = false
+        await app.checkForLatestUpdates(); #expect(await runtime.selfUpdateChecks == 2)
+        #expect(!app.showingError)
+    }
     private func candidate(_ name: String = "A", path: String? = nil, major: Bool = false,
                            source: UpdateSource = .sparkle, action: UpdateAction? = nil) -> UpdateCandidate {
         let app = AppSnapshot(url: URL(fileURLWithPath: path ?? "/tmp/Latest-headless/\(name).app"),

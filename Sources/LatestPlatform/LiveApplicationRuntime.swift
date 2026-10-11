@@ -11,6 +11,7 @@ public struct LiveApplicationRuntime: ApplicationRuntime {
     private let http: BoundedHTTPClient
     private let catalogue: CatalogueProvider
     private let broker: BrokerClient
+    private let selfUpdates: HostSelfUpdates
 
     @MainActor public init(cacheDirectory: URL, homebrewExecutable: URL? = nil,
                            masURL: URL? = nil, catalogueURL: URL? = nil) {
@@ -19,6 +20,7 @@ public struct LiveApplicationRuntime: ApplicationRuntime {
         appStore = AppStoreProvider(http: http, masURL: masURL)
         catalogue = CatalogueProvider(http: http, catalogueURL: catalogueURL)
         broker = BrokerClient()
+        selfUpdates = HostSelfUpdates()
     }
     public func scan(_ directories: [DirectoryPreference]) async -> ApplicationInventory {
         let result = await inventory.scan(directories)
@@ -89,4 +91,6 @@ public struct LiveApplicationRuntime: ApplicationRuntime {
     public func enableBroker() async throws -> Bool {
         try await MainActor.run { try BrokerClient.register(); return BrokerClient.status != .enabled }
     }
+    public func configureSelfUpdates() async throws -> Bool { try await selfUpdates.configure() }
+    public func checkSelfUpdates() async throws { try await selfUpdates.check() }
 }
