@@ -1,6 +1,6 @@
 # Native major consent and scoped bulk installation through the shared core
 
-Observed on 2026-10-11 at `ed5d42e`, macOS 27.0.1 / Xcode 27.0 /
+Observed again on 2026-10-11 at `1dd0240`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. Four actual native cases drive ApplicationSession and
 LiveApplicationRuntime with real signed apps, signed appcasts/archives and
 controlled HTTPS requests. There is no GUI automation, injected inventory,
@@ -49,7 +49,7 @@ versions/architectures and per-job outcomes. Prepared targets and retired bulk
 bundles remain in the sibling `prepared/` directory. The ordinary Homebrew Ruby
 runtime remains unchanged.
 
-Default Swift runs execute 24 deterministic functions and skip six native
+Default Swift runs execute 24 deterministic functions and skip eight native
 opt-ins; skips are not installation proof. Xcode MCP discovers the additional
 opt-in and runs 24 selected deterministic functions with zero failures/skips.
 These native cases replace historical L17 GUI automation for correctness. Manual

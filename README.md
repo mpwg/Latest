@@ -57,6 +57,15 @@ scan-time commands and exactly two scoped minor installations with duplicate
 rejection. Excluded apps keep identical bytes; every case restarts in a new
 process. Run `python3 scripts/native_headless_major_bulk.py all`.
 
+The [direct native directory suite](docs/headless-directory-acceptance.md)
+checks exclusion/add/remove persistence, actual populated/empty volume ejection
+and automatic recovery, and real delayed HTTPS scan ownership. Run
+`python3 scripts/native_headless_directories.py all`.
+The [native migration suite](docs/headless-migration-acceptance.md) uses the shared
+legacy reader with real isolated CFPreferences and JSON across five processes;
+only inventory/provider capabilities are scoped for isolation. Run
+`python3 scripts/native_headless_migration.py all`.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and

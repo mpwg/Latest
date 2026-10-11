@@ -1,6 +1,6 @@
 # Native Sparkle through the shared core
 
-Checked again on 2026-10-11 at `ed5d42e`, macOS 27.0.1, Xcode 27.0 / Swift 6.4,
+Checked again on 2026-10-11 at `1dd0240`, macOS 27.0.1, Xcode 27.0 / Swift 6.4,
 arm64. Actual fixture applications are Apple Development signed by team
 `PZV43D6HWT`; an independent test-only Ed25519 key signs the localhost appcast
 and archive. This is not Developer ID, notarization, Store or production

@@ -1,6 +1,6 @@
 # Native Homebrew through the shared application core
 
-Checked revision: `ed5d42e`, 2026-10-11, macOS 27.0.1 / Xcode 27.0 /
+Checked revision: `1dd0240`, 2026-10-11, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. Five actual cases pass through ApplicationSession and
 LiveApplicationRuntime without a Latest window, XCUITest or GUI automation.
 The real brew operates only in the prepared nonstandard **Tier 3** prefix.

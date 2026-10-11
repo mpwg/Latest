@@ -8,15 +8,15 @@ core shared with a later CLI; automated tests run without GUI automation;
 direct work/commits on main are authorized, without PRs yet. Reuse the approved
 localhost certificate/trust until its natural expiry on 2026-10-17.
 
-Checked application/runtime/test code: `ed5d42e`, macOS 27.0.1 / Xcode 27.0 /
+Checked application/runtime/test code: `1dd0240`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. The final docs may have a later revision; native JSON source
 maps must still match every relevant source file. Both Ubuntu and macOS main CI
-on `1856178` passed; the later native major-bulk package's CI is tracked separately below.
+on `b5a256a` passed; the later directory/migration package's CI is tracked separately below.
 
 | Criterion | Status | Current evidence / next step |
 |---|---|---|
 | GUI-independent application core and shared future CLI API | passed | LatestApplication depends only on LatestCore; source-boundary validator; GUI forwards ID commands and renders core state |
-| Complete default workflow testing without GUI automation | passed | 24 deterministic Swift test functions (12 application workflows plus actual process-stream separation); six separate native opt-ins are skipped by default; current Xcode MCP run selected 24 functions with zero failures/skips |
+| Complete default workflow testing without GUI automation | passed | 24 deterministic Swift test functions (12 application workflows plus actual process-stream separation); eight separate native opt-ins are skipped by default; current Xcode MCP run selected 24 functions with zero failures/skips |
 | Scans, exact selection, preferences, migration and consent | passed | Direct core tests include supersession, ordered persistence/restart, ignored/skipped direct mutations, channel settings, stale major consent and bulk eligibility |
 | Jobs, rejection, duplicate starts, cancellation, handoff and quit policy | passed | Direct core tests exercise the actual session and job transitions; actual signed provider lifecycle outcomes are recorded below |
 | Actual signed Sparkle update/rejection/retry/process restart | passed | headless-native-acceptance.md: four actual native outcomes and four new process restarts; signature/architecture, exact-instance journal and unchanged controls |
@@ -25,14 +25,15 @@ on `1856178` passed; the later native major-bulk package's CI is tracked separat
 | Real signed native compatibility and build policy | passed | headless-compatibility-acceptance.md: four actual signed targets, exact rejection/no-job outcomes, actual lower-display/higher-build installation and four fresh process restarts on arm64 |
 | Real native ignore, skip/new version and Stable/Beta persistence | passed | headless-preferences-acceptance.md: nine actual fresh processes, real signed feeds, independent JSON checks, exact-instance skip/channel policy and unchanged signed bundles; no job starts |
 | Real native major consent and scoped bulk installation | passed | headless-major-bulk-acceptance.md: four signed cases, four fresh restarts, real scan/download gates, zero changed-major archive requests, exactly two authorized minor jobs/downloads and unchanged excluded apps |
-| Remaining native volumes and legacy-domain migration | open | Adapt/rerun the remaining historical scopes through the shared runtime on current code; injected tests are not native installation proof |
+| Native directory/volume recovery and real superseded request | passed | headless-directory-acceptance.md: four actual cases/fresh restarts, own HFS+ volumes, production monitoring, exact persisted directory commands and drained old real HTTPS scan; no installation job |
+| Actual native legacy-domain reader and JSON migration | passed | headless-migration-acceptance.md: shared reader moved from GUI to LatestCore; real CFPreferences/JSON over five processes, malformed/default and changed-source checks; only inventory/provider capabilities are scoped to the private profile |
 | Native broker/XPC/Store/package scope | open | Headless native broker scopes remain; controlled authentic Store target/package/account/update is still unavailable |
 | Keyboard, VoiceOver, large text and full EN/DE view interaction | open | Separate manual native acceptance; headless logic and catalogue parity do not establish these criteria |
 | Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 56a593b: 14 contracts, actual clean archive rebuild and development-signed version/build/source/licence checks; production artifact set remains open |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
 | Current local build/regression checks | passed | Warnings-as-errors Debug/Release, 84 invariants, 14 source/feed regressions, 74 localized keys |
 | Portable CI on actual Ubuntu | passed | ci-platforms.md at 4bee7bf: Ubuntu 24.04 / Python 3.14.8; thirteen Python source/history tests and resource/source/localization validation pass; native Mac checks remain required |
-| Verified implementation main CI | passed | [1856178 / 38165075769](https://github.com/mpwg/Latest/actions/runs/38165075769): Ubuntu and macOS jobs pass; native major-bulk package CI and final whole-goal CI still must match their respective heads |
+| Verified implementation main CI | passed | [b5a256a / 38165601000](https://github.com/mpwg/Latest/actions/runs/38165601000): Ubuntu and macOS jobs pass; directory/migration package CI and final whole-goal CI still must match their respective heads |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following

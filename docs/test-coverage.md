@@ -32,7 +32,31 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
-## Current direct native major/bulk and regression run
+## Current native directories, migration and regression run
+
+At `1dd0240`, [four native directory/volume cases](headless-directory-acceptance.md)
+and [two real legacy/JSON migration cases](headless-migration-acceptance.md) pass.
+Actual images are ejected/remounted, production monitoring recovers populated
+and empty volumes, and the obsolete real HTTPS scan is drained after a newer
+generation removes its directory. Every directory case passes in a fresh process.
+Five fresh migration processes use actual isolated CFPreferences and real JSON;
+only inventory/provider capabilities are scoped to the private profile.
+
+The production legacy reader moved from GUI startup into LatestCore, shared with
+the future CLI. Changed old values cannot overwrite migrated/edited settings;
+malformed values produce defaults. Ordinary domain/file hashes and all controlled
+app bytes remain unchanged. No preferences timestamp is restored and all owned
+volumes are detached after acceptance.
+
+All twenty-two previous native cases also pass again on this revision; twenty-eight
+result maps match every relevant source hash. Default tests execute 24 deterministic
+functions and skip eight native opt-ins. Xcode MCP builds the test targets and
+runs 24 selected functions with zero failures/skips. Debug/Release warnings-as-errors,
+84 invariants, fourteen Python tests and 74 localized keys pass. Evidence includes
+`.build/headless-regression-after-migration.log`, `.build/headless-migration-all.log`,
+and `.build/migration-xcode-evidence.json` with its native xcresult.
+
+## Direct native major/bulk and regression run
 
 [Four actual major/bulk cases](headless-major-bulk-acceptance.md) pass at
 `ed5d42e`, with four separate restart processes. Real signed semantic/provider

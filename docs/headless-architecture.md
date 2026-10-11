@@ -89,6 +89,9 @@ feeds, with independently checked JSON and unchanged apps.
 The [real major/bulk cases](headless-major-bulk-acceptance.md) use signed updates
 and actual HTTPS scan/download gates to verify consent, changed-policy rejection,
 duplicate protection and exactly two authorized minor installations.
+The [native directory/volume cases](headless-directory-acceptance.md) use actual
+owned disk images and the production monitor. The [shared legacy reader](headless-migration-acceptance.md)
+uses actual CFPreferences/JSON across five processes with scoped discovery.
 Remaining native provider/platform
 scopes must be rerun through the shared runtime after this extraction.
 Manual keyboard, VoiceOver, large-text and English/German view acceptance remain
