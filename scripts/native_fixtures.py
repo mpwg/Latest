@@ -221,7 +221,9 @@ def serve():
 def trust_localhost():
     value = manifest()
     if value.get('trustedKeychain'):
-        raise ValueError('This fixture certificate is already recorded as trusted.')
+        run(['security', 'verify-cert', '-c', ROOT / 'tls.crt', '-p', 'ssl', '-n', 'localhost', '-L'], capture=True)
+        print('Reusing the existing trusted localhost certificate; keychain configuration unchanged.')
+        return
     keychain = run(['security', 'default-keychain', '-d', 'user'], capture=True).strip('"')
     # The explicit command opts into user-domain SSL trust for localhost only.
     value['trustedKeychain'] = keychain
