@@ -90,7 +90,7 @@ def run_case(case, baseline):
     elif case == 'adhoc':
         fixtures.run(['codesign', '--force', '--sign', '-', '--options', 'runtime', app])
     elif case == 'symlink':
-        (resources / 'mas').unlink(); (resources / 'mas').symlink_to(baseline / 'Contents/Resources/mas'); sign(app)
+        (resources / 'mas').unlink(); (resources / 'mas').symlink_to(baseline / 'Contents/Resources/mas')
     mutation = digest_app(app)
     outcome = execute(case, app, evidence)
     if digest_app(app) != mutation or any(digest_app(path) != old for path, old in zip(controls, before)):

@@ -44,6 +44,13 @@ import LatestTrust
             do { try await client.update(claim, appURL: appURL); Issue.record("Altered signed bundle/tool was accepted.") }
             catch LatestFailure.rejected(let reason) { print("Observed native signed boundary rejection: \(reason)") }
             #expect(client.activeConnectionCount == 0)
+            if mode == "symlink" {
+                let info = try #require(Bundle(url: appURL)?.infoDictionary)
+                let configuration = try BrokerConfiguration(team: try #require(info["LatestSigningTeam"] as? String),
+                    masHash: try #require(info["LatestMasSHA256"] as? String), verifierHash: try #require(info["LatestVerifierSHA256"] as? String))
+                do { try configuration.verifyBundledTools(appURL: appURL); Issue.record("Actual external tool symlink was accepted.") }
+                catch LatestFailure.rejected(let reason) { #expect(reason == "Cannot open the bundled tool safely.") }
+            }
         }
         #expect(client.activeConnectionCount == 0)
     }
