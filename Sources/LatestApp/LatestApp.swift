@@ -4,18 +4,17 @@ import AppKit
 
 /// AppKit owns the macOS lifecycle; all application content uses SwiftUI views.
 @MainActor final class LatestApplicationDelegate: NSObject, NSApplicationDelegate {
-    let model = AppModel()
+    let model = makeApplicationSession()
     private var mainWindow: NSWindow?
     private var settingsWindow: NSWindow?
     private var selfUpdater: SPUStandardUpdaterController?
 
     override init() {
         super.init()
-        model.showSettingsHandler = { [weak self] in self?.showSettings() }
     }
     func applicationDidFinishLaunching(_ notification: Notification) {
         installMenu()
-        let controller = NSHostingController(rootView: LatestWindow(model: model).task { await self.model.start() })
+        let controller = NSHostingController(rootView: LatestWindow(model: model, showSettings: { [weak self] in self?.showSettings() }).task { await self.model.start() })
         let window = NSWindow(contentViewController: controller)
         window.title = "Latest"
         window.styleMask.insert(.resizable)
@@ -63,9 +62,9 @@ import AppKit
         window.center(); window.makeKeyAndOrderFront(nil)
         settingsWindow = window
     }
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { model.activeUpdates == 0 }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { model.canQuit }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard model.activeUpdates > 0 else { return .terminateNow }
+        guard !model.canQuit else { return .terminateNow }
         let alert = NSAlert()
         alert.messageText = String(localized: "Updates Are Running")
         alert.informativeText = String(localized: "Wait for installation to finish before quitting Latest.")

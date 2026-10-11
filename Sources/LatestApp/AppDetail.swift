@@ -1,4 +1,5 @@
 import SwiftUI
+import LatestApplication
 import AppKit
 import LatestCore
 
@@ -40,12 +41,12 @@ private struct AppDetailActions: View {
                 if let event = row.event, !event.isTerminal {
                     ProgressView(value: event.progress).frame(width: 160)
                     Text(event.phase.rawValue.capitalized)
-                    Button("Cancel") { model.cancel(row) }.disabled(event.phase == .installing || event.phase == .verifying)
+                    Button("Cancel") { model.cancel(row.id) }.disabled(!model.canCancel(row.id))
                         .accessibilityIdentifier("cancel-update")
                 } else {
-                    Button(row.record.status == .external ? "Open Updater" : "Update") { model.requestUpdate(row) }
+                    Button(row.record.status == .external ? "Open Updater" : "Update") { model.requestUpdate(row.id) }
                         .buttonStyle(.borderedProminent)
-                        .disabled(model.scanning || model.isUpdating(row.id) || ![.available, .external].contains(row.record.status))
+                        .disabled(!model.canUpdate(row.id))
                         .accessibilityIdentifier("update-selected")
                 }
                 Button("Open App") { NSWorkspace.shared.open(row.id.url) }
@@ -65,16 +66,16 @@ private struct AppDetailMetadata: View {
             LabeledContent("Source") { SourceTitle(source: row.record.candidate?.source ?? .unknown) }
             LabeledContent("Location") { Text(row.id.path).font(.caption).lineLimit(3) }
             LabeledContent("Bundle Identifier") { Text(row.record.app.bundleID).font(.caption) }
-            Picker("Release Channel", selection: Binding(get: { model.preferences.channels[row.id.path, default: .stable] }, set: { model.preferences.channels[row.id.path] = $0; model.save(); model.refresh() })) {
+            Picker("Release Channel", selection: Binding(get: { model.preferences.channels[row.id.path, default: .stable] }, set: { model.preferences.channels[row.id.path] = $0 })) {
                 Text("Stable").tag(ReleaseChannel.stable)
                 Text("Beta").tag(ReleaseChannel.beta)
             }.pickerStyle(.segmented).frame(maxWidth: 260).accessibilityIdentifier("release-channel")
             HStack {
-                Button(model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) ? "Stop Ignoring" : "Ignore App") { model.ignore(row) }.accessibilityIdentifier("ignore-selected")
-                Button("Skip This Version") { model.skip(row) }.disabled(row.record.candidate == nil)
+                Button(model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) ? "Stop Ignoring" : "Ignore App") { model.ignore(row.id) }.accessibilityIdentifier("ignore-selected")
+                Button("Skip This Version") { model.skip(row.id) }.disabled(row.record.candidate == nil)
                     .accessibilityIdentifier("skip-selected")
                 if row.record.status == .skipped {
-                    Button("Clear Skipped Version") { model.clearSkip(row) }.accessibilityIdentifier("clear-skip-selected")
+                    Button("Clear Skipped Version") { model.clearSkip(row.id) }.accessibilityIdentifier("clear-skip-selected")
                 }
             }
         }

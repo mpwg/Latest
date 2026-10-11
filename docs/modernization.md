@@ -9,9 +9,17 @@ prose, comments, commits and PRs are English; UI translations remain localized.
 
 - LatestCore: immutable Sendable snapshots, structural versions, provenance,
   decisions, jobs, generations, bounded networking and atomic cache.
+- LatestApplication: GUI-independent observable session, scans, selection, preferences,
+  major consent, update jobs and front-end effects; depends only on LatestCore.
 - LatestPlatform: canonical inventory, subprocesses, metadata, main-actor
   Sparkle adapter and broker client.
-- LatestApp: MainActor/Observation and SwiftUI, no private Apple frameworks.
+- LatestApp: SwiftUI/AppKit rendering and native UI effects only, forwarding shared
+  session commands; no private Apple frameworks. A future CLI uses the same core.
+
+Automated application tests run without GUI automation. Native installer tests
+drive the same application/runtime APIs with controlled apps. Manual UI and
+accessibility acceptance stay distinct. Manage the Xcode project with Xcode MCP;
+do not regenerate it with Python. See headless-architecture.md.
 - LatestBroker: SMAppService daemon with mutual signature validation, accepting
   only one verified numeric App Store update request for bundled mas.
 

@@ -1,4 +1,6 @@
+import AppKit
 import SwiftUI
+import LatestApplication
 import LatestPlatform
 
 struct LatestSettings: View {
@@ -25,7 +27,7 @@ private struct GeneralSettings: View {
                 Button("Enable Installation Helper") { model.enableBroker() }
                 if model.needsBrokerApproval { Text("Approve Latest in System Settings → General → Login Items & Extensions.").foregroundStyle(.orange) }
             }
-        }.formStyle(.grouped).onChange(of: model.preferences) { _, _ in model.save() }
+        }.formStyle(.grouped)
     }
 }
 private struct DirectorySettings: View {
@@ -46,7 +48,12 @@ private struct DirectorySettings: View {
                     }
                 }
             }
-            Button("Add Folder…", systemImage: "plus") { model.addDirectory() }.accessibilityIdentifier("add-directory")
-        }.onChange(of: model.preferences.directories) { _, _ in model.save(); model.refresh() }
+            Button("Add Folder…", systemImage: "plus") { chooseDirectory() }.accessibilityIdentifier("add-directory")
+        }
     }
+    private func chooseDirectory() {
+        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
+        if panel.runModal() == .OK, let url = panel.url { model.addDirectory(url) }
+    }
+
 }

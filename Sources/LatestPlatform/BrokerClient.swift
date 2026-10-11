@@ -13,8 +13,7 @@ import LatestTrust
     }
     @MainActor public static func register() throws {
         let service = SMAppService.daemon(plistName: ForkIdentity.broker + ".plist")
-        if service.status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
-        else if service.status != .enabled { try service.register() }
+        if service.status != .requiresApproval && service.status != .enabled { try service.register() }
     }
     public func update(_ claim: AppStoreClaim, appURL: URL = Bundle.main.bundleURL) async throws {
         let configuration = try BrokerConfiguration.load(appURL: appURL)

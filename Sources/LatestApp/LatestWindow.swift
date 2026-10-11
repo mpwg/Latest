@@ -1,9 +1,11 @@
 import SwiftUI
+import LatestApplication
 import AppKit
 import LatestCore
 
 struct LatestWindow: View {
     @Bindable var model: AppModel
+    let showSettings: () -> Void
     var body: some View {
         NavigationSplitView {
             List(selection: $model.selectedID) {
@@ -12,9 +14,9 @@ struct LatestWindow: View {
                         .contextMenu {
                             Button("Open App") { NSWorkspace.shared.open(row.id.url) }
                             Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([row.id.url]) }
-                            Button(model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) ? "Stop Ignoring" : "Ignore App") { model.ignore(row) }
-                            Button("Skip This Version") { model.skip(row) }.disabled(row.record.candidate == nil)
-                            Button("Clear Skipped Version") { model.clearSkip(row) }
+                            Button(model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) ? "Stop Ignoring" : "Ignore App") { model.ignore(row.id) }
+                            Button("Skip This Version") { model.skip(row.id) }.disabled(row.record.candidate == nil)
+                            Button("Clear Skipped Version") { model.clearSkip(row.id) }
                         }
                 }
             }
@@ -27,7 +29,9 @@ struct LatestWindow: View {
             if let row = model.selectedRow { AppDetail(row: row, model: model) }
             else { ContentUnavailableView("Select an App", systemImage: "app.dashed", description: Text("Choose an app to inspect its update source and release notes.")) }
         }
-        .onChange(of: model.selectedID) { _, _ in model.selectNotes() }
+        .onChange(of: model.externalURL) { _, url in
+            if let url { NSWorkspace.shared.open(url); model.externalURL = nil }
+        }
         .toolbar {
             ToolbarItem { Picker("Source", selection: $model.sourceFilter) {
                 Text("All Sources").tag(Optional<UpdateSource>.none)
@@ -36,7 +40,7 @@ struct LatestWindow: View {
             ToolbarItem { Button("Check for Updates", systemImage: "arrow.clockwise") { model.refresh() }.disabled(model.scanning).accessibilityIdentifier("refresh") }
             ToolbarItem { Button("Update All", systemImage: "square.and.arrow.down") { model.updateAll() }
                 .disabled(model.scanning || model.activeUpdates > 0 || !model.hasBulkUpdates).accessibilityIdentifier("update-all") }
-            ToolbarItem { Button("Settings…", systemImage: "gear") { model.showSettingsHandler() }.accessibilityIdentifier("settings") }
+            ToolbarItem { Button("Settings…", systemImage: "gear") { showSettings() }.accessibilityIdentifier("settings") }
         }
         .alert("Update Failed", isPresented: $model.showingError) {
             Button("Open Diagnostics") { NSWorkspace.shared.activateFileViewerSelecting([model.diagnosticURL]) }
@@ -44,7 +48,7 @@ struct LatestWindow: View {
         } message: { Text(model.errorMessage) }
         .confirmationDialog("Confirm Major Upgrade", isPresented: $model.confirmingMajor, titleVisibility: .visible) {
             Button("Install Major Upgrade") { model.confirmMajor() }.disabled(model.scanning)
-            Button("Cancel", role: .cancel) { model.pendingMajor = nil }
+            Button("Cancel", role: .cancel) { model.cancelMajor() }
         } message: { Text("A major upgrade may require a new licence or change compatibility. Review the release notes before continuing.") }
     }
 }

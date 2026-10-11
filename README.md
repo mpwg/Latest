@@ -6,6 +6,12 @@ Homebrew or a restricted App Store helper. The modernization starts from
 upstream 0.12-beta2. This fork is an independent project; releases and support
 belong to [mpwg/Latest](https://github.com/mpwg/Latest).
 
+The [shared application core](docs/headless-architecture.md) owns discovery,
+selection, preferences, consent and update jobs independently of the GUI.
+The native interface renders shared state and forwards commands; a later CLI
+will use the same session and platform runtime. Automated application tests and
+CI run without GUI automation. Xcode project changes use Xcode MCP.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and
@@ -59,7 +65,9 @@ swift test --build-system native --enable-swift-testing --disable-xctest
 
 The compiled verification executable also works with the macOS 27 Command
 Line Tools. Swift Testing and XCUITest require full Xcode. Open the shared
-Latest.xcodeproj scheme for native tests. Dependencies are pinned in
+Latest.xcodeproj scheme for native builds. Run only LatestCoreTests through
+Xcode MCP for headless tests; historical XCUITests are optional reproduction
+material. Dependencies are pinned in
 Config/dependencies.json and mas's committed upstream Package.resolved;
 bootstrap applies the reviewed SDK and package-verification patches.
 
@@ -134,7 +142,7 @@ view behaviour, with provider installation and accessibility covered separately.
 **The modernization is not fully accepted for production.** See
 [acceptance](docs/acceptance.md) for current evidence and remaining native
 installation, accessibility, signing, notarization and self-update gates.
-The verified implementation at `2731361` passed both Xcode 27 CI runs,
+The historical implementation at `2731361` passed both Xcode 27 CI runs,
 including seven Swift Testing tests and five native UI tests. The
 [test coverage](docs/test-coverage.md#native-ui-evidence-for-2731361) lists exactly
 what those isolated UI fixtures establish. Real provider installations,

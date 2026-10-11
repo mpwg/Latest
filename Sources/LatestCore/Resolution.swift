@@ -71,18 +71,29 @@ public struct UpdateEvent: Equatable, Sendable {
     public var isTerminal: Bool { [.succeeded, .failed, .cancelled].contains(phase) }
 }
 
-public actor JobLedger {
+public struct JobState: Sendable {
     private var jobs: [AppInstanceID: (UUID, UpdateEvent)] = [:]
     public init() {}
-    public func start(_ app: AppInstanceID) throws -> UUID {
+    public mutating func start(_ app: AppInstanceID) throws -> UUID {
         if let old = jobs[app], !old.1.isTerminal { throw LatestFailure.rejected("An update is already running for this app.") }
         let token = UUID(); jobs[app] = (token, .init(.queued)); return token
     }
-    @discardableResult public func accept(_ event: UpdateEvent, app: AppInstanceID, token: UUID) -> Bool {
+    @discardableResult public mutating func accept(_ event: UpdateEvent, app: AppInstanceID, token: UUID) -> Bool {
         guard let old = jobs[app], old.0 == token, !old.1.isTerminal else { return false }
         let phases: [JobPhase] = [.queued, .checking, .downloading, .installing, .verifying]
         if !event.isTerminal, let before = phases.firstIndex(of: old.1.phase), let after = phases.firstIndex(of: event.phase), after < before { return false }
         jobs[app] = (token, event); return true
     }
     public func event(for app: AppInstanceID) -> UpdateEvent? { jobs[app]?.1 }
+}
+
+/// Cross-actor adapter around the same synchronous transitions used by clients.
+public actor JobLedger {
+    private var state = JobState()
+    public init() {}
+    public func start(_ app: AppInstanceID) throws -> UUID { try state.start(app) }
+    @discardableResult public func accept(_ event: UpdateEvent, app: AppInstanceID, token: UUID) -> Bool {
+        state.accept(event, app: app, token: token)
+    }
+    public func event(for app: AppInstanceID) -> UpdateEvent? { state.event(for: app) }
 }

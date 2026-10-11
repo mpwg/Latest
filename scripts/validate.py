@@ -20,6 +20,10 @@ for source in (ROOT / "Sources").rglob("*.swift"):
     assert "Bundle(identifier:" not in text, source
     assert '"/bin/bash"' not in text, source
     assert "_CFBundleFlushBundleCaches" not in text, source
+# Keep application policy independently importable by the future CLI and tests.
+for layer in ["LatestCore", "LatestApplication"]:
+    for source in (ROOT / "Sources" / layer).glob("*.swift"):
+        assert not re.search(r"^import (?:AppKit|SwiftUI|Sparkle|LatestPlatform)\b", source.read_text(), re.MULTILINE), source
 info=(ROOT / "Config/Info.plist").read_text()
 assert "NSAllowsArbitraryLoads" not in info and "max.codes" not in info and "DSAKey" not in info
 for path in (ROOT / "Config").glob("*.plist"):
