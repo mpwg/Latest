@@ -328,6 +328,7 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
             jobJournal: state.appendingPathComponent("job-events.jsonl"))
         await app.start(); await app.waitForScan()
         let row = try #require(app.rows.first { $0.id == before.id })
+        print("Native checked status: \(row.record.status), reason: \(row.record.reason ?? "none")")
         try #require(row.record.status == .available)
         app.selectedID = before.id
         app.requestUpdate(before.id); await app.waitForUpdates(); await app.flushPreferences()

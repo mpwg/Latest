@@ -24,6 +24,11 @@ def run_case(case):
     reset_sparkle(selected); reset_sparkle(other)
     controls = [other, ROOT / 'applications/Latest Homebrew Fixture.app',
                 ROOT / 'applications/Unmanaged/Latest Homebrew Fixture.app']
+    host_vendor = Path('/opt/homebrew/Library/Homebrew/vendor/portable-ruby')
+    host_runtime_before = digest_app(host_vendor) if host_vendor.is_dir() else {}
+    isolated_vendor = ROOT / 'homebrew/Library/Homebrew/vendor/portable-ruby'
+    if isolated_vendor.is_symlink():
+        raise ValueError('The disposable Homebrew runtime must not reference the host vendor directory.')
     before = digest_app(selected)
     controls_before = [digest_app(app) for app in controls]
     archive = ROOT / 'web/LatestSparkleFixture-1.1.0.zip'
@@ -59,6 +64,8 @@ def run_case(case):
             raise ValueError('A rejected archive changed the selected fixture.')
         if any(digest_app(app) != old for app, old in zip(controls, controls_before)):
             raise ValueError('An unrelated canonical instance/provider fixture changed.')
+        if host_runtime_before and digest_app(host_vendor) != host_runtime_before:
+            raise ValueError('The ordinary Homebrew Ruby runtime changed.')
         fixtures.run(['codesign', '--verify', '--deep', '--strict', selected])
         architectures = fixtures.run(['lipo', '-archs', selected / 'Contents/MacOS/FixtureApp'], capture=True)
         if architectures != 'arm64':
@@ -70,14 +77,15 @@ def run_case(case):
         sources = list((REPO / 'Sources/LatestApplication').glob('*.swift')) + [
             REPO / 'Sources/LatestPlatform/LiveApplicationRuntime.swift', REPO / 'Sources/LatestPlatform/SparkleProvider.swift',
             REPO / 'Sources/LatestPlatform/Inventory.swift', REPO / 'Sources/LatestCore/Resolution.swift',
-            REPO / 'Tests/LatestCoreTests/CoreTests.swift', Path(__file__)]
+            REPO / 'Tests/LatestCoreTests/CoreTests.swift', REPO / 'scripts/native_fixtures.py', Path(__file__)]
         result = dict(case=case, sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
                       sourceSHA256={str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources},
                       environment=dict(macOS=fixtures.run(['sw_vers', '-productVersion'], capture=True),
                                        xcode=fixtures.run(['xcodebuild', '-version'], capture=True), architecture=architectures),
                       arguments=arguments, selectedPath=str(selected), installedVersion=expected_version,
                       events=events, unrelatedFixturesUnchanged=True, signatureVerified=True,
-                      directProductionSession=True, GUIAutomation=False, normalRuntimeRescan=True)
+                      directProductionSession=True, GUIAutomation=False, normalRuntimeRescan=True,
+                      ordinaryHomebrewRuntimeUnchanged=True)
         (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(f'Headless native Sparkle {case}: passed, {expected_version}, verified signature/architecture, unchanged controls.')
     finally:

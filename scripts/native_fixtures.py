@@ -149,12 +149,13 @@ def prepare_homebrew():
     source = Path(run(['brew', '--repository'], capture=True))
     prefix = ROOT / 'homebrew'
     run(['git', 'clone', '--quiet', '--shared', source, prefix])
-    # Reuse only the host's immutable Ruby runtime, never its Caskroom or taps.
+    # Copy the runtime so automatic Ruby provisioning cannot touch the host.
     vendor = source / 'Library/Homebrew/vendor/portable-ruby'
     if vendor.exists():
         destination = prefix / 'Library/Homebrew/vendor/portable-ruby'
         if not destination.exists():
-            destination.symlink_to(vendor, target_is_directory=True)
+            # Never let an isolated brew auto-provision Ruby through a host symlink.
+            shutil.copytree(vendor, destination, symlinks=True)
     brew = prefix / 'bin/brew'
     env = brew_environment()
     for directory in ['brew-cache', 'brew-logs', 'brew-temp', 'user-config']:

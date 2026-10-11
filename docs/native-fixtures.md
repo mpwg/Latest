@@ -36,7 +36,9 @@ The fixture IDs are `io.github.mpwg.Latest.NativeFixture.Sparkle` and
 its actual bundle metadata with `--fixture-metadata`.
 
 Homebrew is cloned locally from the installed brew repository and may reuse its
-portable Ruby runtime. The fixture prefix, tap, Caskroom, app destination, cache,
+portable Ruby runtime by copying it into the isolated prefix. It never symlinks
+the vendor directory to the host, so automatic Ruby provisioning stays isolated.
+The fixture prefix, tap, Caskroom, app destination, cache,
 logs, XDG trust/configuration and temporary files remain under the generated root. The host's installed
 casks and its prefix are not used as installation targets. This nonstandard
 prefix is a Homebrew Tier 3 test configuration; results must name that limit.
