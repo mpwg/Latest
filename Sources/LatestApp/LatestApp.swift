@@ -19,6 +19,7 @@ import AppKit
         window.title = "Latest"
         window.styleMask.insert(.resizable)
         window.setContentSize(NSSize(width: 1000, height: 650))
+        window.contentMinSize = NSSize(width: 800, height: 520)
         window.setFrameAutosaveName("LatestMainWindow")
         if !window.setFrameUsingName("LatestMainWindow") { window.center() }
         window.isReleasedWhenClosed = false
@@ -68,6 +69,9 @@ import AppKit
         if let settingsWindow { settingsWindow.makeKeyAndOrderFront(nil); return }
         let window = LatestSettingsWindow(contentViewController: NSHostingController(rootView: LatestSettings(model: model)))
         window.title = String(localized: "Settings…")
+        window.styleMask.insert(.resizable)
+        window.setContentSize(NSSize(width: 680, height: 560))
+        window.contentMinSize = NSSize(width: 560, height: 440)
         window.isReleasedWhenClosed = false
         window.center(); window.makeKeyAndOrderFront(nil)
         settingsWindow = window

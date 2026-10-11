@@ -42,16 +42,40 @@ Private baseline report, screenshots and accessibility captures:
 
 ## Repair and next acceptance
 
+At `b0dff78`, actual English and German native interaction passes Command-F
+search/clear, Command-comma and Command-W/Escape settings dismissal, semantic
+Source/Quelle labels, and Homebrew → primary Sparkle → secondary Sparkle detail
+identity. Each fresh accessibility capture has the selected name, exact path,
+bundle identifier and installed version. German current/available, action,
+ignore/skip, channel, release-note placeholder, settings and footer labels are
+translated, with umlauts. The first English launch displayed Sparkle's own
+automatic-check prompt; Don't Check was selected, without updating Latest.
+
+The repaired bundle was launched with the real isolated Homebrew environment,
+including its app directory; the baseline LaunchServices launch omitted those
+variables. Evidence and launch PID/arguments are retained alongside the baseline.
+No fixture update occurred. Both languages were quit; system keyboard and
+VoiceOver settings remained off. Maximum text size reproduced the remaining
+unscaled details/actions/settings defect. This limited EN/DE proof does not
+cover progress, errors, major consent, all preferences or VoiceOver.
+
 The detail view now has selected-instance identity and explicit live metadata
 accessibility values. The source picker has a semantic label. Native menu
 commands focus search and close the front window; the settings window handles
 Escape through the native responder chain. Conditional action labels preserve
 localization. These are presentation changes; shared policy remains in the core.
 
+The follow-up scales details, status, controls, metadata, footer and settings
+with the shared text-size preference. Action and preference controls fall back
+to vertical layouts when a row cannot fit. Settings are resizable, main/settings
+minimum content sizes are explicit, metadata paths can wrap without a line cap,
+and every job-phase label has an English/German literal translation. This
+follow-up still requires native large-text and progress acceptance.
+
 | Criterion | Status | Evidence / next step |
 |---|---|---|
 | Native baseline interaction and concrete defects | passed | Actual signed app screenshots/AX and keyboard sequences above |
-| Repaired search, close commands, source label and selected-instance AX | open | Rebuild/sign with the same identity, then repeat native EN/DE interactions |
+| Repaired search, close commands, source label and selected-instance AX | passed | Actual EN/DE interaction at b0dff78; retained fresh AX captures for three selected instances |
 | Full keyboard, large text and German/English flows | open | Include narrow window, settings, release notes and update/major/error dialogs |
 | Actual VoiceOver reading/navigation | not verifiable | Need observable reader navigation and spoken output on the native host |
 

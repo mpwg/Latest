@@ -9,7 +9,8 @@ struct LatestSettings: View {
         TabView {
             GeneralSettings(model: model).tabItem { Label("General", systemImage: "gear") }
             DirectorySettings(model: model).tabItem { Label("Locations", systemImage: "folder") }
-        }.frame(width: 560, height: 440).padding()
+        }.font(.system(size: 14 * model.preferences.fontScale))
+            .padding().frame(minWidth: 560, minHeight: 440)
     }
 }
 private struct GeneralSettings: View {
@@ -21,7 +22,11 @@ private struct GeneralSettings: View {
             Toggle("Show Unknown and Incompatible Apps", isOn: $model.preferences.showUnknown).accessibilityIdentifier("show-unknown")
             Toggle("Sort by Source", isOn: $model.preferences.sortBySource).accessibilityIdentifier("sort-by-source")
             Toggle("Show Informational Catalogue Hints", isOn: $model.preferences.showCatalogueHints)
-            LabeledContent("Text Size") { Slider(value: $model.preferences.fontScale, in: 1...1.6).frame(width: 160) }
+            LabeledContent("Text Size") {
+                Slider(value: $model.preferences.fontScale, in: 1...1.6).frame(width: 160)
+                    .accessibilityLabel(Text("Text Size")).accessibilityIdentifier("text-size")
+                    .accessibilityValue(model.preferences.fontScale.formatted(.percent.precision(.fractionLength(0))))
+            }
             Section("App Store Updates") {
                 Text("Direct updates require the signed installation helper. iOS apps, duplicate installations and nonstandard locations open the App Store instead.")
                 Button("Enable Installation Helper") { model.enableBroker() }

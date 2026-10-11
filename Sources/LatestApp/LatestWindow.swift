@@ -38,6 +38,7 @@ struct LatestWindow: View {
             if let row = model.selectedRow { AppDetail(row: row, model: model).id(row.id) }
             else { ContentUnavailableView("Select an App", systemImage: "app.dashed", description: Text("Choose an app to inspect its update source and release notes.")) }
         }
+        .font(.system(size: 14 * model.preferences.fontScale))
         .onReceive(NotificationCenter.default.publisher(for: .latestFocusSearch)) { _ in searchFocused = true }
         .onChange(of: model.externalURL) { _, url in
             if let url { NSWorkspace.shared.open(url); model.externalURL = nil }
@@ -72,7 +73,7 @@ private struct AppListRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(row.record.app.name).font(.system(size: 14 * fontScale, weight: .medium))
                 Text(row.record.app.version.description).font(.system(size: 12 * fontScale)).foregroundStyle(.secondary)
-                StatusTitle(status: row.record.status).font(.caption).foregroundStyle(row.record.status == .available ? .blue : .secondary)
+                StatusTitle(status: row.record.status).font(.system(size: 12 * fontScale)).foregroundStyle(row.record.status == .available ? .blue : .secondary)
             }
             Spacer()
             if let event = row.event, !event.isTerminal { ProgressView().controlSize(.small) }
@@ -89,11 +90,11 @@ private struct InventoryFooter: View {
         VStack(alignment: .leading, spacing: 6) {
             if model.scanning {
                 ProgressView(value: Double(model.checked), total: Double(max(1, model.total)))
-                Text(LocalizedStringResource("Checking %lld of %lld", defaultValue: "Checking \(model.checked) of \(model.total)")).font(.caption)
+                Text(LocalizedStringResource("Checking %lld of %lld", defaultValue: "Checking \(model.checked) of \(model.total)")).font(.system(size: 12 * model.preferences.fontScale))
             } else {
-                Text(LocalizedStringResource("%lld apps", defaultValue: "\(model.visibleRows.count) apps")).font(.caption)
+                Text(LocalizedStringResource("%lld apps", defaultValue: "\(model.visibleRows.count) apps")).font(.system(size: 12 * model.preferences.fontScale))
             }
-            if !model.warnings.isEmpty { Text(model.warnings.joined(separator: "\n")).font(.caption).foregroundStyle(.orange).accessibilityIdentifier("inventory-warnings") }
+            if !model.warnings.isEmpty { Text(model.warnings.joined(separator: "\n")).font(.system(size: 12 * model.preferences.fontScale)).foregroundStyle(.orange).accessibilityIdentifier("inventory-warnings") }
         }.padding().frame(maxWidth: .infinity, alignment: .leading).background(.bar)
     }
 }
