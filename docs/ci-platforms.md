@@ -5,6 +5,16 @@ The Ubuntu job runs first; the macOS job depends on its success. No GUI automati
 is used by either job. This division changes the test location, not the native
 acceptance requirements.
 
+Both jobs explicitly select the `bash` run shell. GitHub's
+[shell rules](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaultsrun)
+then apply `-e -o pipefail`, so a failed Swift producer cannot be hidden by the
+successful `tee` log consumer. The actual macOS log at `71d88c4` showed the
+previous unspecified shell as `/bin/bash -e {0}`. A local controlled failing
+producer pipeline returned 0 under that shell and 1 under explicit Bash with
+pipefail; `.build/ci-pipeline-failure-proof.log` retains both observed statuses.
+The logged real Swift tests at `71d88c4` passed; this repair closes future false
+success reporting, not a previously observed test failure.
+
 Current proof at `2971c3cfa61404b1c53227bd575c89e34fb48011`, checked on
 2026-10-11: [Ubuntu job 114563260517](https://github.com/mpwg/Latest/actions/runs/38170949526/job/114563260517)
 and [macOS job 114563294554](https://github.com/mpwg/Latest/actions/runs/38170949526/job/114563294554)
@@ -26,7 +36,7 @@ native wrapper build and controlled debug packaging.
 
 | Scope | CI platform | Reason |
 |---|---|---|
-| Source boundaries, all 74 EN/DE keys and placeholder parity | Ubuntu 24.04 | Python text/JSON validation, without Apple SDKs |
+| Source boundaries, all current 84 EN/DE keys and placeholder parity | Ubuntu 24.04 | Python text/JSON validation, without Apple SDKs |
 | Config plist parsing, shared-scheme XML, Python script syntax | Ubuntu 24.04 | Standard-library parsers; actual Xcode project parsing remains on macOS |
 | Seven frozen-source/artifact-binding tests | Ubuntu 24.04 | Real disposable Git repositories, exports, symlinks, hashes and metadata; external signing/notary orchestration is explicitly mocked |
 | Six appcast-history/metadata rejection tests | Ubuntu 24.04 | Python XML/history contracts, without the native signing executable |
