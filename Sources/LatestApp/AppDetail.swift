@@ -46,7 +46,8 @@ private struct AppDetailActions: View {
                 VStack(alignment: .leading, spacing: 10) { AppDetailButtons(row: row, model: model) }
             }
             if row.record.candidate?.isMajorUpgrade == true { Label("Major Upgrade", systemImage: "exclamationmark.circle").foregroundStyle(.orange) }
-            if let message = row.event?.message { Text(message).foregroundStyle(.red) }
+            if row.event?.phase == .cancelled { JobPhaseTitle(phase: .cancelled).foregroundStyle(.secondary) }
+            else if let message = row.event?.message { Text(message).foregroundStyle(.red) }
             if let reason = row.record.reason { Text(reason).foregroundStyle(.secondary) }
         }
     }
@@ -58,7 +59,8 @@ private struct AppDetailButtons: View {
         Group {
             if let event = row.event, !event.isTerminal {
                 ProgressView(value: event.progress).frame(width: 160)
-                JobPhaseTitle(phase: event.phase)
+                    .accessibilityLabel(Text("Update Progress")).accessibilityIdentifier("update-progress")
+                JobPhaseTitle(phase: event.phase).accessibilityIdentifier("update-phase")
                 Button { model.cancel(row.id) } label: { Text("Cancel").font(.system(size: 14 * model.preferences.fontScale)) }
                     .disabled(!model.canCancel(row.id))
                     .accessibilityIdentifier("cancel-update")

@@ -52,3 +52,41 @@ original feed/preferences and collect the final version. Preserve evidence names
 | German/English progress, error and handoff accessibility | open | Fresh native interaction; earlier headless lifecycle evidence does not establish GUI readability |
 
 The complete lifecycle UI gate remains open.
+
+## English actual outcome at 77e9b92
+
+The repaired GUI now rejects both main Command-W and application Command-Q
+while a real HTTPS download is active, retaining the same visible selected
+instance after Return dismisses the native alert. Actual native Cancel produces
+one cancelled terminal job, no error sheet and unchanged selected 1.0.0 bytes.
+It revealed a presentation defect: the detail displayed a red internal
+`Swift.CancellationError` description. The renderer now uses the existing neutral
+localized Cancelled phase instead; this follow-up requires a current native check.
+
+A second real Update receives HTTP 503, displays the native Update Failed sheet
+with Diagnostics/OK, and Escape dismisses it. Independent transport and journal
+checks confirm a failed terminal job, unchanged primary bytes and three unchanged
+control instances. The same primary remains eligible for a valid retry.
+
+The third native Update delivers the real signed archive. A natively registered
+selected fixture PID 94579, independently matched by NSWorkspace to the exact
+primary bundle URL, is stopped to hold actual installer handoff. The UI shows
+Installing and a disabled Cancel; main Command-W and Command-Q still show the
+running alert and keep the window/app open. The stopped process state and unchanged
+app bytes are independently checked before SIGCONT. Installation then finishes
+at signed 1.1.0 (2) / arm64, Up to Date, Update disabled, without an error. Normal
+Command-Q quits after completion.
+
+The current journal has exactly cancelled → failed → succeeded terminal jobs,
+all addressed to the primary path; all three nonselected byte maps remain
+identical. Strict installed signature/version/architecture checks pass. The
+gated transport sends actual bytes every five seconds; the real native operation
+was never replaced by an injected installer. Feed/preferences are restored only
+after the actual GUI process quits. Private proof:
+`evidence/native-ui-lifecycle/main-close-repaired-en/` under the fixture root.
+
+The captured progress accessibility indicator had no semantic label. The
+presentation now assigns a localized Update Progress label and stable phase/
+progress identifiers. This improves the native AX surface; spoken VoiceOver
+acceptance remains separate and unproven. German, repaired cancellation/AX,
+new-process UI restart and Diagnostics action still require current interaction.

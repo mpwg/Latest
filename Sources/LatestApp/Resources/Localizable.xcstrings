@@ -1,6 +1,13 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Update Progress": {
+      "comment": "Accessibility label for the selected application's update progress indicator.",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Update Progress" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Fortschritt der Aktualisierung" } }
+      }
+    },
     "%lld apps": {
       "comment": "Latest application interface text.",
       "localizations": {
