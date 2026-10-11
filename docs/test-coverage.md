@@ -22,6 +22,16 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
+## Current direct native Sparkle lifecycle
+
+[Three actual lifecycle cases](headless-lifecycle-acceptance.md) pass at 7f43333:
+real gated download/cancellation, HTTP 503/retry, and a natively registered stopped
+app during installer handoff. Exact terminal journals, unchanged pre-recovery
+bytes/other instances, signed 1.1.0 and separately spawned restart processes
+accompany the state checks. All five Homebrew and four other Sparkle native cases
+also pass at the same current test-source revision. Default runs execute 24
+functions and skip the three separate native opt-ins; those skips are not proof.
+
 ## Current direct native Homebrew verification
 
 [Five actual Homebrew cases](headless-homebrew-acceptance.md) pass at 01939db

@@ -79,7 +79,8 @@ A successful headless test of an injected installer establishes workflow policy,
 not a real provider installation. [Five actual Homebrew outcomes](headless-homebrew-acceptance.md) and
 [four actual signed Sparkle outcomes](headless-native-acceptance.md) now pass
 through the shared runtime, including a separate process restart after each and
-retry without resetting the rejected bundle. Remaining native provider/lifecycle
+retry without resetting the rejected bundle. The [three real lifecycle gates](headless-lifecycle-acceptance.md) also pass
+without GUI automation. Remaining native provider/platform
 scopes must be rerun through the shared runtime after this extraction.
 Manual keyboard, VoiceOver, large-text and English/German view acceptance remain
 separate release criteria. App Store receipts/account/update and production

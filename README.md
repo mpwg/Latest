@@ -28,6 +28,12 @@ the normal Homebrew registry/runtime. Run
 `python3 scripts/native_headless_homebrew.py all` after compiling the opt-in test.
 Structured subprocess output remains separate from bounded diagnostics.
 
+The [direct native lifecycle suite](docs/headless-lifecycle-acceptance.md) checks
+actual download cancellation, HTTP-503 failure/retry and installer handoff
+through the same core. A stopped, natively registered signed fixture verifies
+handoff cancellation/quit protection; real installation and new-process restart
+complete the checks. Run `python3 scripts/native_headless_lifecycle.py all`.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and
