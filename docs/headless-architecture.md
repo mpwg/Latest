@@ -83,6 +83,9 @@ retry without resetting the rejected bundle. The [three real lifecycle gates](he
 without GUI automation.
 The [four signed compatibility cases](headless-compatibility-acceptance.md)
 also run through the production session with separate process restarts.
+The [native preferences scenarios](headless-preferences-acceptance.md) exercise
+ignore/skip/channel persistence through nine fresh processes and real signed
+feeds, with independently checked JSON and unchanged apps.
 Remaining native provider/platform
 scopes must be rerun through the shared runtime after this extraction.
 Manual keyboard, VoiceOver, large-text and English/German view acceptance remain

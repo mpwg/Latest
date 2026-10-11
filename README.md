@@ -40,6 +40,12 @@ builds and actual installation by Sparkle build-number policy. Four new-process
 restarts confirm the results. Run `python3 scripts/native_headless_compatibility.py all`.
 The host scope is arm64; other fixture instances remain unchanged.
 
+The [direct native preferences suite](docs/headless-preferences-acceptance.md)
+checks bundle-wide ignore/reversal, exact-instance/version skipping and
+independent Stable/Beta channels through nine fresh processes and real signed
+feeds. It independently checks persisted JSON and unchanged app bytes. Run
+`python3 scripts/native_headless_preferences.py all`.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and

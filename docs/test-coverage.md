@@ -22,7 +22,25 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
-## Current direct native compatibility and regression run
+## Current direct native preferences and regression run
+
+[Two actual preferences scenarios](headless-preferences-acceptance.md) pass at
+`2463621` through nine fresh shared-session processes. Ignore/reversal, visibility,
+exact-instance/version skip/clear/new-version behavior and Stable/Beta persistence
+use real signed apps/HTTPS feeds and independently checked JSON. No installation
+job starts and all controlled app bytes stay unchanged. All sixteen other native
+cases and their sixteen fresh restart processes also pass again at this revision;
+all eighteen result source maps match the current relevant files.
+
+Default Swift tests execute 24 deterministic functions and skip five native
+opt-ins. Xcode MCP builds test targets and selects 24 functions with zero
+failures/skips. The native preference opt-in is discovered in the existing test
+target. The Xcode MCP project serialization preserves all project objects and
+settings. Local warnings-as-errors Debug/Release, 84 invariants, 14 Python release
+regressions and 74 localized keys pass. Aggregate logs are retained under
+`.build/headless-preferences-all.log` and `.build/headless-regression-after-preferences.log`.
+
+## Direct native compatibility and regression run
 
 [Four real signed compatibility cases](headless-compatibility-acceptance.md)
 pass at `d6505ff`, each followed by a fresh process restart. They check an actual
