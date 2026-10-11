@@ -34,6 +34,12 @@ through the same core. A stopped, natively registered signed fixture verifies
 handoff cancellation/quit protection; real installation and new-process restart
 complete the checks. Run `python3 scripts/native_headless_lifecycle.py all`.
 
+The [direct native compatibility suite](docs/headless-compatibility-acceptance.md)
+checks real signed architecture/minimum-OS rejection, incomparable installed
+builds and actual installation by Sparkle build-number policy. Four new-process
+restarts confirm the results. Run `python3 scripts/native_headless_compatibility.py all`.
+The host scope is arm64; other fixture instances remain unchanged.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and

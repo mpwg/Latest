@@ -8,28 +8,28 @@ core shared with a later CLI; automated tests run without GUI automation;
 direct work/commits on main are authorized, without PRs yet. Reuse the approved
 localhost certificate/trust until its natural expiry on 2026-10-17.
 
-Checked application/runtime/test code: `7f43333`, macOS 27.0.1 / Xcode 27.0 /
+Checked application/runtime/test code: `d6505ff`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. The final docs may have a later revision; native JSON source
-maps must still match every relevant source file. Core CI on 14d8e3c and
-source-release CI on 56a593b passed; documentation-only follow-up CI is tracked
-separately.
+maps must still match every relevant source file. Main CI on `264bc6d` passed;
+the later compatibility package's CI is tracked separately below.
 
 | Criterion | Status | Current evidence / next step |
 |---|---|---|
 | GUI-independent application core and shared future CLI API | passed | LatestApplication depends only on LatestCore; source-boundary validator; GUI forwards ID commands and renders core state |
-| Complete default workflow testing without GUI automation | passed | 24 deterministic Swift test functions (12 application workflows plus actual process-stream separation); three separate native opt-ins are skipped by default; current default Swift run has 24 executed functions |
+| Complete default workflow testing without GUI automation | passed | 24 deterministic Swift test functions (12 application workflows plus actual process-stream separation); four separate native opt-ins are skipped by default; Xcode MCP selected 24 functions with zero failures/skips before the compatibility opt-in was added |
 | Scans, exact selection, preferences, migration and consent | passed | Direct core tests include supersession, ordered persistence/restart, ignored/skipped direct mutations, channel settings, stale major consent and bulk eligibility |
-| Jobs, rejection, duplicate starts, cancellation, handoff and quit policy | passed | Direct core tests exercise the actual session and job transitions; provider-side signed lifecycle scenarios still need their own native rerun |
+| Jobs, rejection, duplicate starts, cancellation, handoff and quit policy | passed | Direct core tests exercise the actual session and job transitions; actual signed provider lifecycle outcomes are recorded below |
 | Actual signed Sparkle update/rejection/retry/process restart | passed | headless-native-acceptance.md: four actual native outcomes and four new process restarts; signature/architecture, exact-instance journal and unchanged controls |
 | Actual targeted Homebrew update, rejection, hints, error/retry/restart | passed | headless-homebrew-acceptance.md: five actual native outcomes and five new processes; exact ownership/instance guards, signature/architecture, unchanged controls and ordinary registry/runtime |
 | Actual Sparkle cancellation, HTTP failure/retry and installer handoff | passed | headless-lifecycle-acceptance.md: three actual native scenarios, controlled registered PID and three new-process restarts; original Homebrew/Sparkle suites also pass at this revision |
-| Remaining native volume/compatibility scenarios | open | Adapt/rerun the remaining historical scopes through the shared runtime on current code; injected tests are not native installation proof |
+| Real signed native compatibility and build policy | passed | headless-compatibility-acceptance.md: four actual signed targets, exact rejection/no-job outcomes, actual lower-display/higher-build installation and four fresh process restarts on arm64 |
+| Remaining native volumes, preferences, major/bulk scenarios | open | Adapt/rerun the remaining historical scopes through the shared runtime on current code; injected tests are not native installation proof |
 | Native broker/XPC/Store/package scope | open | Headless native broker scopes remain; controlled authentic Store target/package/account/update is still unavailable |
 | Keyboard, VoiceOver, large text and full EN/DE view interaction | open | Separate manual native acceptance; headless logic and catalogue parity do not establish these criteria |
 | Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 56a593b: 14 contracts, actual clean archive rebuild and development-signed version/build/source/licence checks; production artifact set remains open |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
 | Current local build/regression checks | passed | Warnings-as-errors Debug/Release, 84 invariants, 14 source/feed regressions, 74 localized keys |
-| Verified implementation main CI | passed | [14d8e3c / 38151975428](https://github.com/mpwg/Latest/actions/runs/38151975428) and [56a593b / 38153797844](https://github.com/mpwg/Latest/actions/runs/38153797844); final whole-goal CI still must match the eventual release head |
+| Verified implementation main CI | passed | [264bc6d / 38159496045](https://github.com/mpwg/Latest/actions/runs/38159496045); compatibility-package CI and final whole-goal CI still must match their respective heads |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following

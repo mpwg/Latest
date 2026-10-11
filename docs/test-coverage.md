@@ -22,7 +22,23 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
-## Current direct native Sparkle lifecycle
+## Current direct native compatibility and regression run
+
+[Four real signed compatibility cases](headless-compatibility-acceptance.md)
+pass at `d6505ff`, each followed by a fresh process restart. They check an actual
+x86_64 enclosure on arm64, a macOS 99 target, an incomparable signed installed
+build, and actual Sparkle installation of 0.9.0 (2) over 1.0.0 (1).
+Default Swift runs execute 24 deterministic functions and skip four native
+opt-ins. The selected Xcode MCP core run before this additional opt-in passed
+24 functions with zero failures/skips; the native wrapper also built.
+
+All five Homebrew, four other Sparkle and three lifecycle cases also pass again
+at this revision, with twelve further fresh process restarts. All sixteen
+private result source maps match the current relevant files. Warnings-as-errors
+Debug/Release, 84 invariants, 14 Python release regressions and 74 localized keys
+pass. The retained local aggregate log is `.build/headless-regression-after-compatibility.log`.
+
+## Direct native Sparkle lifecycle
 
 [Three actual lifecycle cases](headless-lifecycle-acceptance.md) pass at 7f43333:
 real gated download/cancellation, HTTP 503/retry, and a natively registered stopped
@@ -30,9 +46,9 @@ app during installer handoff. Exact terminal journals, unchanged pre-recovery
 bytes/other instances, signed 1.1.0 and separately spawned restart processes
 accompany the state checks. All five Homebrew and four other Sparkle native cases
 also pass at the same current test-source revision. Default runs execute 24
-functions and skip the three separate native opt-ins; those skips are not proof.
+functions and then skipped three separate native opt-ins; those skips are not proof.
 
-## Current direct native Homebrew verification
+## Direct native Homebrew verification
 
 [Five actual Homebrew cases](headless-homebrew-acceptance.md) pass at 01939db
 through the production session/runtime, followed by five new-process restarts.

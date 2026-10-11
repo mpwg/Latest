@@ -1,6 +1,6 @@
 # Sparkle lifecycle through the shared application core
 
-Checked at `7f43333`, 2026-10-11, macOS 27.0.1 / Xcode 27.0 /
+Checked again at `d6505ff`, 2026-10-11, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. Three real native cases use ApplicationSession and
 LiveApplicationRuntime with actual signed apps and Sparkle 2.10. No Latest GUI,
 XCUITest or synthesized input is used. The existing approved localhost
