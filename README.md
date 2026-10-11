@@ -27,6 +27,13 @@ channel changes in persisted JSON. Native source/channel/settings controls
 forward shared bindings. Full VoiceOver, narrow-window, long
 release-note and update-dialog acceptance remains separate and open.
 
+[Native interactive lifecycle acceptance](docs/native-ui-lifecycle-acceptance.md)
+adds actual English cancellation, HTTP503 failure, valid retry and installer
+handoff. The main window and app stay open during active jobs; installation
+reaches signed1.1 arm64 while three other instances retain identical bytes.
+German restart and the repaired cancellation/progress AX presentation await
+manual unlock of the native Mac; independent builds/tests/CI pass at `b59d5e9`.
+
 The [direct native Sparkle suite](docs/headless-native-acceptance.md) now checks
 actual signed installation, archive/signature rejection and successful retry
 through that same core, without GUI automation. A separate process restart

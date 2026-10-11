@@ -1,5 +1,22 @@
 # Test coverage and evidence
 
+## Native interactive lifecycle
+
+[Lifecycle UI acceptance](native-ui-lifecycle-acceptance.md) at `77e9b92` records
+actual native English Cancel, HTTP503 failure, valid retry, installer handoff and
+main-window/application guards through the same shared session. Independent
+journals show cancelled/failed/succeeded primary-only jobs, strict signed1.1
+arm64 installation and unchanged three control byte maps. The selected running
+fixture's exact NSWorkspace identity and stopped process are checked before
+handoff recovery. No injected installer is used.
+
+The follow-up `b59d5e9` presents cancellation neutrally and labels progress AX.
+Current local Debug/Release/Xcode, 31 regular Swift functions with nine explicit
+native skips, fourteen Python tests and 85 translations pass; actual
+[Ubuntu/macOS CI](https://github.com/mpwg/Latest/actions/runs/38176553024) passes.
+The current German GUI restart cannot yet be observed: CUA requires owner unlock
+of the locked Mac. Builds/CI do not replace that remaining native acceptance.
+
 ## Native interactive UI repairs
 
 [Native UI acceptance](native-ui-acceptance.md) records actual signed macOS

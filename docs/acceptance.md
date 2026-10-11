@@ -10,9 +10,11 @@ localhost certificate/trust until its natural expiry on 2026-10-17.
 
 Checked application/runtime/test code: `ead2e13`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. Native GUI repairs are separately checked at `44c6958` in
-native-ui-acceptance.md. The final docs may have a later revision; native JSON source
+native-ui-acceptance.md and English lifecycle outcomes at `77e9b92` in
+native-ui-lifecycle-acceptance.md. The `b59d5e9` presentation repair still requires
+manual Mac unlock for German native interaction. The final docs may have a later revision; native JSON source
 maps must still match every relevant source file. Both Ubuntu and macOS main CI
-on `2971c3c` passed, including the shared Store queue package. Later changes still
+on `b59d5e9` passed, including the shared Store queue and native GUI packages. Later changes still
 require corresponding current CI and relevant source-map checks.
 
 | Criterion | Status | Current evidence / next step |
@@ -32,12 +34,14 @@ require corresponding current CI and relevant source-map checks.
 | Native broker/XPC/Store/package scope | open | Headless native broker scopes remain; controlled authentic Store target/package/account/update is still unavailable |
 | Native signed broker client/tool rejection and missing-service retry | passed | headless-broker-boundary-acceptance.md: nine actual cases, real signature/hash/symlink checks and two absent-service XPC attempts; observed callback isolation crash fixed; no root-service registration or privileged execution proof is implied |
 | App Store bulk job serialization in shared core | passed | store-queue-acceptance.md: six actual production-session tests with injected exclusive runtime, ownership through verification, registered queue cancellation, failure/retry, fresh offer/ignore rejection and parallel other providers; native privileged Store bulk remains open |
+| Native English lifecycle UI with close/quit guard and real installation | passed | native-ui-lifecycle-acceptance.md at 77e9b92: actual cancel, HTTP503, retry, stopped registered fixture handoff, disabled Cancel, guarded main close/quit in download/install, signed1.1 arm64 and unchanged3controls |
+| Current cancellation/progress presentation and German GUI restart | not verifiable | b59d5e9 compiled/CI pass; CUA reports locked Mac requiring manual owner unlock. PID95757 remains launched with no update; next actual restart/cancellation/AX check awaits unlock |
 | Keyboard, VoiceOver, large text and full EN/DE view interaction | open | native-ui-acceptance.md: actual EN/DE shortcuts, exact-instance AX, default-window 100%/160% content/control fonts and five reliable selector focus cycles pass; spoken VoiceOver, minimum/narrow windows, long notes and update/major/error/progress dialogs remain open |
 | Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 56a593b: 14 contracts, actual clean archive rebuild and development-signed version/build/source/licence checks; production artifact set remains open |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
-| Current local build/regression checks | passed | Warnings-as-errors Debug/Release, Xcode MCP GUI build, 31 regular Swift functions plus nine explicit default native skips, 84 invariants, 14 source/feed regressions, 84 localized keys; 37 native core maps still match |
+| Current local build/regression checks | passed | b59d5e9: warnings-as-errors Debug/Release, Xcode MCP GUI build, 31 regular Swift functions plus nine explicit default native skips, 84 invariants, 14 source/feed regressions, 85 localized keys; 37 native core maps still match |
 | Portable CI on actual Ubuntu | passed | ci-platforms.md at 2971c3c: actual Ubuntu 24.04; thirteen Python source/history tests and resource/source/localization validation pass; native Mac checks remain required |
-| Verified implementation main CI | passed | [71d88c4 / 38173445248](https://github.com/mpwg/Latest/actions/runs/38173445248): Ubuntu and macOS jobs pass, including native UI compilation; subsequent focus repair and final whole-goal CI must match their respective heads |
+| Verified implementation main CI | passed | [b59d5e9 / 38176553024](https://github.com/mpwg/Latest/actions/runs/38176553024): Ubuntu and macOS jobs pass, explicit Bash pipefail observed at 911c5f6; final whole-goal CI must match its final head |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following

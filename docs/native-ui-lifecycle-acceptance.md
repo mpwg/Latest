@@ -90,3 +90,22 @@ presentation now assigns a localized Update Progress label and stable phase/
 progress identifiers. This improves the native AX surface; spoken VoiceOver
 acceptance remains separate and unproven. German, repaired cancellation/AX,
 new-process UI restart and Diagnostics action still require current interaction.
+
+## Current environment gate at b59d5e9
+
+The development-signed repaired cancellation/progress bundle is built. A fresh
+German GUI process (PID 95757) was launched against installed primary 1.1.0 and
+the isolated inventory profile. CUA then reported the native Mac was locked and
+automatic unlock was unavailable, requiring manual owner unlock. No native
+observation of that restart occurred; no German/restart/presentation pass is
+claimed. The owner was asked to unlock. The controlled process remains alive,
+with no update command issued, so the intended next step is fresh actual primary
+1.1.0/Aktuell/disabled Update inspection, normal quit, then German cancellation,
+HTTP error/retry and Diagnostics interaction.
+
+Independent checks at `b59d5e9` pass: warnings-as-errors Debug/Release, Xcode MCP
+build, 31 regular Swift functions (nine explicit default native skips), fourteen
+source/feed tests and all 85 EN/DE keys. All 37 native core result source maps
+still match. [Ubuntu and macOS CI](https://github.com/mpwg/Latest/actions/runs/38176553024)
+also pass at that exact revision. These checks do not substitute for the blocked
+native German interaction.
