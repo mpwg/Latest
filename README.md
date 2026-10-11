@@ -22,8 +22,9 @@ requires its separate native/signing acceptance.
 release tests and repository/localization checks onto Ubuntu 24.04. The native
 macOS job keeps the real signing integration, Swift tests, locked adapters,
 Xcode build and packaging, and starts only after the portable checks pass.
-Both jobs pass at [2971c3c](https://github.com/mpwg/Latest/actions/runs/38170949526);
-the platform-boundary document records commands, scope and retained evidence.
+Both jobs pass at [4422057](https://github.com/mpwg/Latest/actions/runs/38178452561).
+The platform-boundary document records commands, scope, retained evidence and
+the remaining dependencies for running shared Swift application tests on Linux.
 
 [Native interactive UI acceptance](docs/native-ui-acceptance.md) records actual
 English/German search and window shortcuts, selected-instance accessibility and

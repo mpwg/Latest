@@ -15,14 +15,16 @@ pipefail; `.build/ci-pipeline-failure-proof.log` retains both observed statuses.
 The logged real Swift tests at `71d88c4` passed; this repair closes future false
 success reporting, not a previously observed test failure.
 
-Current proof at `2971c3cfa61404b1c53227bd575c89e34fb48011`, checked on
-2026-10-11: [Ubuntu job 114563260517](https://github.com/mpwg/Latest/actions/runs/38170949526/job/114563260517)
-and [macOS job 114563294554](https://github.com/mpwg/Latest/actions/runs/38170949526/job/114563294554)
+Current proof at `4422057280580e0f4095d28f1d0f3b05b43a9e63`, checked on
+2026-10-12 (Europe/Vienna): [Ubuntu job 114585719211](https://github.com/mpwg/Latest/actions/runs/38178452561/job/114585719211)
+and [macOS job 114585743745](https://github.com/mpwg/Latest/actions/runs/38178452561/job/114585743745)
 both succeeded. Ubuntu ran resource/localization/source validation and all
 thirteen source/artifact/history tests; macOS then passed the real signing
 integration, Swift suites, native wrapper build and debug packaging. The retained
-Ubuntu log is `.build/ubuntu-portable-current-ci.log`. The same three portable
-commands below were rerun locally at this revision and also passed. This is CI
+Ubuntu log is `.build/ubuntu-ci-assessment-4422057.log`: Ubuntu 24.04,
+CPython 3.14.8, explicit Bash with pipefail, thirteen tests and all 85 EN/DE keys.
+The same three portable commands below were rerun locally at this revision and
+also passed. This is CI
 evidence, not manual native or production release acceptance.
 
 Initial split proof at `4bee7bf5396c8eef56efd939431e6c2bbf5ce1c9` on 2026-10-11:
@@ -36,7 +38,7 @@ native wrapper build and controlled debug packaging.
 
 | Scope | CI platform | Reason |
 |---|---|---|
-| Source boundaries, all current 84 EN/DE keys and placeholder parity | Ubuntu 24.04 | Python text/JSON validation, without Apple SDKs |
+| Source boundaries, all current 85 EN/DE keys and placeholder parity | Ubuntu 24.04 | Python text/JSON validation, without Apple SDKs |
 | Config plist parsing, shared-scheme XML, Python script syntax | Ubuntu 24.04 | Standard-library parsers; actual Xcode project parsing remains on macOS |
 | Seven frozen-source/artifact-binding tests | Ubuntu 24.04 | Real disposable Git repositories, exports, symlinks, hashes and metadata; external signing/notary orchestration is explicitly mocked |
 | Six appcast-history/metadata rejection tests | Ubuntu 24.04 | Python XML/history contracts, without the native signing executable |
@@ -77,7 +79,31 @@ LatestCore also imports CryptoKit and uses Apple URLSession async-byte APIs;
 LatestProcess imports Darwin and uses Darwin-specific spawn flags. A Linux job
 must not silently omit those sources and claim the entire core was tested.
 
-A future Swift Linux package split would need the same policy sources, genuinely
-portable cryptography/networking adapters and a distinct deterministic test
-target. It is separate from moving the already portable Python checks. No Linux
-Swift compilation or native macOS installation proof is inferred here.
+A further Swift Linux package split could run the injected application tests for
+selection/filtering, consent, bulk eligibility, job ownership, cancellation,
+retry, persistence, Store queue serialization and host self-update commands.
+Those tests exercise the shared session through `ApplicationRuntime`; they do
+not require a real installer. Their current test file nevertheless imports the
+native modules and also contains opt-in native installation suites. Disabling
+those suites at runtime does not remove their compile-time dependencies.
+
+That split would need the same policy sources, portable cryptography/networking
+adapters, a package manifest without Apple-only targets on Linux, and a distinct
+deterministic test target. The Linux tests must compile the actual shared sources,
+without replacing them with copies or silently excluding unported core code.
+Native process, signature, receipt, Sparkle, broker and installation tests must
+retain their macOS gate. This assessment leaves that refactor separate from the
+already verified Ubuntu checks; no Linux Swift compilation is claimed.
+
+## Assessment acceptance
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| Identify and execute the currently portable checks on Ubuntu | Fulfilled | Actual Ubuntu job above: resource validation, seven frozen-source tests and six history tests pass at `4422057` |
+| Keep native verification on macOS and gate it on portable success | Fulfilled | Workflow dependency and successful macOS job at the same revision |
+| Assess further Swift candidates and concrete blockers | Fulfilled | Current Package.swift, CoreTests.swift, Networking.swift, ReleaseSigning.swift and CommandRunner.swift; analysis above |
+| Document commands, revision, environment and observed outcome | Fulfilled | This document and updated README/test-coverage references |
+
+The assessment is complete. Moving Swift tests to Linux is an implementation
+candidate, not an accepted Linux build. The overall native/release acceptance
+matrix remains unchanged by these CI results.

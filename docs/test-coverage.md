@@ -57,14 +57,18 @@ focused native adapter change requires its own current CI.
 
 ## Ubuntu CI split
 
-At `2971c3c`, [both CI jobs](https://github.com/mpwg/Latest/actions/runs/38170949526)
+At `4422057`, [both CI jobs](https://github.com/mpwg/Latest/actions/runs/38178452561)
 pass. The [portable Ubuntu job](ci-platforms.md) passes thirteen Python
 tests and source/localization/resource checks on actual Ubuntu 24.04 with
 CPython 3.14.8. Six history tests and seven source/artifact contracts require no
-Apple SDK. The actual signed-feed test remains in macOS CI; local full discovery
+Apple SDK; all 85 EN/DE keys pass. The actual signed-feed test remains in macOS CI; local full discovery
 still executes all fourteen tests and passes. Swift/native/Xcode/package checks
 remain on macOS, gated on portable success. No native acceptance criterion is
-replaced by this Linux run.
+replaced by this Linux run. The renewed assessment on 2026-10-12 identifies the
+injected shared application tests as further Linux candidates, with concrete
+package, cryptography, network and test-target separation prerequisites. It does
+not claim a Swift Linux build. The actual Ubuntu log is retained at
+`.build/ubuntu-ci-assessment-4422057.log`.
 
 ## Original headless extraction evidence (historical)
 
