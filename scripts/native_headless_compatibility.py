@@ -10,6 +10,7 @@ import subprocess
 import urllib.request
 import uuid
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 import native_fixtures as fixtures
 from native_homebrew_acceptance import digest_app
