@@ -6,6 +6,19 @@ import LatestProcess
 @testable import LatestPlatform
 
 @Suite("Audit regression contracts") struct CoreTests {
+    @Test @MainActor func malformedBrokerRequestsNeverOpenAConnection() async throws {
+        let client = BrokerClient()
+        for claim in [AppStoreClaim(storeID: 0, bundleID: "fixture", path: "/Applications/Fixture.app"),
+                      .init(storeID: 1, bundleID: "bad\nidentifier", path: "/Applications/Fixture.app"),
+                      .init(storeID: 1, bundleID: "fixture", path: "/Applications/../tmp/Fixture.app"),
+                      .init(storeID: 1, bundleID: "fixture", path: "/Applications/Subfolder/Fixture.app")] {
+            do { try await client.update(claim, appURL: URL(fileURLWithPath: "/nonexistent-fixture.app")); Issue.record("Malformed request was accepted.") }
+            catch LatestFailure.rejected(let reason) {
+                #expect(reason == "The App Store update request is invalid or targets a nonstandard location.")
+            }
+            #expect(client.activeConnectionCount == 0)
+        }
+    }
     @Test(arguments: ["1.2", "1.2.0", "2026.2.19", "٣.١", "1.0rc1", "", "🚀"])
     func equalityIsReflexive(_ string: String) {
         let value = AppVersion(display: string)

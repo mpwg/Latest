@@ -6,6 +6,7 @@ import LatestTrust
 
 @MainActor public final class BrokerClient {
     private var connections: [UUID: NSXPCConnection] = [:]
+    var activeConnectionCount: Int { connections.count }
     private func invalidate(_ token: UUID) { connections.removeValue(forKey: token)?.invalidate() }
     public init() {}
     @MainActor public static var status: SMAppService.Status {
@@ -16,7 +17,17 @@ import LatestTrust
         if service.status != .requiresApproval && service.status != .enabled { try service.register() }
     }
     public func update(_ claim: AppStoreClaim, appURL: URL = Bundle.main.bundleURL) async throws {
-        let configuration = try BrokerConfiguration.load(appURL: appURL)
+        try BrokerPolicy.validateRequest(claim)
+        try Task.checkCancellation()
+        let validation = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            let configuration = try BrokerConfiguration.load(appURL: appURL)
+            try configuration.verifyBundledTools(appURL: appURL)
+            try Task.checkCancellation()
+            return configuration
+        }
+        let configuration = try await withTaskCancellationHandler { try await validation.value }
+            onCancel: { validation.cancel() }
         let requirement = try ForkIdentity.requirement(identifier: ForkIdentity.broker, team: configuration.team)
         let token = UUID()
         let connection = NSXPCConnection(machServiceName: ForkIdentity.broker, options: .privileged)

@@ -39,7 +39,10 @@ public enum CodeTrust {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         var hash = SHA256()
-        while let data = try handle.read(upToCount: 65536), !data.isEmpty { hash.update(data: data) }
+        while let data = try handle.read(upToCount: 65536), !data.isEmpty {
+            try Task.checkCancellation()
+            hash.update(data: data)
+        }
         return hash.finalize().map { String(format: "%02x", $0) }.joined()
     }
 }
@@ -64,5 +67,21 @@ public struct BrokerConfiguration: Sendable {
         let result = try Self(team: team, masHash: hash, verifierHash: verifierHash)
         try CodeTrust.verify(appURL, requirement: ForkIdentity.requirement(identifier: ForkIdentity.application, team: team))
         return result
+    }
+    /// Read-only client preflight; the broker independently verifies its descriptor-staged copies.
+    public func verifyBundledTools(appURL: URL) throws {
+        for (name, identifier, expectedHash) in [("mas", ForkIdentity.tool, masHash),
+                                               ("LatestPackageVerifier", ForkIdentity.verifier, verifierHash)] {
+            try Task.checkCancellation()
+            let source = appURL.appendingPathComponent("Contents/Resources").appendingPathComponent(name)
+            guard source.resolvingSymlinksInPath().path == source.path,
+                  let attributes = try? FileManager.default.attributesOfItem(atPath: source.path),
+                  attributes[.type] as? FileAttributeType == .typeRegular,
+                  let size = attributes[.size] as? Int, size > 0, size <= 128_000_000 else {
+                throw LatestFailure.rejected("Cannot open the bundled tool safely.")
+            }
+            guard try CodeTrust.sha256(source) == expectedHash else { throw LatestFailure.rejected("Bundled tool digest mismatch.") }
+            try CodeTrust.verify(source, requirement: ForkIdentity.requirement(identifier: identifier, team: team))
+        }
     }
 }

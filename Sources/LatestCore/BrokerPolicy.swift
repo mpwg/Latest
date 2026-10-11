@@ -10,7 +10,7 @@ public struct AppStoreClaim: Codable, Equatable, Sendable {
 }
 
 public enum BrokerPolicy {
-    public static func validate(_ claim: AppStoreClaim, installed: [AppStoreClaim], outdatedIDs: Set<UInt64>) throws {
+    public static func validateRequest(_ claim: AppStoreClaim) throws {
         guard claim.storeID > 0, claim.storeID <= UInt64(Int64.max), !claim.bundleID.isEmpty,
               claim.bundleID.utf8.count <= 255, claim.bundleID.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || ".-_".contains($0)) }),
               claim.path.hasPrefix("/Applications/"), claim.path.hasSuffix(".app"),
@@ -18,6 +18,9 @@ public enum BrokerPolicy {
               URL(fileURLWithPath: claim.path).deletingLastPathComponent().path == "/Applications" else {
             throw LatestFailure.rejected("The App Store update request is invalid or targets a nonstandard location.")
         }
+    }
+    public static func validate(_ claim: AppStoreClaim, installed: [AppStoreClaim], outdatedIDs: Set<UInt64>) throws {
+        try validateRequest(claim)
         let instances = installed.filter { $0.storeID == claim.storeID || $0.bundleID == claim.bundleID }
         guard instances.count == 1, instances.first == claim, outdatedIDs.contains(claim.storeID) else {
             throw LatestFailure.rejected("The App Store installation is ambiguous, changed, or no longer outdated.")

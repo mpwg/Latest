@@ -27,14 +27,15 @@ private actor BrokerEngine {
         guard !busy, uid >= 500, data.count <= 4096 else { throw LatestFailure.rejected("The broker cannot accept this request.") }
         busy = true; defer { busy = false }
         let claim = try JSONDecoder().decode(AppStoreClaim.self, from: data)
-        _ = try BrokerPolicy.arguments(for: claim)
+        try BrokerPolicy.validateRequest(claim)
         // The signed host seals configuration and tool resources before staging.
         try CodeTrust.verify(host, requirement: ForkIdentity.requirement(identifier: ForkIdentity.application, team: configuration.team))
         let staged = try StagedTool.prepare(source: host.appendingPathComponent("Contents/Resources/mas"), hash: configuration.masHash,
                                            requirement: ForkIdentity.requirement(identifier: ForkIdentity.tool, team: configuration.team))
+        defer { try? FileManager.default.removeItem(at: staged.directory) }
         let verifier = try StagedTool.prepare(source: host.appendingPathComponent("Contents/Resources/LatestPackageVerifier"), hash: configuration.verifierHash,
                                              requirement: ForkIdentity.requirement(identifier: ForkIdentity.verifier, team: configuration.team))
-        defer { try? FileManager.default.removeItem(at: staged.directory); try? FileManager.default.removeItem(at: verifier.directory) }
+        defer { try? FileManager.default.removeItem(at: verifier.directory) }
         guard let user = getpwuid(uid), let home = user.pointee.pw_dir, let name = user.pointee.pw_name else {
             throw LatestFailure.rejected("Cannot resolve the authenticated user.")
         }
