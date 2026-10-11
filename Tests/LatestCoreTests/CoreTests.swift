@@ -2,10 +2,51 @@ import Foundation
 import AppKit
 import Testing
 import LatestProcess
+import LatestTrust
 @testable import LatestCore
 @testable import LatestPlatform
 
 @Suite("Audit regression contracts") struct CoreTests {
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_BROKER_BOUNDARY"] != nil,
+                   "Requires a private development-signed Latest bundle and explicitly controlled mutations."))
+    @MainActor func realBrokerBoundaryWithoutGUIAutomation() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        let mode = try #require(environment["LATEST_HEADLESS_BROKER_BOUNDARY"])
+        try #require(["valid", "mas", "verifier", "pin", "wrong-id", "adhoc", "symlink", "unavailable", "cancelled"].contains(mode))
+        let path = try #require(environment["LATEST_HEADLESS_BROKER_APP"])
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent(".build/native-install-tests/evidence/headless-broker-boundary")
+        try #require(path.hasPrefix(root.path + "/"))
+        let appURL = URL(fileURLWithPath: path)
+        let client = BrokerClient()
+        let claim = AppStoreClaim(storeID: UInt64(Int64.max), bundleID: "io.github.mpwg.Latest.NativeFixture.NotAStoreApp",
+                                  path: "/Applications/Latest Native Broker Fixture.app")
+        try #require(!FileManager.default.fileExists(atPath: claim.path))
+        if mode == "valid" {
+            let configuration = try BrokerConfiguration.load(appURL: appURL)
+            try configuration.verifyBundledTools(appURL: appURL)
+            #expect(configuration.team == "PZV43D6HWT")
+        } else if mode == "unavailable" {
+            for _ in 0..<2 {
+                let start = ContinuousClock.now
+                do { try await client.update(claim, appURL: appURL); Issue.record("Unavailable broker unexpectedly accepted a request.") }
+                catch LatestFailure.process(let reason) { print("Observed native unavailable broker error: \(reason)") }
+                #expect(start.duration(to: .now) < .seconds(10))
+                #expect(client.activeConnectionCount == 0)
+            }
+        } else if mode == "cancelled" {
+            let request = Task { @MainActor in try await client.update(claim, appURL: appURL) }
+            request.cancel()
+            do { try await request.value; Issue.record("Pre-cancelled request unexpectedly opened a connection.") }
+            catch is CancellationError { }
+            #expect(client.activeConnectionCount == 0)
+        } else {
+            do { try await client.update(claim, appURL: appURL); Issue.record("Altered signed bundle/tool was accepted.") }
+            catch LatestFailure.rejected(let reason) { print("Observed native signed boundary rejection: \(reason)") }
+            #expect(client.activeConnectionCount == 0)
+        }
+        #expect(client.activeConnectionCount == 0)
+    }
     @Test @MainActor func malformedBrokerRequestsNeverOpenAConnection() async throws {
         let client = BrokerClient()
         for claim in [AppStoreClaim(storeID: 0, bundleID: "fixture", path: "/Applications/Fixture.app"),
