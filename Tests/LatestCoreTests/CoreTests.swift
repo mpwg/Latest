@@ -704,3 +704,114 @@ struct NativePreferencesTests {
     }
 }
 
+@Suite("Native major consent and scoped bulk installation") @MainActor
+struct NativeMajorBulkTests {
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_MAJOR_BULK"] != nil,
+                   "Requires disposable signed apps and controlled real HTTPS scans/downloads."))
+    func realMajorBulkWithoutGUIAutomation() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        let mode = try #require(environment["LATEST_HEADLESS_MAJOR_BULK"])
+        try #require(["major", "provider-major", "changed-major", "bulk"].contains(mode))
+        let restart = environment["LATEST_HEADLESS_MAJOR_BULK_RESTART"] != nil
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent(".build/native-install-tests")
+        let evidence = root.appendingPathComponent("evidence/headless-major-bulk")
+        let state = root.appendingPathComponent("preferences/headless-major-bulk")
+        let selected = root.appendingPathComponent("applications/Latest Sparkle Fixture.app")
+        let before = try #require(AppInventory.snapshot(at: selected))
+        try #require(before.bundleID == "io.github.mpwg.Latest.NativeFixture.Sparkle" && before.signatureTeam != nil)
+        let runtime = LiveApplicationRuntime(cacheDirectory: state.appendingPathComponent("Cache"),
+            homebrewExecutable: root.appendingPathComponent("homebrew/bin/brew"))
+        let app = ApplicationSession(runtime: runtime, preferencesURL: state.appendingPathComponent("preferences.json"),
+            diagnosticURL: state.appendingPathComponent("diagnostics.log"), monitoringInterval: nil,
+            jobJournal: state.appendingPathComponent("job-events.jsonl"))
+        await app.start()
+        if mode == "bulk" && !restart {
+            try await wait {
+                app.scanning && app.rows.first { $0.id == before.id }?.record.candidate != nil &&
+                FileManager.default.fileExists(atPath: evidence.appendingPathComponent("bulk/scan-requested").path)
+            }
+            #expect(!app.canUpdate(before.id)); app.requestUpdate(before.id); app.updateAll()
+            #expect(app.activeUpdates == 0 && app.canQuit)
+            try await checkpoint("SCAN", evidence: evidence)
+        }
+        await app.waitForScan()
+        let row = try #require(app.rows.first { $0.id == before.id })
+        app.selectedID = before.id
+        if restart {
+            let version = mode == "major" ? "2.0.0" : mode == "changed-major" ? "1.0.0" : "1.1.0"
+            #expect(row.record.app.version.display == version)
+            #expect(row.record.status == (mode == "changed-major" ? .available : .current))
+            if mode == "changed-major" { #expect(row.record.candidate?.isMajorUpgrade == true) }
+            if mode == "bulk" {
+                let minor = try #require(app.rows.first { $0.record.app.bundleID == "io.github.mpwg.Latest.NativeFixture.L17.minor" })
+                #expect(minor.record.app.version.display == "1.1.0" && minor.record.status == .current)
+                try verifyExcluded(app)
+            }
+            #expect(app.rows.allSatisfy { $0.event == nil }); #expect(app.activeUpdates == 0 && app.canQuit)
+            return
+        }
+        try #require(before.version.display == "1.0.0" && app.canUpdate(before.id))
+        switch mode {
+        case "major", "provider-major":
+            try #require(row.record.candidate?.isMajorUpgrade == true)
+            app.updateAll(); await app.waitForUpdates()
+            #expect(app.activeUpdates == 0 && row.event == nil)
+            app.requestUpdate(before.id)
+            #expect(app.confirmingMajor && app.pendingMajor?.app.id == before.id)
+            #expect(app.activeUpdates == 0 && app.canQuit)
+            app.cancelMajor(); app.confirmMajor()
+            #expect(!app.confirmingMajor && app.pendingMajor == nil && row.event == nil)
+            try await checkpoint("CANCEL_MAJOR", evidence: evidence)
+            #expect(AppInventory.snapshot(at: selected)?.fingerprint == before.fingerprint)
+            app.requestUpdate(before.id); app.confirmMajor(); app.confirmMajor()
+            await app.waitForUpdates()
+            #expect(row.event?.phase == .succeeded && row.record.status == .current)
+            #expect(row.record.app.version.display == (mode == "major" ? "2.0.0" : "1.1.0"))
+        case "changed-major":
+            try #require(row.record.candidate?.isMajorUpgrade == false)
+            try await checkpoint("CHANGED_MAJOR", evidence: evidence)
+            app.requestUpdate(before.id); await app.waitForUpdates()
+            #expect(row.event?.phase == .failed && app.showingError)
+            #expect(app.errorMessage == "The Sparkle update's major-upgrade requirement changed. Check for updates again.")
+            #expect(AppInventory.snapshot(at: selected)?.fingerprint == before.fingerprint)
+        case "bulk":
+            let minor = try #require(app.rows.first { $0.record.app.bundleID == "io.github.mpwg.Latest.NativeFixture.L17.minor" })
+            try verifyExcluded(app)
+            try #require(app.canUpdate(minor.id) && app.hasBulkUpdates)
+            app.updateAll(); app.updateAll(); app.requestUpdate(before.id)
+            try await wait { app.activeUpdates == 2 && row.event?.phase == .downloading && minor.event?.phase == .downloading }
+            #expect(!app.canQuit && !app.canUpdate(before.id) && !app.hasBulkUpdates)
+            #expect(app.rows.filter { $0.event != nil }.count == 2)
+            try await checkpoint("BULK", evidence: evidence)
+            await app.waitForUpdates()
+            for updated in [row, minor] {
+                #expect(updated.event?.phase == .succeeded && updated.record.status == .current)
+                #expect(updated.record.app.version.display == "1.1.0" && updated.record.app.version.build == "2")
+            }
+            try verifyExcluded(app)
+        default: Issue.record("Unexpected native major/bulk mode.")
+        }
+        #expect(app.activeUpdates == 0 && app.canQuit && !app.confirmingMajor)
+        await app.flushPreferences()
+    }
+    private func verifyExcluded(_ app: ApplicationSession) throws {
+        for (key, status) in [("major", AppStatus.available), ("declared-major", .available), ("ignored", .ignored),
+                              ("skipped", .skipped), ("incompatible", .incompatible), ("current", .current), ("unknown", .unknown)] {
+            let row = try #require(app.rows.first { $0.record.app.bundleID == "io.github.mpwg.Latest.NativeFixture.L17." + key })
+            #expect(row.record.status == status && row.record.app.version.display == "1.0.0")
+            #expect(row.event == nil)
+            if key == "major" || key == "declared-major" { #expect(row.record.candidate?.isMajorUpgrade == true) }
+        }
+    }
+    private func wait(_ condition: @MainActor () -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+        while !condition() && ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(50)) }
+        try #require(condition(), "The actual shared-session major/bulk state did not reach its checkpoint.")
+    }
+    private func checkpoint(_ name: String, evidence: URL) async throws {
+        FileHandle.standardOutput.write(Data(("L17_READY_" + name + "\n").utf8))
+        try await wait { FileManager.default.fileExists(atPath: evidence.appendingPathComponent(name + "-ready").path) }
+    }
+}
+

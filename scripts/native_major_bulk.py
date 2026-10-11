@@ -50,7 +50,7 @@ def make_target(baseline, prepared, identifier, name, version, build, feed_url, 
     return archive, signature
 
 
-def run_case(case):
+def run_case(case, test_runner=None, evidence_directory='l17', state_directory='l03'):
     selected = ROOT / 'applications/Latest Sparkle Fixture.app'
     other = ROOT / 'applications/Secondary/Latest Sparkle Fixture.app'
     homebrew = ROOT / 'applications/Latest Homebrew Fixture.app'
@@ -59,18 +59,18 @@ def run_case(case):
     feed_path = ROOT / 'web/appcast.xml'
     original_feed = feed_path.read_bytes()
     template = ET.fromstring(original_feed).find('./channel/item')
-    prepared = ROOT / 'evidence/l17/prepared' / uuid.uuid4().hex
+    prepared = ROOT / 'evidence' / evidence_directory / 'prepared' / uuid.uuid4().hex
     prepared.mkdir(parents=True, exist_ok=True)
     group = ROOT / 'applications' / ('L17-' + prepared.name)
     baseline = ROOT / 'versions/sparkle/1.0.0/Latest Sparkle Fixture.app'
-    controls = [other, homebrew]
+    controls = [other, homebrew, ROOT / 'applications/Unmanaged/Latest Homebrew Fixture.app']
     targets = {'selected': selected}
     payloads = {}
     request_counts = {}
     download_gate = threading.Event()
     scan_gate = threading.Event()
     checkpoint = {}
-    state = ROOT / 'preferences/l03'
+    state = ROOT / 'preferences' / state_directory
     state.mkdir(parents=True, exist_ok=True)
     journal = state / 'job-events.jsonl'
     journal.write_text('')
@@ -83,6 +83,8 @@ def run_case(case):
             path = urlsplit(self.path).path
             request_counts[path] = request_counts.get(path, 0) + 1
             if path == '/scan-gate.xml':
+                if test_runner is not None:
+                    (evidence / 'scan-requested').write_text('Actual HTTPS scan request received.\n')
                 scan_gate.wait(45)
             data = payloads.get(path)
             if data is None:
@@ -110,11 +112,12 @@ def run_case(case):
     origin = f'https://localhost:{server.server_port}'
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
-    evidence = ROOT / 'evidence/l17' / case
+    evidence = ROOT / 'evidence' / evidence_directory / case
     evidence.mkdir(parents=True, exist_ok=True)
+    if (evidence / 'scan-requested').exists(): (evidence / 'scan-requested').unlink()
     markers = ['SCAN', 'BULK'] if case == 'bulk' else (['CHANGED_MAJOR'] if case == 'changed-major' else ['CANCEL_MAJOR'])
     for name in markers:
-        path = ROOT / f'evidence/l17/{name}-ready'
+        path = ROOT / 'evidence' / evidence_directory / (name + '-ready')
         if path.exists():
             path.unlink()
 
@@ -181,7 +184,7 @@ def run_case(case):
 
         def coordinate(log):
             for name in markers:
-                marker = ROOT / f'evidence/l17/{name}-ready'
+                marker = ROOT / 'evidence' / evidence_directory / (name + '-ready')
                 if f'L17_READY_{name}' in log and not marker.exists():
                     events = [json.loads(line) for line in journal.read_text().splitlines()]
                     if any(digest_app(targets[key]) != expected for key, expected in before_targets.items()):
@@ -208,7 +211,7 @@ def run_case(case):
         tests = dict(major='testNativeMajorConsentAndCancellation', bulk='testNativeBulkEligibilityAndDuplicateActivation',
                      **{'provider-major': 'testNativeProviderDeclaredMajorConsent', 'changed-major': 'testNativeChangedMajorRequirementIsRejected'})
         test = tests[case]
-        outcome = run_native_test(test, evidence, coordinate=coordinate)
+        outcome = (test_runner or run_native_test)(test, evidence, coordinate=coordinate)
         if set(checkpoint) != set(markers):
             raise ValueError('Not every required actual native checkpoint executed.')
         expected_keys = ['selected', 'minor'] if case == 'bulk' else ['selected']
@@ -247,11 +250,12 @@ def run_case(case):
                       sourceSHA256={str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest()
                                     for path in [REPO / 'Sources/LatestApp/AppModel.swift', REPO / 'Sources/LatestApp/LatestWindow.swift',
                                                  REPO / 'Sources/LatestApp/AppDetail.swift', REPO / 'Tests/LatestUITests/LatestUITests.swift', Path(__file__)]},
-                      nativeTest=test, **outcome, checkpoints=checkpoint, installed=installed, jobEvents=events,
+                      nativeTest=outcome.get('testIdentifier', test), **outcome, checkpoints=checkpoint, installed=installed, jobEvents=events,
                       requestCounts=request_counts, excludedAndUnrelatedUnchanged=True,
                       retiredGroup=str(prepared / 'retired-installed-apps') if group.exists() else None)
         (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(f'Native {case}: passed; {len(jobs)} actual jobs with expected terminal results and unchanged excluded/control apps.')
+        return result
     finally:
         feed_path.write_bytes(original_feed)
         scan_gate.set(); download_gate.set()
