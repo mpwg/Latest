@@ -104,6 +104,7 @@ import LatestCore
         scanTask = Task { await scan(token: token) }
     }
     private func scan(token: UInt64) async {
+        guard generation == token, !Task.isCancelled else { return }
         scanning = true; checked = 0
         defer { if generation == token { scanning = false } }
         let result = await runtime.scan(preferences.directories)

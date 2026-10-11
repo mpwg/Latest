@@ -12,5 +12,7 @@
   VoiceOver and layout acceptance remain distinct from headless correctness.
 - Manage Xcode project structure through Xcode MCP. Do not generate or rewrite
   the project using Python or another external project generator.
-- Work on focused `codex/` branches and pull requests in `mpwg/Latest`.
-  Do not push directly to main or publish a release without explicit approval.
+- The owner currently authorizes direct work and intermediate commits on `main`
+  in `mpwg/Latest`; pull requests are premature and must not be created yet.
+  Keep packages focused. Upstream is read-only. Do not publish a release without
+  explicit approval.
