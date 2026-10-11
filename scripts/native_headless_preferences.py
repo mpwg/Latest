@@ -103,7 +103,7 @@ def run_case(case):
         if any(architecture != 'arm64' for architecture in architectures): raise ValueError('Fixture architecture changed.')
         sources = [path for layer in ['LatestCore', 'LatestApplication', 'LatestPlatform', 'LatestProcess', 'LatestTrust', 'LatestContracts']
                    for path in sorted((REPO / 'Sources' / layer).glob('*.swift'))]
-        sources += [REPO / 'Tests/LatestCoreTests/NativePreferencesTests.swift', REPO / 'Tests/NativeFixtures/FixtureApp.swift',
+        sources += [REPO / 'Tests/LatestCoreTests/CoreTests.swift', REPO / 'Tests/NativeFixtures/FixtureApp.swift',
                     REPO / 'scripts/native_fixtures.py', REPO / 'scripts/native_app_preferences.py',
                     REPO / 'scripts/native_sparkle_compatibility.py', Path(__file__)]
         result = dict(case=case, sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
