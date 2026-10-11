@@ -1,5 +1,24 @@
 # Test coverage and evidence
 
+## Shared host self-update entry and current regression
+
+At `0d6728f`, four new [host self-update tests](shared-self-update-acceptance.md)
+run the production session without a GUI/SDK controller. All 35 regular Swift
+functions pass, with nine explicitly skipped default native opt-ins. The native
+host controller moved from the GUI into the shared runtime; startup, capability,
+reentrant request ownership, ordinary-job exclusion and error/retry are shared.
+The validator rejects Sparkle imports in GUI sources as well as GUI/platform
+imports in the core/application modules.
+
+All nine actual native drivers were rerun after the protocol/session/runtime
+change. The 37 current JSON source maps match, including actual provider
+installations/rejections/restarts, settings/migration, real volume actions and
+native signed broker/client boundaries. Debug/Release/Xcode builds, 84 invariants,
+fourteen source/feed tests, 85 translations and
+[Ubuntu/macOS CI](https://github.com/mpwg/Latest/actions/runs/38177801106) pass.
+This does not prove a production host self-update or replace locked-host native
+UI acceptance. Private logs/index: `.build/shared-self-update-native-regression/`.
+
 ## Native interactive lifecycle
 
 [Lifecycle UI acceptance](native-ui-lifecycle-acceptance.md) at `77e9b92` records

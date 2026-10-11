@@ -12,6 +12,12 @@ The native interface renders shared state and forwards commands; a later CLI
 will use the same session and platform runtime. Automated application tests and
 CI run without GUI automation. Xcode project changes use Xcode MCP.
 
+The [host self-update entry](docs/shared-self-update-acceptance.md) also uses the
+shared session/runtime. GUI menus forward commands and share eligibility/error
+policy; they do not import Sparkle. Four new headless tests cover capability,
+request ownership, active-job exclusion and retry. Production self-update still
+requires its separate native/signing acceptance.
+
 [CI platform boundaries](docs/ci-platforms.md) separate thirteen portable Python
 release tests and repository/localization checks onto Ubuntu 24.04. The native
 macOS job keeps the real signing integration, Swift tests, locked adapters,

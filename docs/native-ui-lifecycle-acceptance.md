@@ -98,8 +98,11 @@ German GUI process (PID 95757) was launched against installed primary 1.1.0 and
 the isolated inventory profile. CUA then reported the native Mac was locked and
 automatic unlock was unavailable, requiring manual owner unlock. No native
 observation of that restart occurred; no German/restart/presentation pass is
-claimed. The owner was asked to unlock. The controlled process remains alive,
-with no update command issued, so the intended next step is fresh actual primary
+claimed. The owner was asked to unlock. At that checkpoint the controlled process
+remained alive with no update command issued. A later fresh CUA check still
+reported the lock; the exact known idle PID was stopped and its original private
+preferences restored before the shared-self-update native regressions. The
+intended next step is a new updated signed GUI process and fresh actual primary
 1.1.0/Aktuell/disabled Update inspection, normal quit, then German cancellation,
 HTTP error/retry and Diagnostics interaction.
 

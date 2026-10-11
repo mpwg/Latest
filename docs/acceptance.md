@@ -8,19 +8,20 @@ core shared with a later CLI; automated tests run without GUI automation;
 direct work/commits on main are authorized, without PRs yet. Reuse the approved
 localhost certificate/trust until its natural expiry on 2026-10-17.
 
-Checked application/runtime/test code: `ead2e13`, macOS 27.0.1 / Xcode 27.0 /
+Checked application/runtime/test code: `0d6728f`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. Native GUI repairs are separately checked at `44c6958` in
 native-ui-acceptance.md and English lifecycle outcomes at `77e9b92` in
 native-ui-lifecycle-acceptance.md. The `b59d5e9` presentation repair still requires
 manual Mac unlock for German native interaction. The final docs may have a later revision; native JSON source
 maps must still match every relevant source file. Both Ubuntu and macOS main CI
-on `b59d5e9` passed, including the shared Store queue and native GUI packages. Later changes still
+on `0d6728f` passed, including the shared host self-update entry. Later changes still
 require corresponding current CI and relevant source-map checks.
 
 | Criterion | Status | Current evidence / next step |
 |---|---|---|
 | GUI-independent application core and shared future CLI API | passed | LatestApplication depends only on LatestCore; source-boundary validator; GUI forwards ID commands and renders core state |
-| Complete default workflow testing without GUI automation | passed | 31 deterministic Swift functions including six exclusive Store workflows and malformed actual client requests; nine native opt-ins skipped by default; current Xcode MCP run selects 31 functions with zero failures/skips |
+| Complete default workflow testing without GUI automation | passed | 35 deterministic Swift functions including four host self-update command tests, six exclusive Store workflows and malformed actual client requests; nine native opt-ins skipped by default; Xcode MCP builds current GUI without UI automation |
+| Shared host self-update entry | passed | shared-self-update-acceptance.md: native SDK ownership moved from GUI into runtime; shared capability/ownership/ordinary-job/error policy, four headless tests and portable no-Sparkle-in-GUI validator |
 | Scans, exact selection, preferences, migration and consent | passed | Direct core tests include supersession, ordered persistence/restart, ignored/skipped direct mutations, channel settings, stale major consent and bulk eligibility |
 | Jobs, rejection, duplicate starts, cancellation, handoff and quit policy | passed | Direct core tests exercise the actual session and job transitions; actual signed provider lifecycle outcomes are recorded below |
 | Actual signed Sparkle update/rejection/retry/process restart | passed | headless-native-acceptance.md: four actual native outcomes and four new process restarts; signature/architecture, exact-instance journal and unchanged controls |
@@ -35,13 +36,13 @@ require corresponding current CI and relevant source-map checks.
 | Native signed broker client/tool rejection and missing-service retry | passed | headless-broker-boundary-acceptance.md: nine actual cases, real signature/hash/symlink checks and two absent-service XPC attempts; observed callback isolation crash fixed; no root-service registration or privileged execution proof is implied |
 | App Store bulk job serialization in shared core | passed | store-queue-acceptance.md: six actual production-session tests with injected exclusive runtime, ownership through verification, registered queue cancellation, failure/retry, fresh offer/ignore rejection and parallel other providers; native privileged Store bulk remains open |
 | Native English lifecycle UI with close/quit guard and real installation | passed | native-ui-lifecycle-acceptance.md at 77e9b92: actual cancel, HTTP503, retry, stopped registered fixture handoff, disabled Cancel, guarded main close/quit in download/install, signed1.1 arm64 and unchanged3controls |
-| Current cancellation/progress presentation and German GUI restart | not verifiable | b59d5e9 compiled/CI pass; CUA reports locked Mac requiring manual owner unlock. PID95757 remains launched with no update; next actual restart/cancellation/AX check awaits unlock |
+| Current cancellation/progress presentation and German GUI restart | not verifiable | Compiled/current CI pass; CUA reports locked Mac requiring manual owner unlock. The known idle PID95757 was safely stopped and saved private preferences restored before regression; next actual updated restart/cancellation/AX check awaits unlock |
 | Keyboard, VoiceOver, large text and full EN/DE view interaction | open | native-ui-acceptance.md: actual EN/DE shortcuts, exact-instance AX, default-window 100%/160% content/control fonts and five reliable selector focus cycles pass; spoken VoiceOver, minimum/narrow windows, long notes and update/major/error/progress dialogs remain open |
 | Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 56a593b: 14 contracts, actual clean archive rebuild and development-signed version/build/source/licence checks; production artifact set remains open |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
-| Current local build/regression checks | passed | b59d5e9: warnings-as-errors Debug/Release, Xcode MCP GUI build, 31 regular Swift functions plus nine explicit default native skips, 84 invariants, 14 source/feed regressions, 85 localized keys; 37 native core maps still match |
+| Current local build/regression checks | passed | 0d6728f: warnings-as-errors Debug/Release, Xcode MCP GUI build, 35 regular Swift functions plus nine explicit default native skips, 84 invariants, 14 source/feed regressions, 85 localized keys; all nine native drivers rerun and 37 current result maps match |
 | Portable CI on actual Ubuntu | passed | ci-platforms.md at 2971c3c: actual Ubuntu 24.04; thirteen Python source/history tests and resource/source/localization validation pass; native Mac checks remain required |
-| Verified implementation main CI | passed | [b59d5e9 / 38176553024](https://github.com/mpwg/Latest/actions/runs/38176553024): Ubuntu and macOS jobs pass, explicit Bash pipefail observed at 911c5f6; final whole-goal CI must match its final head |
+| Verified implementation main CI | passed | [0d6728f / 38177801106](https://github.com/mpwg/Latest/actions/runs/38177801106): Ubuntu and macOS jobs pass; final whole-goal CI must match its final head |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following
