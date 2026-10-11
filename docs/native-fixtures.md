@@ -63,7 +63,9 @@ python3 scripts/native_fixtures.py serve
 ```
 
 The server binds only `127.0.0.1:8443` and serves `web/`. The seven-day TLS
-certificate has localhost/127.0.0.1 subject names. Before adding user trust,
+certificate has localhost/127.0.0.1 subject names. Reuse this certificate and
+its approved user-domain trust throughout its validity; do not rotate or remove
+it between runs. The owner explicitly requested this lifecycle on 2026-10-11. Before adding user trust,
 native URLSession rejects it with `NSURLErrorServerCertificateUntrusted` (-1202).
 An explicit-certificate transport check does not change system trust:
 
@@ -81,7 +83,10 @@ python3 scripts/native_fixtures.py trust-localhost
 This command adds only the generated certificate to the user's default keychain
 with an SSL policy constrained to `localhost`. It records that keychain in the
 manifest. The owner approved this temporary trust for the controlled acceptance
-tests on 2026-10-10. It must be removed after those tests:
+tests on 2026-10-10. The current certificate expires on 2026-10-17 at 06:45:50 UTC (08:45:50 in
+Vienna). Native `security verify-cert` succeeds now and returns
+`CSSMERR_TP_CERT_EXPIRED` for 06:45:51 UTC that day. Leave it configured until
+expiry, as requested on 2026-10-11. For an explicitly requested cleanup only:
 
 ```sh
 python3 scripts/native_fixtures.py untrust-localhost

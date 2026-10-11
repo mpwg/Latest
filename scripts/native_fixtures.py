@@ -228,7 +228,7 @@ def trust_localhost():
     save(value)
     run(['security', 'add-trusted-cert', '-r', 'trustRoot', '-p', 'ssl', '-s', 'localhost',
          '-k', keychain, ROOT / 'tls.crt'])
-    value['tlsTrust'] = 'user-domain SSL trust constrained to localhost; remove after tests'
+    value['tlsTrust'] = 'user-domain SSL trust constrained to localhost; reuse until natural expiry per owner request'
     save(value)
 
 

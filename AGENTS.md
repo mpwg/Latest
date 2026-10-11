@@ -16,3 +16,7 @@
   in `mpwg/Latest`; pull requests are premature and must not be created yet.
   Keep packages focused. Upstream is read-only. Do not publish a release without
   explicit approval.
+
+- Reuse the already approved localhost test certificate and retain its user-domain
+  SSL trust until natural expiry. Do not rotate, remove or re-add it between test
+  runs. Explicit fixture cleanup remains a separate user-directed operation.

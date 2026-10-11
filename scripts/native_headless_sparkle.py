@@ -5,6 +5,8 @@ import hashlib
 import json
 import plistlib
 import re
+import ssl
+import urllib.request
 import subprocess
 from pathlib import Path
 import native_fixtures as fixtures
@@ -17,7 +19,11 @@ REPO = fixtures.REPO
 
 
 def run_case(case):
-    fixtures.manifest()  # Only the explicitly prepared disposable environment.
+    manifest = fixtures.manifest()  # Only the explicitly prepared disposable environment.
+    fixtures.run(['security', 'verify-cert', '-c', ROOT / 'tls.crt', '-p', 'ssl', '-n', 'localhost', '-L'], capture=True)
+    with urllib.request.urlopen(f"https://localhost:{manifest['port']}/appcast.xml",
+                               context=ssl.create_default_context(cafile=ROOT / 'tls.crt'), timeout=5) as response:
+        if response.status != 200: raise ValueError('Start the controlled fixture HTTPS server first.')
     selected = ROOT / 'applications/Latest Sparkle Fixture.app'
     other = ROOT / 'applications/Secondary/Latest Sparkle Fixture.app'
     stop_selected_fixture(selected)
