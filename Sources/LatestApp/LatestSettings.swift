@@ -50,7 +50,9 @@ private struct DirectorySettings: View {
             List {
                 ForEach($model.preferences.directories) { $directory in
                     HStack {
-                        Toggle(directory.path, isOn: $directory.enabled).lineLimit(2)
+                        Toggle(isOn: $directory.enabled) {
+                            Text(directory.path).font(.system(size: 14 * model.preferences.fontScale))
+                        }
                             .accessibilityIdentifier("directory-enabled-" + directory.path)
                         Button("Remove", systemImage: "minus.circle") {
                             // Read the binding before mutating its containing preferences.
@@ -60,7 +62,9 @@ private struct DirectorySettings: View {
                     }
                 }
             }
-            Button("Add Folder…", systemImage: "plus") { chooseDirectory() }.accessibilityIdentifier("add-directory")
+            Button { chooseDirectory() } label: {
+                Label("Add Folder…", systemImage: "plus").font(.system(size: 14 * model.preferences.fontScale))
+            }.accessibilityIdentifier("add-directory")
         }
     }
     private func chooseDirectory() {

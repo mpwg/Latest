@@ -19,6 +19,12 @@ Xcode build and packaging, and starts only after the portable checks pass.
 Both jobs pass at [2971c3c](https://github.com/mpwg/Latest/actions/runs/38170949526);
 the platform-boundary document records commands, scope and retained evidence.
 
+[Native interactive UI acceptance](docs/native-ui-acceptance.md) records actual
+English/German search and window shortcuts, selected-instance accessibility and
+large-text repairs. Native source/channel/settings controls forward shared
+bindings and preserve keyboard behavior. Full VoiceOver, narrow-window, long
+release-note and update-dialog acceptance remains separate and open.
+
 The [direct native Sparkle suite](docs/headless-native-acceptance.md) now checks
 actual signed installation, archive/signature rejection and successful retry
 through that same core, without GUI automation. A separate process restart

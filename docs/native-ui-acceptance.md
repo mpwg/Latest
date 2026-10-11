@@ -82,6 +82,20 @@ captions. These three selectors now use native AppKit controls with explicit
 fonts and bindings; that final adapter change awaits native EN/DE, keyboard and
 selection-persistence checks. No update has been invoked in these UI checks.
 
+At `52baaf4`, native German 100% → 160% interaction confirms that source,
+channel and settings selector captions now grow with the content. Native source
+keyboard actions change four rows to two Sparkle rows and restore All Sources.
+Settings keyboard/click actions switch General/Locations. A fresh documented
+Tab → Right/Space → Left/Space sequence selects Beta and restores Stable for
+the primary Sparkle instance. Independent JSON checkpoints confirm exactly the
+primary canonical path, with no secondary channel entry or installation job.
+An initial arrow attempt did not reproduce after focus was established and is
+not claimed as a defect. Selected-instance AX remains correct. The directory
+checkbox path and Add Folder caption still stayed small; explicit label fonts
+and uncapped path wrapping address that final observed content gap, pending
+native recheck. System Keyboard Navigation was restored off, VoiceOver stayed
+off and the controlled app was quit.
+
 | Criterion | Status | Evidence / next step |
 |---|---|---|
 | Native baseline interaction and concrete defects | passed | Actual signed app screenshots/AX and keyboard sequences above |
