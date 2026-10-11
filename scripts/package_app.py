@@ -16,7 +16,21 @@ def run(args, capture=False):
     result = subprocess.run(args, cwd=ROOT, check=True, text=True, capture_output=capture)
     return result.stdout.strip() if capture else None
 
-def package(configuration, identity, team, public_key, version):
+def package_identity(configuration, build_number, source_revision):
+    if (build_number is None) != (source_revision is None):
+        raise ValueError('Build number and source revision must be provided together.')
+    if build_number is None:
+        if configuration == 'release':
+            raise ValueError('Use release.py to package a production release from its frozen source export.')
+        source_revision = run(['git', 'rev-parse', '--verify', 'HEAD^{commit}'], capture=True)
+        build_number = run(['git', 'rev-list', '--count', source_revision], capture=True)
+    if not re.fullmatch(r'[1-9][0-9]*', build_number) or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', source_revision):
+        raise ValueError('Invalid immutable build/source metadata.')
+    return build_number, source_revision
+
+
+def package(configuration, identity, team, public_key, version, build_number=None, source_revision=None):
+    build_number, source_revision = package_identity(configuration, build_number, source_revision)
     run(["python3", "scripts/bootstrap.py"])
     run(["swift", "build", "-c", configuration])
     binaries = Path(run(["swift", "build", "-c", configuration, "--show-bin-path"], capture=True))
@@ -44,7 +58,7 @@ def package(configuration, identity, team, public_key, version):
     shutil.copy2(ROOT / "Vendor/Sparkle/LICENSE", contents / "Resources/Sparkle-LICENSE.txt")
     info = plistlib.loads((ROOT / "Config/Info.plist").read_bytes())
     info.update({"CFBundleIdentifier": "io.github.mpwg.Latest", "CFBundleExecutable": "Latest", "CFBundleShortVersionString": version,
-                 "CFBundleVersion": run(["git", "rev-list", "--count", "HEAD"], capture=True), "LatestSigningTeam": team,
+                 "CFBundleVersion": build_number, "LatestSourceRevision": source_revision, "LatestSigningTeam": team,
                  "SUPublicEDKey": public_key})
     daemon = plistlib.loads((ROOT / "Config/io.github.mpwg.Latest.Broker.plist").read_bytes())
     if team:
@@ -82,7 +96,9 @@ if __name__ == "__main__":
     parser.add_argument("--team", default="")
     parser.add_argument("--public-key", default="")
     parser.add_argument("--version", default="1.0.0")
+    parser.add_argument("--build-number")
+    parser.add_argument("--source-revision")
     args = parser.parse_args()
     if args.configuration == "release" and (args.identity == "-" or not args.team or not args.public_key):
         parser.error("Release builds require own signing identity, team and Ed25519 public key")
-    package(args.configuration, args.identity, args.team, args.public_key, args.version)
+    package(args.configuration, args.identity, args.team, args.public_key, args.version, args.build_number, args.source_revision)

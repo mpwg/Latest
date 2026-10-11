@@ -20,3 +20,5 @@
 - Reuse the already approved localhost test certificate and retain its user-domain
   SSL trust until natural expiry. Do not rotate, remove or re-add it between test
   runs. Explicit fixture cleanup remains a separate user-directed operation.
+
+- Add `Co-authored-by: Codex <codex@openai.com>` to every Codex-created commit.
