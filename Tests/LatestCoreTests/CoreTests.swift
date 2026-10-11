@@ -504,12 +504,13 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
         app.selectedID = before.id
         if mode == "handoff" {
             let pid = try #require(ProcessInfo.processInfo.environment["LATEST_HEADLESS_HANDOFF_PID"].flatMap(Int32.init))
-            try await waitForNativeState { NSRunningApplication(processIdentifier: pid)?.bundleURL?.resolvingSymlinksInPath() == selected }
+            try await waitForNativeState { NSRunningApplication(processIdentifier: pid)?.bundleURL.map { AppInstanceID(url: $0) } == before.id }
             try await sparkleLifecycleCheckpoint("fixture-ready", root: root)
         }
         app.requestUpdate(before.id)
         if mode == "cancellation" {
-            try await waitForNativeState { row.event?.phase == .downloading && (row.event?.progress ?? 0) > 0 && app.canCancel(before.id) }
+            try await waitForNativeState { row.event?.phase == .downloading && app.canCancel(before.id) &&
+                FileManager.default.fileExists(atPath: root.appendingPathComponent("evidence/headless-lifecycle/coordination/download-started-ready").path) }
             #expect(!app.canQuit)
             app.cancel(before.id); app.cancel(before.id)
             await app.waitForUpdates()

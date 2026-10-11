@@ -60,7 +60,7 @@ def run_case(case):
     journal = state / 'job-events.jsonl'; journal.write_text('')
     evidence = ROOT / 'evidence/headless-lifecycle' / case; evidence.mkdir(parents=True, exist_ok=True)
     coordination = ROOT / 'evidence/headless-lifecycle/coordination'; coordination.mkdir(parents=True, exist_ok=True)
-    for phase in ['fixture-ready', 'cancellation', 'download-error', 'handoff']:
+    for phase in ['fixture-ready', 'cancellation', 'download-error', 'handoff', 'download-started']:
         for suffix in ['ready', 'released']:
             path = coordination / f'{phase}-{suffix}'
             if path.exists(): path.unlink()
@@ -85,6 +85,7 @@ def run_case(case):
             self.send_header('Content-Length', str(len(data))); self.end_headers()
             try:
                 self.wfile.write(data[:1024]); self.wfile.flush()
+                (coordination / 'download-started-ready').write_text('Real TLS download received and first data bytes flushed.\n')
                 released.wait(100)
                 self.wfile.write(data[1024:]); self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError, ssl.SSLError): disconnected.set()
