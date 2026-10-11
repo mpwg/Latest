@@ -32,6 +32,13 @@ development packaging from the archive. Build1506 has exact source/licence
 metadata and reuses the existing approved signing certificate. Production
 Developer ID/notarization and self-update acceptance remain open.
 
+The [native networking acceptance](docs/native-network-acceptance.md) checks
+the production HTTPS/cache client without GUI automation: actual current
+Homebrew metadata, certificate/downgrade rejection, status/stream/JSON failures,
+cancellation and offline process restart. Run
+`python3 scripts/native_network_acceptance.py` with the existing approved
+fixture certificate/trust; the command reuses both and preserves all test apps.
+
 [Native interactive UI acceptance](docs/native-ui-acceptance.md) records actual
 English/German search and window shortcuts, selected-instance accessibility and
 large-text repairs. Five native selector keyboard cycles pass at `44c6958`,

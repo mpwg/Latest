@@ -44,6 +44,7 @@ native wrapper build and controlled debug packaging.
 | Six appcast-history/metadata rejection tests | Ubuntu 24.04 | Python XML/history contracts, without the native signing executable |
 | Actual Ed25519 signed-feed integration test | macOS 27 | Builds and runs the real LatestRelease tool; no substituted signer |
 | Swift application/invariant/native-adapter tests | macOS 27 | Current package includes Sparkle and LatestPlatform; tests include AppKit/native adapters |
+| Compile isolated native network harness with all core sources | macOS 27 | Production Apple TLS/streaming APIs; actual native TLS/cache acceptance remains an explicit local opt-in using the approved fixture trust |
 | Locked mas/Sparkle bootstrap, app/broker build, Xcode wrapper and packaging | macOS 27 | Apple SDKs, frameworks, executable tools and bundle/signature checks |
 | Manual native interaction and production release | Separate native acceptance | CI tests/builds do not prove keyboard, VoiceOver, layout, authentic Store installation or a notarized production self-update |
 

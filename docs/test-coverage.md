@@ -1,5 +1,18 @@
 # Test coverage and evidence
 
+## Native production networking and cache
+
+[L23 network acceptance](native-network-acceptance.md) at `ecae2d0` runs thirteen
+actual native subprocesses using every compiled LatestCore source and its
+production TLS session. It fetches the current real 19.1 MB Homebrew catalogue,
+isolates valid/invalid neighbours, rejects certificate mismatch and HTTPS
+downgrade, preserves a good cache across real status/JSON/stream errors, cancels
+an active stream, and verifies offline recovery in a new process. Expired,
+corrupt and oversized offline caches are rejected. Independent server/cached
+byte/time/app-file checks accompany the current source-hash-bound JSON.
+The existing certificate/trust is reused; no GUI automation or installation
+occurs. macOS CI compiles the opt-in harness; default CI does not alter trust.
+
 ## Current archive rebuild
 
 The [frozen-source rebuild](source-release-acceptance.md) at `d628184`, checked
@@ -340,7 +353,7 @@ and HTTPS checks do not replace the remaining provider installation acceptance.
 | A08 cancellation | Reaped process groups, owned preflight cancellation, safe installer handoff | Controlled real package cancellation |
 | A09 progress | Monotonic phases and terminal-state protection; main-actor adapter build | Native Sparkle lifecycle |
 | A11 Homebrew | Real v2 schema and exit-1 regression; actual native update, provenance loss, changed-instance rejection, informational catalogue and real failure/retry; unchanged controls | Default-prefix, arbitrary-cask and other-architecture coverage |
-| A12 network/cache | HTTP rejection, status, body bound, downgrade rejection, malformed body and stale good cache | Native TLS/server behaviour |
+| A12 network/cache | Deterministic contracts plus native-network-acceptance.md: actual TLS, downgrade/status/stream/JSON rejection, current provider sample and offline restart | Native network/cache proof passes; full UI freshness presentation remains separate |
 | A13 inventory | Missing/disabled folders, current metadata, superseded generations | External volume/device events |
 | A14 UI | Five native XCUITests passed on 2731361; exact cases below | Source filtering/sorting, skip/channel/major/bulk interactions; VoiceOver, keyboard and large text |
 | A15 release trust | Foreign signer rejection, requirement injection, Ed25519 valid/tampered signatures, signed feed envelope | Developer ID/notarization/self-update |
