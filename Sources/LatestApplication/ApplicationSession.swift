@@ -2,6 +2,36 @@ import Foundation
 import Observation
 import LatestCore
 
+/// One Store workflow owns the broker until installed-result verification finishes.
+@MainActor private final class StoreUpdateQueue {
+    struct Permit { let id: UUID; let waited: Bool }
+    private var owner: UUID?
+    private var waiters: [(UUID, CheckedContinuation<Permit, any Error>)] = []
+    func acquire() async throws -> Permit {
+        try Task.checkCancellation()
+        let id = UUID()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                if Task.isCancelled { continuation.resume(throwing: CancellationError()) }
+                else if owner == nil { owner = id; continuation.resume(returning: Permit(id: id, waited: false)) }
+                else { waiters.append((id, continuation)) }
+            }
+        } onCancel: { Task { @MainActor in self.cancelWaiting(id) } }
+    }
+    private func cancelWaiting(_ id: UUID) {
+        guard let index = waiters.firstIndex(where: { $0.0 == id }) else { return }
+        waiters.remove(at: index).1.resume(throwing: CancellationError())
+    }
+    func release(_ permit: Permit) {
+        guard owner == permit.id else { return }
+        if waiters.isEmpty { owner = nil }
+        else {
+            let next = waiters.removeFirst(); owner = next.0
+            next.1.resume(returning: Permit(id: next.0, waited: true))
+        }
+    }
+}
+
 @MainActor @Observable public final class ApplicationRow: Identifiable {
     public let id: AppInstanceID
     public internal(set) var record: AppRecord
@@ -49,6 +79,7 @@ import LatestCore
     private let store: PreferencesStore
     private let scanLedger = ScanLedger()
     private var jobLedger = JobState()
+    private let storeQueue = StoreUpdateQueue()
     private let runtime: any ApplicationRuntime
     private let monitoringInterval: Duration?
     private let fixtureRecords: (@MainActor @Sendable (Preferences) -> [AppRecord])?
@@ -202,11 +233,26 @@ import LatestCore
         rows.first { $0.id == candidate.app.id }?.event = .init(.queued)
         jobs[candidate.app.id] = Task {
             var jobToken: UUID?
+            var storePermit: StoreUpdateQueue.Permit?
+            defer { if let storePermit { storeQueue.release(storePermit) } }
             do {
                 let token = try jobLedger.start(candidate.app.id); jobToken = token
                 try Task.checkCancellation()
+                if case .appStore = candidate.action { storePermit = try await storeQueue.acquire() }
+                try Task.checkCancellation()
                 _ = try await runtime.validate(candidate.app)
                 try Task.checkCancellation()
+                if storePermit?.waited == true {
+                    let context = CheckContext(apps: rows.map { $0.record.app }, preferences: preferences)
+                    let fresh = await runtime.check(candidate.app, context: context)
+                    try Task.checkCancellation()
+                    guard fresh.status == .available, let offer = fresh.candidate, offer.authoritative,
+                          offer.id == candidate.id, offer.action == candidate.action,
+                          offer.app.fingerprint == candidate.app.fingerprint,
+                          offer.isMajorUpgrade == candidate.isMajorUpgrade, offer.channel == candidate.channel else {
+                        throw LatestFailure.rejected("The queued App Store update changed. Check for updates again.")
+                    }
+                }
                 accept(.init(.checking), candidate: candidate, token: token)
                 let context = CheckContext(apps: rows.map { $0.record.app }, preferences: preferences)
                 try await runtime.install(candidate, context: context) { event in

@@ -196,6 +196,149 @@ import LatestTrust
 
 @testable import LatestApplication
 
+private actor ExclusiveStoreTestRuntime: ApplicationRuntime {
+    var apps: [AppSnapshot]
+    var offers: [AppInstanceID: UpdateCandidate]
+    var installed: [AppInstanceID] = []
+    var validated: [AppInstanceID] = []
+    var activeStores = 0
+    var maximumStores = 0
+    var failures = Set<AppInstanceID>()
+    var holdVerification = false
+    let firstStore = CompletionGate<AppInstanceID>()
+    let otherProvider = CompletionGate<Void>()
+    let releaseStore = CompletionGate<Void>()
+    let verification = CompletionGate<AppInstanceID>()
+    let releaseVerification = CompletionGate<Void>()
+    init(_ offers: [UpdateCandidate]) {
+        apps = offers.map(\.app); self.offers = Dictionary(uniqueKeysWithValues: offers.map { ($0.app.id, $0) })
+    }
+    func failOnce(_ id: AppInstanceID) { failures.insert(id) }
+    func pauseVerification() { holdVerification = true }
+    func changeOffer(_ offer: UpdateCandidate) { offers[offer.app.id] = offer }
+    func scan(_ directories: [DirectoryPreference]) -> ApplicationInventory { .init(apps: apps) }
+    func check(_ app: AppSnapshot, context: CheckContext) -> AppRecord {
+        Resolution.record(app, candidate: offers[app.id], preferences: context.preferences,
+            operatingSystem: .init(majorVersion: 27, minorVersion: 0, patchVersion: 1), architecture: .arm64)
+    }
+    func validate(_ expected: AppSnapshot) throws -> AppSnapshot {
+        validated.append(expected.id)
+        guard let app = apps.first(where: { $0.id == expected.id }), app.fingerprint == expected.fingerprint else {
+            throw LatestFailure.rejected("Selected queued instance changed.")
+        }
+        return app
+    }
+    func install(_ candidate: UpdateCandidate, context: CheckContext,
+                 event: @escaping @MainActor @Sendable (UpdateEvent) -> Void) async throws {
+        let store: Bool
+        if case .appStore = candidate.action { store = true } else { store = false }
+        if store {
+            activeStores += 1; maximumStores = max(maximumStores, activeStores)
+        }
+        defer { if store { activeStores -= 1 } }
+        guard activeStores <= 1 else { throw LatestFailure.process("Exclusive broker is busy.") }
+        installed.append(candidate.app.id)
+        await event(.init(store ? .installing : .downloading))
+        if store { await firstStore.finish(.success(candidate.app.id)); try await releaseStore.wait() }
+        else { await otherProvider.finish(.success(())) }
+        if failures.remove(candidate.app.id) != nil { throw LatestFailure.process("Controlled Store failure.") }
+        let old = candidate.app
+        let updated = AppSnapshot(url: old.id.url, bundleID: old.bundleID, name: old.name, version: candidate.version,
+            architectures: old.architectures, fingerprint: "installed")
+        apps = apps.map { $0.id == old.id ? updated : $0 }
+        offers[updated.id] = .init(app: updated, source: candidate.source, version: candidate.version,
+            action: candidate.action, authoritative: true)
+    }
+    func verify(_ candidate: UpdateCandidate, context: CheckContext) async throws {
+        if case .appStore = candidate.action, holdVerification {
+            await verification.finish(.success(candidate.app.id)); try await releaseVerification.wait()
+        }
+    }
+    func releaseNotes(_ url: URL) -> String { "" }
+    func enableBroker() -> Bool { true }
+}
+
+@Suite("Serialized Store workflows without GUI automation") @MainActor
+struct StoreWorkflowTests {
+    private func offer(_ name: String, storeID: UInt64? = nil) -> UpdateCandidate {
+        let app = AppSnapshot(url: URL(fileURLWithPath: "/Applications/Latest Unit \(name).app"),
+            bundleID: "io.github.mpwg.Latest.Unit." + name, name: name,
+            version: .init(display: "1.0", build: "1"), architectures: [.arm64], fingerprint: "original")
+        return .init(app: app, source: storeID == nil ? .sparkle : .appStore,
+            version: .init(display: "1.1", build: "2"),
+            action: storeID.map(UpdateAction.appStore) ?? .sparkle(URL(string: "https://example.invalid/feed")!), authoritative: true)
+    }
+    private func session(_ runtime: ExclusiveStoreTestRuntime) async -> ApplicationSession {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("Latest-store-queue-" + UUID().uuidString)
+        let app = ApplicationSession(runtime: runtime, preferencesURL: root.appendingPathComponent("preferences.json"),
+            diagnosticURL: root.appendingPathComponent("diagnostics.log"), monitoringInterval: nil)
+        await app.start(); await app.waitForScan(); return app
+    }
+    private func wait(_ condition: @MainActor () -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+        while !condition() && ContinuousClock.now < deadline { await Task.yield() }
+        try #require(condition(), "The controlled shared-session Store workflow did not reach its state.")
+    }
+    @Test func bulkSerializesStoreThroughVerificationAndKeepsOtherProvidersRunning() async throws {
+        let a = offer("A", storeID: 1), b = offer("B", storeID: 2), other = offer("Other")
+        let runtime = ExclusiveStoreTestRuntime([a,b,other]); await runtime.pauseVerification()
+        let app = await session(runtime); app.updateAll(); app.updateAll()
+        let first = try await runtime.firstStore.wait(); try await runtime.otherProvider.wait()
+        let queued = first == a.app.id ? b.app.id : a.app.id
+        #expect(await runtime.installed.count == 2)
+        #expect(app.rows.first { $0.id == queued }?.event?.phase == .queued && app.canCancel(queued))
+        #expect(!app.canQuit); #expect(!app.canCancel(first))
+        await runtime.releaseStore.finish(.success(())); _ = try await runtime.verification.wait()
+        #expect(app.rows.first { $0.id == first }?.event?.phase == .verifying)
+        #expect(await runtime.installed.count == 2)
+        #expect(app.rows.first { $0.id == queued }?.event?.phase == .queued)
+        await runtime.releaseVerification.finish(.success(())); await app.waitForUpdates()
+        #expect(await runtime.maximumStores == 1)
+        #expect(Set(await runtime.installed) == [a.app.id,b.app.id,other.app.id])
+        #expect(app.rows.allSatisfy { $0.event?.phase == .succeeded && $0.record.status == .current })
+        #expect(app.canQuit && !app.showingError)
+    }
+    @Test func queuedCancellationFinishesBeforeActiveStoreAndCanRetry() async throws {
+        let a = offer("A", storeID: 1), b = offer("B", storeID: 2)
+        let runtime = ExclusiveStoreTestRuntime([a,b]); let app = await session(runtime)
+        app.requestUpdate(a.app.id); _ = try await runtime.firstStore.wait()
+        app.requestUpdate(b.app.id); try await wait { app.canCancel(b.app.id) }
+        app.cancel(b.app.id); app.cancel(b.app.id)
+        try await wait { !app.isUpdating(b.app.id) }
+        #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .cancelled)
+        #expect(app.activeUpdates == 1 && !app.canQuit && !app.showingError)
+        #expect(await runtime.installed == [a.app.id]); #expect(await runtime.validated == [a.app.id])
+        await app.waitForScan(); app.requestUpdate(b.app.id)
+        await runtime.releaseStore.finish(.success(())); await app.waitForUpdates()
+        #expect(await runtime.installed == [a.app.id,b.app.id]); #expect(await runtime.maximumStores == 1)
+        #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .succeeded)
+    }
+    @Test func failedStoreReleasesNextJobAndCanRetry() async throws {
+        let a = offer("A", storeID: 1), b = offer("B", storeID: 2)
+        let runtime = ExclusiveStoreTestRuntime([a,b]); await runtime.failOnce(a.app.id)
+        let app = await session(runtime); app.requestUpdate(a.app.id); _ = try await runtime.firstStore.wait()
+        app.requestUpdate(b.app.id); await runtime.releaseStore.finish(.success(())); await app.waitForUpdates()
+        #expect(app.rows.first { $0.id == a.app.id }?.event?.phase == .failed)
+        #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .succeeded)
+        #expect(await runtime.maximumStores == 1)
+        app.requestUpdate(a.app.id); await app.waitForUpdates()
+        #expect(await runtime.installed == [a.app.id,b.app.id,a.app.id])
+        #expect(app.rows.allSatisfy { $0.record.status == .current })
+    }
+    @Test func changedQueuedOfferFailsBeforeInstaller() async throws {
+        let a = offer("A", storeID: 1), b = offer("B", storeID: 2)
+        let runtime = ExclusiveStoreTestRuntime([a,b]); let app = await session(runtime)
+        app.requestUpdate(a.app.id); _ = try await runtime.firstStore.wait(); app.requestUpdate(b.app.id)
+        let changed = UpdateCandidate(app: b.app, source: .appStore, version: .init(display: "2.0", build: "3"),
+            action: b.action, authoritative: true)
+        await runtime.changeOffer(changed); await runtime.releaseStore.finish(.success(())); await app.waitForUpdates()
+        #expect(await runtime.installed == [a.app.id])
+        #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .failed)
+        #expect(app.errorMessage == "The queued App Store update changed. Check for updates again.")
+        #expect(app.canQuit)
+    }
+}
+
 private actor ApplicationTestRuntime: ApplicationRuntime {
     enum Installation { case immediate, downloadGate, handoffGate, failure }
     var apps: [AppSnapshot]
