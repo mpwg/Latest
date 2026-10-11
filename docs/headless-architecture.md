@@ -86,6 +86,9 @@ also run through the production session with separate process restarts.
 The [native preferences scenarios](headless-preferences-acceptance.md) exercise
 ignore/skip/channel persistence through nine fresh processes and real signed
 feeds, with independently checked JSON and unchanged apps.
+The [real major/bulk cases](headless-major-bulk-acceptance.md) use signed updates
+and actual HTTPS scan/download gates to verify consent, changed-policy rejection,
+duplicate protection and exactly two authorized minor installations.
 Remaining native provider/platform
 scopes must be rerun through the shared runtime after this extraction.
 Manual keyboard, VoiceOver, large-text and English/German view acceptance remain

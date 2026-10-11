@@ -32,7 +32,25 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
-## Current direct native preferences and regression run
+## Current direct native major/bulk and regression run
+
+[Four actual major/bulk cases](headless-major-bulk-acceptance.md) pass at
+`ed5d42e`, with four separate restart processes. Real signed semantic/provider
+major targets require consent; cancellation starts no job. A changed provider
+requirement fails before archive download. Actual held HTTPS scans/downloads
+prove command guards and duplicate rejection. Exactly two authorized minor
+paths install once; excluded apps preserve their exact bytes.
+
+All eighteen other native cases and their fresh processes also pass again on
+this revision. All twenty-two result source maps match current relevant files.
+Default tests execute 24 deterministic functions and skip six native opt-ins;
+Xcode MCP runs 24 selected functions with zero failures/skips. Warnings-as-errors
+Debug/Release, 84 invariants, fourteen Python tests and 74 localized keys pass.
+Logs: `.build/headless-major-bulk-all.log`,
+`.build/headless-regression-after-major-bulk.log`, and
+`.build/major-bulk-xcode-evidence.json` plus its native xcresult.
+
+## Direct native preferences and regression run
 
 [Two actual preferences scenarios](headless-preferences-acceptance.md) pass at
 `2463621` through nine fresh shared-session processes. Ignore/reversal, visibility,

@@ -9,8 +9,10 @@ Observed at `4bee7bf5396c8eef56efd939431e6c2bbf5ce1c9` on 2026-10-11:
 [Ubuntu job 114545497751](https://github.com/mpwg/Latest/actions/runs/38164941252/job/114545497751)
 completed successfully on Ubuntu 24.04 / CPython 3.14.8. Its logs show seven
 frozen-source tests, six appcast-history tests and all 74 EN/DE keys passing.
-The retained local log is `.build/ubuntu-portable-ci.log`. The macOS job starts
-after that result; its pending state is not a native build success.
+The retained local log is `.build/ubuntu-portable-ci.log`. Both jobs also pass
+at [1856178 / run 38165075769](https://github.com/mpwg/Latest/actions/runs/38165075769):
+the Ubuntu checks gate the macOS build, real signing integration, Swift tests,
+native wrapper build and controlled debug packaging.
 
 | Scope | CI platform | Reason |
 |---|---|---|

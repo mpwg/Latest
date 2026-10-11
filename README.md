@@ -51,6 +51,12 @@ independent Stable/Beta channels through nine fresh processes and real signed
 feeds. It independently checks persisted JSON and unchanged app bytes. Run
 `python3 scripts/native_headless_preferences.py all`.
 
+The [direct native major/bulk suite](docs/headless-major-bulk-acceptance.md)
+checks real major cancellation/consent, changed provider requirements, blocked
+scan-time commands and exactly two scoped minor installations with duplicate
+rejection. Excluded apps keep identical bytes; every case restarts in a new
+process. Run `python3 scripts/native_headless_major_bulk.py all`.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and
