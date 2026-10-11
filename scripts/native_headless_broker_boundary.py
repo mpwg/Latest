@@ -99,10 +99,11 @@ def run_case(case, baseline):
                for path in sorted((REPO / 'Sources' / layer).glob('*.swift'))]
     sources += [REPO / 'Tests/LatestCoreTests/CoreTests.swift', REPO / 'scripts/package_app.py', Path(__file__)]
     info = plistlib.loads((baseline / 'Contents/Info.plist').read_bytes())
+    architecture = fixtures.run(['lipo', '-archs', baseline / 'Contents/MacOS/Latest'], capture=True)
     result = dict(case=case, sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
                   sourceSHA256={str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources},
                   environment=dict(macOS=fixtures.run(['sw_vers', '-productVersion'], capture=True),
-                                   xcode=fixtures.run(['xcodebuild', '-version'], capture=True), uid=os.getuid()),
+                                       xcode=fixtures.run(['xcodebuild', '-version'], capture=True), architecture=architecture, uid=os.getuid()),
                   signedBaselineRevision=info['LatestSourceRevision'], signingTeam=info['LatestSigningTeam'],
                   controlledApp=str(app), execution=outcome, GUIAutomation=False, controlsUnchanged=True,
                   noServiceRegistration=True, noRootToolExecution=True,
