@@ -8,6 +8,41 @@ inside ignored .release/ed25519.key with mode 0600. Back it up securely before
 discarding this checkout. Configure the matching seed only in a protected own-
 repository secret or local environment. Never put it in command-line arguments.
 
+## Immutable source input
+
+Release preparation refuses staged, unstaged and untracked source changes.
+It captures one complete Git commit and derives its build count once. The exact
+commit is exported to source.tar.gz, extracted into a private new workspace,
+and built there. Packaging receives explicit build/source values; it never reads
+the original checkout's moving HEAD. Source hashes are compared after build and
+before finalization; changes to the original revision/worktree also abort.
+
+Without release credentials, prepare and rebuild only the source:
+
+```sh
+python3 scripts/release.py --version 1.0.0 --prepare-source-only
+```
+
+This creates a unique ignored .release/source-preparation/... directory with
+source.tar.gz, source-revision.txt, source-manifest.json and its extracted
+source/ workspace. The manifest records every exported source file, dependency
+pins, reviewed patch hashes and archive hash/length. It exports only committed
+files; ignored private keys, Vendor and build caches are absent. Python 3.12+
+is required for safe archive extraction. Inside the exported source directory:
+
+```sh
+python3 scripts/bootstrap.py
+swift build -c release -Xswiftc -warnings-as-errors
+swift test --build-system native --enable-swift-testing --disable-xctest
+```
+
+For a controlled debug bundle rebuilt from that archive, pass the manifest's
+explicit --build-number and --source-revision to scripts/package_app.py.
+This preserves metadata even without a .git directory. Such a bundle is not
+production Developer ID/notarization acceptance.
+
+## Signed/notarized preparation
+
 With a Developer ID signing identity, own team and a configured notarytool
 keychain profile, run:
 
@@ -18,7 +53,8 @@ python3 scripts/release.py --version 1.0.0 --identity 'Developer ID Application:
 `SPARKLE_PRIVATE_KEY` supplies the base64 Ed25519 seed. The script refuses a key
 that differs from the committed public key. It packages and signs own identities,
 notarizes, staples, rebuilds the final archive, signs archive and feed, and exports
-the matching Git source revision. It does not publish, change main, create tags,
+the matching frozen Git source revision. Notarytool must report Accepted;
+stapler validation and Gatekeeper assessment must also pass. It does not publish, change main, create tags,
 register a daemon or update installed applications.
 
 For every subsequent release, download the current own signed appcast and pass
@@ -61,6 +97,16 @@ Verified implementation `3ba5c3d`, 2026-10-10, macOS 27.0.1 / Swift 6.4:
 
 This closes feed construction acceptance only. Release credentials, packaging,
 notarization and real self-update retain their separate criteria.
+
+The final .release/<version>/ contains only Latest.zip, signed appcast.xml,
+source.tar.gz, source-revision.txt, source-manifest.json, notarization.json and
+artifact-manifest.json. The artifact manifest binds version, build, source,
+archive/feed/source hashes and lengths, pins/patches and the actual toolchain.
+The app carries LatestSourceRevision; licences must match the pinned input.
+The final directory appears only after every check and never overwrites an
+existing preparation. Incomplete attempts remain under .release/work/ for
+inspection, separate from the publication set. Build workspace and unsigned
+intermediate feed never enter the publication directory.
 
 Review .release/<version>/ before creating an own-repository release. Publish the
 archive and corresponding source, then publish the signed appcast at the own

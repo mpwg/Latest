@@ -162,11 +162,17 @@ is excluded under .release/ and must be backed up securely. Release packaging
 requires your own Developer ID, notarization credentials and the matching
 Ed25519 seed. Never commit or print a private signing key.
 
-Release preparation requires either `--first-release` or `--existing-feed`.
+Release preparation builds one clean immutable Git export and records source,
+archive, feed, dependency/patch and toolchain metadata in hash manifests.
+`python3 scripts/release.py --version 1.0.0 --prepare-source-only` prepares the
+source archive independently of signing credentials. The signed production path
+still requires Developer ID/notarization and current native acceptance.
+
+Signed release preparation requires either `--first-release` or `--existing-feed`.
 Existing feed signatures and metadata are checked before notarization, historical
 entries are retained and the complete result is signed again. Run
 `python3 -m unittest discover -s Tests/ReleaseTests -v` after `swift build` for
-the independent feed-history/signing checks. See [release procedure](docs/releasing.md).
+the independent source-export, metadata-binding and feed-history/signing checks. See [release procedure](docs/releasing.md).
 
 See [architecture](docs/modernization.md), [beta audit](docs/audit-2026-10-09.md),
 [test coverage](docs/test-coverage.md) and [security boundary](docs/security-boundary.md).
