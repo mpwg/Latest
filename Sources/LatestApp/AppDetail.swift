@@ -16,6 +16,7 @@ struct AppDetail: View {
             }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
         }.textSelection(.enabled)
             .font(.system(size: 14 * model.preferences.fontScale))
+            .controlSize(model.preferences.fontScale >= 1.3 ? .large : .regular)
     }
 }
 private struct AppDetailHeader: View {
@@ -58,19 +59,20 @@ private struct AppDetailButtons: View {
             if let event = row.event, !event.isTerminal {
                 ProgressView(value: event.progress).frame(width: 160)
                 JobPhaseTitle(phase: event.phase)
-                Button("Cancel") { model.cancel(row.id) }.disabled(!model.canCancel(row.id))
+                Button { model.cancel(row.id) } label: { Text("Cancel").font(.system(size: 14 * model.preferences.fontScale)) }
+                    .disabled(!model.canCancel(row.id))
                     .accessibilityIdentifier("cancel-update")
             } else {
                 Button { model.requestUpdate(row.id) } label: {
-                    if row.record.status == .external { Text("Open Updater") }
-                    else { Text("Update") }
+                    if row.record.status == .external { Text("Open Updater").font(.system(size: 14 * model.preferences.fontScale)) }
+                    else { Text("Update").font(.system(size: 14 * model.preferences.fontScale)) }
                 }
                     .buttonStyle(.borderedProminent)
                     .disabled(!model.canUpdate(row.id))
                     .accessibilityIdentifier("update-selected")
             }
-            Button("Open App") { NSWorkspace.shared.open(row.id.url) }
-            Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([row.id.url]) }
+            Button { NSWorkspace.shared.open(row.id.url) } label: { Text("Open App").font(.system(size: 14 * model.preferences.fontScale)) }
+            Button { NSWorkspace.shared.activateFileViewerSelecting([row.id.url]) } label: { Text("Reveal in Finder").font(.system(size: 14 * model.preferences.fontScale)) }
         }
     }
 }
@@ -89,8 +91,8 @@ private struct AppDetailMetadata: View {
                     .accessibilityValue(row.record.app.bundleID).accessibilityIdentifier("selected-app-bundle-id")
             }
             Picker("Release Channel", selection: Binding(get: { model.preferences.channels[row.id.path, default: .stable] }, set: { model.preferences.channels[row.id.path] = $0 })) {
-                Text("Stable").tag(ReleaseChannel.stable)
-                Text("Beta").tag(ReleaseChannel.beta)
+                Text("Stable").font(.system(size: 14 * model.preferences.fontScale)).tag(ReleaseChannel.stable)
+                Text("Beta").font(.system(size: 14 * model.preferences.fontScale)).tag(ReleaseChannel.beta)
             }.pickerStyle(.segmented).frame(maxWidth: 360).accessibilityIdentifier("release-channel")
             ViewThatFits(in: .horizontal) {
                 HStack { AppPreferenceButtons(row: row, model: model) }.fixedSize(horizontal: true, vertical: false)
@@ -105,13 +107,15 @@ private struct AppPreferenceButtons: View {
     var body: some View {
         Group {
             Button { model.ignore(row.id) } label: {
-                if model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) { Text("Stop Ignoring") }
-                else { Text("Ignore App") }
+                if model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) { Text("Stop Ignoring").font(.system(size: 14 * model.preferences.fontScale)) }
+                else { Text("Ignore App").font(.system(size: 14 * model.preferences.fontScale)) }
             }.accessibilityIdentifier("ignore-selected")
-            Button("Skip This Version") { model.skip(row.id) }.disabled(row.record.candidate == nil)
+            Button { model.skip(row.id) } label: { Text("Skip This Version").font(.system(size: 14 * model.preferences.fontScale)) }
+                .disabled(row.record.candidate == nil)
                 .accessibilityIdentifier("skip-selected")
             if row.record.status == .skipped {
-                Button("Clear Skipped Version") { model.clearSkip(row.id) }.accessibilityIdentifier("clear-skip-selected")
+                Button { model.clearSkip(row.id) } label: { Text("Clear Skipped Version").font(.system(size: 14 * model.preferences.fontScale)) }
+                    .accessibilityIdentifier("clear-skip-selected")
             }
         }
     }

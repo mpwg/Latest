@@ -15,7 +15,7 @@ struct LatestWindow: View {
         NavigationSplitView {
             List(selection: $model.selectedID) {
                 ForEach(model.visibleRows) { row in
-                    AppListRow(row: row, fontScale: model.preferences.fontScale).tag(row.id)
+                    AppListRow(row: row, fontScale: model.preferences.fontScale, selected: model.selectedID == row.id).tag(row.id)
                         .contextMenu {
                             Button("Open App") { NSWorkspace.shared.open(row.id.url) }
                             Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([row.id.url]) }
@@ -39,6 +39,7 @@ struct LatestWindow: View {
             else { ContentUnavailableView("Select an App", systemImage: "app.dashed", description: Text("Choose an app to inspect its update source and release notes.")) }
         }
         .font(.system(size: 14 * model.preferences.fontScale))
+        .controlSize(model.preferences.fontScale >= 1.3 ? .large : .regular)
         .onReceive(NotificationCenter.default.publisher(for: .latestFocusSearch)) { _ in searchFocused = true }
         .onChange(of: model.externalURL) { _, url in
             if let url { NSWorkspace.shared.open(url); model.externalURL = nil }
@@ -67,13 +68,15 @@ struct LatestWindow: View {
 private struct AppListRow: View {
     let row: AppRow
     let fontScale: Double
+    let selected: Bool
     var body: some View {
         HStack(spacing: 12) {
             Image(nsImage: row.icon).resizable().frame(width: 36, height: 36).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(row.record.app.name).font(.system(size: 14 * fontScale, weight: .medium))
                 Text(row.record.app.version.description).font(.system(size: 12 * fontScale)).foregroundStyle(.secondary)
-                StatusTitle(status: row.record.status).font(.system(size: 12 * fontScale)).foregroundStyle(row.record.status == .available ? .blue : .secondary)
+                StatusTitle(status: row.record.status).font(.system(size: 12 * fontScale))
+                    .foregroundStyle(selected ? AnyShapeStyle(.primary) : row.record.status == .available ? AnyShapeStyle(.blue) : AnyShapeStyle(.secondary))
             }
             Spacer()
             if let event = row.event, !event.isTerminal { ProgressView().controlSize(.small) }

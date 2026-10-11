@@ -10,6 +10,7 @@ struct LatestSettings: View {
             GeneralSettings(model: model).tabItem { Label("General", systemImage: "gear") }
             DirectorySettings(model: model).tabItem { Label("Locations", systemImage: "folder") }
         }.font(.system(size: 14 * model.preferences.fontScale))
+            .controlSize(model.preferences.fontScale >= 1.3 ? .large : .regular)
             .padding().frame(minWidth: 560, minHeight: 440)
     }
 }
@@ -29,7 +30,9 @@ private struct GeneralSettings: View {
             }
             Section("App Store Updates") {
                 Text("Direct updates require the signed installation helper. iOS apps, duplicate installations and nonstandard locations open the App Store instead.")
-                Button("Enable Installation Helper") { model.enableBroker() }
+                Button { model.enableBroker() } label: {
+                    Text("Enable Installation Helper").font(.system(size: 14 * model.preferences.fontScale))
+                }
                 if model.needsBrokerApproval { Text("Approve Latest in System Settings → General → Login Items & Extensions.").foregroundStyle(.orange) }
             }
         }.formStyle(.grouped)
