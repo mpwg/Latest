@@ -24,6 +24,7 @@ private struct AppDetailHeader: View {
             Image(nsImage: row.icon).resizable().frame(width: 72, height: 72).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
                 Text(row.record.app.name).font(.title)
+                    .accessibilityLabel(Text(verbatim: row.record.app.name)).accessibilityIdentifier("selected-app-name")
                 Text(row.record.app.version.description).foregroundStyle(.secondary)
                     .accessibilityValue(row.record.app.version.description).accessibilityIdentifier("installed-version")
                 if let candidate = row.record.candidate { Text("New version: \(candidate.version.description)") }
@@ -44,7 +45,10 @@ private struct AppDetailActions: View {
                     Button("Cancel") { model.cancel(row.id) }.disabled(!model.canCancel(row.id))
                         .accessibilityIdentifier("cancel-update")
                 } else {
-                    Button(row.record.status == .external ? "Open Updater" : "Update") { model.requestUpdate(row.id) }
+                    Button { model.requestUpdate(row.id) } label: {
+                        if row.record.status == .external { Text("Open Updater") }
+                        else { Text("Update") }
+                    }
                         .buttonStyle(.borderedProminent)
                         .disabled(!model.canUpdate(row.id))
                         .accessibilityIdentifier("update-selected")
@@ -64,14 +68,23 @@ private struct AppDetailMetadata: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             LabeledContent("Source") { SourceTitle(source: row.record.candidate?.source ?? .unknown) }
-            LabeledContent("Location") { Text(row.id.path).font(.caption).lineLimit(3) }
-            LabeledContent("Bundle Identifier") { Text(row.record.app.bundleID).font(.caption) }
+            LabeledContent("Location") {
+                Text(row.id.path).font(.caption).lineLimit(3)
+                    .accessibilityValue(row.id.path).accessibilityIdentifier("selected-app-location")
+            }
+            LabeledContent("Bundle Identifier") {
+                Text(row.record.app.bundleID).font(.caption)
+                    .accessibilityValue(row.record.app.bundleID).accessibilityIdentifier("selected-app-bundle-id")
+            }
             Picker("Release Channel", selection: Binding(get: { model.preferences.channels[row.id.path, default: .stable] }, set: { model.preferences.channels[row.id.path] = $0 })) {
                 Text("Stable").tag(ReleaseChannel.stable)
                 Text("Beta").tag(ReleaseChannel.beta)
             }.pickerStyle(.segmented).frame(maxWidth: 260).accessibilityIdentifier("release-channel")
             HStack {
-                Button(model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) ? "Stop Ignoring" : "Ignore App") { model.ignore(row.id) }.accessibilityIdentifier("ignore-selected")
+                Button { model.ignore(row.id) } label: {
+                    if model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) { Text("Stop Ignoring") }
+                    else { Text("Ignore App") }
+                }.accessibilityIdentifier("ignore-selected")
                 Button("Skip This Version") { model.skip(row.id) }.disabled(row.record.candidate == nil)
                     .accessibilityIdentifier("skip-selected")
                 if row.record.status == .skipped {

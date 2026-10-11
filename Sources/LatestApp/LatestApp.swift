@@ -49,14 +49,24 @@ import AppKit
         edit.addItem(withTitle: String(localized: "Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
         edit.addItem(withTitle: String(localized: "Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
         edit.addItem(withTitle: String(localized: "Select All"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        edit.addItem(.separator())
+        edit.addItem(withTitle: String(localized: "Search apps"), action: #selector(focusSearch), keyEquivalent: "f").target = self
+        let windowItem = NSMenuItem(); menu.addItem(windowItem)
+        let windowMenu = NSMenu(title: String(localized: "Window")); windowItem.submenu = windowMenu
+        windowMenu.addItem(withTitle: String(localized: "Close Window"), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        NSApp.windowsMenu = windowMenu
         NSApp.mainMenu = menu
     }
     @objc private func openSettings() { showSettings() }
     @objc private func refresh() { model.refresh() }
+    @objc private func focusSearch() {
+        mainWindow?.makeKeyAndOrderFront(nil)
+        NotificationCenter.default.post(name: .latestFocusSearch, object: nil)
+    }
     @objc private func updateSelf() { selfUpdater?.checkForUpdates(nil) }
     private func showSettings() {
         if let settingsWindow { settingsWindow.makeKeyAndOrderFront(nil); return }
-        let window = NSWindow(contentViewController: NSHostingController(rootView: LatestSettings(model: model)))
+        let window = LatestSettingsWindow(contentViewController: NSHostingController(rootView: LatestSettings(model: model)))
         window.title = String(localized: "Settings…")
         window.isReleasedWhenClosed = false
         window.center(); window.makeKeyAndOrderFront(nil)
@@ -72,6 +82,11 @@ import AppKit
         alert.runModal()
         return .terminateCancel
     }
+}
+
+/// Escape dismisses the auxiliary settings window through the native responder chain.
+@MainActor private final class LatestSettingsWindow: NSWindow {
+    override func cancelOperation(_ sender: Any?) { performClose(sender) }
 }
 
 @main @MainActor enum LatestApplication {

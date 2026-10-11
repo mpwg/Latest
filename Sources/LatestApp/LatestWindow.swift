@@ -3,9 +3,14 @@ import LatestApplication
 import AppKit
 import LatestCore
 
+extension Notification.Name {
+    static let latestFocusSearch = Notification.Name("LatestFocusSearch")
+}
+
 struct LatestWindow: View {
     @Bindable var model: AppModel
     let showSettings: () -> Void
+    @FocusState private var searchFocused: Bool
     var body: some View {
         NavigationSplitView {
             List(selection: $model.selectedID) {
@@ -14,7 +19,10 @@ struct LatestWindow: View {
                         .contextMenu {
                             Button("Open App") { NSWorkspace.shared.open(row.id.url) }
                             Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([row.id.url]) }
-                            Button(model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) ? "Stop Ignoring" : "Ignore App") { model.ignore(row.id) }
+                            Button { model.ignore(row.id) } label: {
+                                if model.preferences.ignoredBundleIDs.contains(row.record.app.bundleID) { Text("Stop Ignoring") }
+                                else { Text("Ignore App") }
+                            }
                             Button("Skip This Version") { model.skip(row.id) }.disabled(row.record.candidate == nil)
                             Button("Clear Skipped Version") { model.clearSkip(row.id) }
                         }
@@ -22,13 +30,15 @@ struct LatestWindow: View {
             }
             .accessibilityIdentifier("app-list")
             .searchable(text: $model.query, prompt: "Search apps")
+            .searchFocused($searchFocused)
             .navigationTitle("Applications")
             .navigationSplitViewColumnWidth(min: 300, ideal: 380)
             .safeAreaInset(edge: .bottom) { InventoryFooter(model: model) }
         } detail: {
-            if let row = model.selectedRow { AppDetail(row: row, model: model) }
+            if let row = model.selectedRow { AppDetail(row: row, model: model).id(row.id) }
             else { ContentUnavailableView("Select an App", systemImage: "app.dashed", description: Text("Choose an app to inspect its update source and release notes.")) }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .latestFocusSearch)) { _ in searchFocused = true }
         .onChange(of: model.externalURL) { _, url in
             if let url { NSWorkspace.shared.open(url); model.externalURL = nil }
         }
@@ -36,7 +46,7 @@ struct LatestWindow: View {
             ToolbarItem { Picker("Source", selection: $model.sourceFilter) {
                 Text("All Sources").tag(Optional<UpdateSource>.none)
                 ForEach(UpdateSource.allCases, id: \.rawValue) { source in SourceTitle(source: source).tag(Optional(source)) }
-            }.accessibilityIdentifier("source-filter") }
+            }.accessibilityLabel(Text("Source")).accessibilityIdentifier("source-filter") }
             ToolbarItem { Button("Check for Updates", systemImage: "arrow.clockwise") { model.refresh() }.disabled(model.scanning).accessibilityIdentifier("refresh") }
             ToolbarItem { Button("Update All", systemImage: "square.and.arrow.down") { model.updateAll() }
                 .disabled(model.scanning || model.activeUpdates > 0 || !model.hasBulkUpdates).accessibilityIdentifier("update-all") }
