@@ -30,6 +30,7 @@ the later preferences package's CI is tracked separately below.
 | Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 56a593b: 14 contracts, actual clean archive rebuild and development-signed version/build/source/licence checks; production artifact set remains open |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
 | Current local build/regression checks | passed | Warnings-as-errors Debug/Release, 84 invariants, 14 source/feed regressions, 74 localized keys |
+| Portable CI on actual Ubuntu | passed | ci-platforms.md at 4bee7bf: Ubuntu 24.04 / Python 3.14.8; thirteen Python source/history tests and resource/source/localization validation pass; native Mac checks remain required |
 | Verified implementation main CI | passed | [7bd12a0 / 38163970564](https://github.com/mpwg/Latest/actions/runs/38163970564); preferences-package CI and final whole-goal CI still must match their respective heads |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 

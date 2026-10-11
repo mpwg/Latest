@@ -1,5 +1,15 @@
 # Test coverage and evidence
 
+## Ubuntu CI split
+
+At `4bee7bf`, the [portable Ubuntu job](ci-platforms.md) passes thirteen Python
+tests and source/localization/resource checks on actual Ubuntu 24.04 with
+CPython 3.14.8. Six history tests and seven source/artifact contracts require no
+Apple SDK. The actual signed-feed test remains in macOS CI; local full discovery
+still executes all fourteen tests and passes. Swift/native/Xcode/package checks
+remain on macOS, gated on portable success. No native acceptance criterion is
+replaced by this Linux run.
+
 ## Original headless extraction evidence (historical)
 
 At `78c4548`, 23 deterministic Swift test functions pass without GUI automation,

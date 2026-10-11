@@ -12,6 +12,11 @@ The native interface renders shared state and forwards commands; a later CLI
 will use the same session and platform runtime. Automated application tests and
 CI run without GUI automation. Xcode project changes use Xcode MCP.
 
+[CI platform boundaries](docs/ci-platforms.md) separate thirteen portable Python
+release tests and repository/localization checks onto Ubuntu 24.04. The native
+macOS job keeps the real signing integration, Swift tests, locked adapters,
+Xcode build and packaging, and starts only after the portable checks pass.
+
 The [direct native Sparkle suite](docs/headless-native-acceptance.md) now checks
 actual signed installation, archive/signature rejection and successful retry
 through that same core, without GUI automation. A separate process restart
