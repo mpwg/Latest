@@ -115,11 +115,18 @@ struct NativeSegmentedChoice<Value: Equatable>: NSViewRepresentable {
     func updateNSView(_ control: NSSegmentedControl, context: Context) {
         context.coordinator.selection = $selection
         context.coordinator.values = options.map(\.0)
-        for (index, option) in options.enumerated() { control.setLabel(String(localized: option.1), forSegment: index) }
-        control.selectedSegment = options.firstIndex { $0.0 == selection } ?? -1
-        control.font = .systemFont(ofSize: 14 * scale)
-        control.controlSize = scale >= 1.3 ? .large : .regular
-        control.isEnabled = context.environment.isEnabled
+        for (index, option) in options.enumerated() {
+            let title = String(localized: option.1)
+            if control.label(forSegment: index) != title { control.setLabel(title, forSegment: index) }
+        }
+        let selected = options.firstIndex { $0.0 == selection } ?? -1
+        // Preserve native keyboard focus when scans re-render unchanged selection.
+        if control.selectedSegment != selected { control.selectedSegment = selected }
+        let size = CGFloat(14 * scale)
+        if control.font?.pointSize != size { control.font = .systemFont(ofSize: size) }
+        let controlSize: NSControl.ControlSize = scale >= 1.3 ? .large : .regular
+        if control.controlSize != controlSize { control.controlSize = controlSize }
+        if control.isEnabled != context.environment.isEnabled { control.isEnabled = context.environment.isEnabled }
         control.setAccessibilityLabel(String(localized: label))
         control.setAccessibilityIdentifier(identifier)
     }
@@ -148,11 +155,16 @@ private struct NativeSourcePicker: NSViewRepresentable {
     }
     func updateNSView(_ control: NSPopUpButton, context: Context) {
         context.coordinator.selection = $selection
-        control.selectItem(at: values.firstIndex(of: selection) ?? 0)
-        control.font = .systemFont(ofSize: 14 * scale)
-        control.menu?.font = control.font
-        control.controlSize = scale >= 1.3 ? .large : .regular
-        control.isEnabled = context.environment.isEnabled
+        let selected = values.firstIndex(of: selection) ?? 0
+        if control.indexOfSelectedItem != selected { control.selectItem(at: selected) }
+        let size = CGFloat(14 * scale)
+        if control.font?.pointSize != size {
+            control.font = .systemFont(ofSize: size)
+            control.menu?.font = control.font
+        }
+        let controlSize: NSControl.ControlSize = scale >= 1.3 ? .large : .regular
+        if control.controlSize != controlSize { control.controlSize = controlSize }
+        if control.isEnabled != context.environment.isEnabled { control.isEnabled = context.environment.isEnabled }
         control.setAccessibilityLabel(String(localized: "Source"))
         control.setAccessibilityIdentifier("source-filter")
     }

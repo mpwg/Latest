@@ -96,6 +96,18 @@ and uncapped path wrapping address that final observed content gap, pending
 native recheck. System Keyboard Navigation was restored off, VoiceOver stayed
 off and the controlled app was quit.
 
+At `71d88c4`, the directory path/Add Folder caption repairs pass actual German
+160% interaction. English 100% → 160% confirms ordinary content/control/selector
+growth, full path wrapping and selected-instance AX. Source/settings keyboard
+actions and window/search shortcuts pass. A primary Beta channel selected by
+keyboard is independently persisted to JSON. However, after opening/dismissing
+Settings, Left/Space fails twice to restore Stable despite visible Beta focus.
+Stable was restored by click, independently checked in JSON; the fixture apps
+remain unchanged. Full channel keyboard acceptance is therefore open. The
+native adapters now avoid reapplying unchanged selection, labels, font, size or
+enabled state during scan-driven render updates; a focused native retry of the
+failure sequence is required before accepting that repair.
+
 | Criterion | Status | Evidence / next step |
 |---|---|---|
 | Native baseline interaction and concrete defects | passed | Actual signed app screenshots/AX and keyboard sequences above |
