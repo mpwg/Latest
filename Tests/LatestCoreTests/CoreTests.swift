@@ -306,4 +306,38 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
         app.requestUpdate(a.app.id)
         #expect(app.externalURL == url); #expect(await runtime.installed.isEmpty); #expect(app.canQuit)
     }
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_SPARKLE"] != nil,
+                   "Requires explicitly prepared disposable signed apps and localhost HTTPS."))
+    func realSparkleRuntimeWithoutGUIAutomation() async throws {
+        let repository = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let root = repository.appendingPathComponent(".build/native-install-tests")
+        let appURL = root.appendingPathComponent("applications/Latest Sparkle Fixture.app")
+        let expected = ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_SPARKLE"]
+        try #require(expected == "succeeded" || expected == "failed")
+        let before = try #require(AppInventory.snapshot(at: appURL))
+        try #require(before.bundleID == "io.github.mpwg.Latest.NativeFixture.Sparkle")
+        try #require(before.version.display == "1.0.0" && before.signatureTeam != nil)
+        let state = root.appendingPathComponent("preferences/headless")
+        let preferencesURL = state.appendingPathComponent("preferences.json")
+        let preferences = Preferences(directories: [.init(path: root.appendingPathComponent("applications").path)])
+        try await PreferencesStore(url: preferencesURL).save(preferences)
+        let runtime = LiveApplicationRuntime(cacheDirectory: state.appendingPathComponent("Cache"),
+            homebrewExecutable: root.appendingPathComponent("homebrew/bin/brew"))
+        let app = ApplicationSession(runtime: runtime, preferencesURL: preferencesURL,
+            diagnosticURL: state.appendingPathComponent("diagnostics.log"), monitoringInterval: nil,
+            jobJournal: state.appendingPathComponent("job-events.jsonl"))
+        await app.start(); await app.waitForScan()
+        let row = try #require(app.rows.first { $0.id == before.id })
+        try #require(row.record.status == .available)
+        app.selectedID = before.id
+        app.requestUpdate(before.id); await app.waitForUpdates(); await app.flushPreferences()
+        #expect(row.event?.phase.rawValue == expected)
+        #expect(row.record.app.version.display == (expected == "succeeded" ? "1.1.0" : "1.0.0"))
+        #expect(app.canQuit)
+        let restarted = ApplicationSession(runtime: runtime, preferencesURL: preferencesURL,
+            diagnosticURL: state.appendingPathComponent("restart-diagnostics.log"), monitoringInterval: nil)
+        await restarted.start(); await restarted.waitForScan()
+        #expect(restarted.rows.first { $0.id == before.id }?.record.status == (expected == "succeeded" ? .current : .available))
+    }
+
 }
