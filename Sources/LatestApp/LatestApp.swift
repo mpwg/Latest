@@ -3,7 +3,7 @@ import Sparkle
 import AppKit
 
 /// AppKit owns the macOS lifecycle; all application content uses SwiftUI views.
-@MainActor final class LatestApplicationDelegate: NSObject, NSApplicationDelegate {
+@MainActor final class LatestApplicationDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let model = makeApplicationSession()
     private var mainWindow: NSWindow?
     private var settingsWindow: NSWindow?
@@ -23,6 +23,7 @@ import AppKit
         window.setFrameAutosaveName("LatestMainWindow")
         if !window.setFrameUsingName("LatestMainWindow") { window.center() }
         window.isReleasedWhenClosed = false
+        window.delegate = self
         mainWindow = window
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()
@@ -79,12 +80,20 @@ import AppKit
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { model.canQuit }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !model.canQuit else { return .terminateNow }
+        presentRunningUpdatesAlert()
+        return .terminateCancel
+    }
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard sender === mainWindow, !model.canQuit else { return true }
+        presentRunningUpdatesAlert()
+        return false
+    }
+    private func presentRunningUpdatesAlert() {
         let alert = NSAlert()
         alert.messageText = String(localized: "Updates Are Running")
         alert.informativeText = String(localized: "Wait for installation to finish before quitting Latest.")
         alert.addButton(withTitle: String(localized: "Keep Latest Open"))
         alert.runModal()
-        return .terminateCancel
     }
 }
 
