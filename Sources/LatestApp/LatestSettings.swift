@@ -5,10 +5,14 @@ import LatestPlatform
 
 struct LatestSettings: View {
     @Bindable var model: AppModel
+    @State private var section = 0
     var body: some View {
-        TabView {
-            GeneralSettings(model: model).tabItem { Label("General", systemImage: "gear") }
-            DirectorySettings(model: model).tabItem { Label("Locations", systemImage: "folder") }
+        VStack(spacing: 14) {
+            NativeSegmentedChoice(selection: $section, options: [(0, LocalizedStringResource("General")), (1, LocalizedStringResource("Locations"))],
+                                  label: "Settings…", identifier: "settings-section", scale: model.preferences.fontScale)
+                .fixedSize()
+            if section == 0 { GeneralSettings(model: model) }
+            else { DirectorySettings(model: model) }
         }.font(.system(size: 14 * model.preferences.fontScale))
             .controlSize(model.preferences.fontScale >= 1.3 ? .large : .regular)
             .padding().frame(minWidth: 560, minHeight: 440)

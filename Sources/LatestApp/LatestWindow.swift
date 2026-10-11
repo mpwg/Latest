@@ -45,10 +45,7 @@ struct LatestWindow: View {
             if let url { NSWorkspace.shared.open(url); model.externalURL = nil }
         }
         .toolbar {
-            ToolbarItem { Picker("Source", selection: $model.sourceFilter) {
-                Text("All Sources").tag(Optional<UpdateSource>.none)
-                ForEach(UpdateSource.allCases, id: \.rawValue) { source in SourceTitle(source: source).tag(Optional(source)) }
-            }.accessibilityLabel(Text("Source")).accessibilityIdentifier("source-filter") }
+            ToolbarItem { NativeSourcePicker(selection: $model.sourceFilter, scale: model.preferences.fontScale) }
             ToolbarItem { Button("Check for Updates", systemImage: "arrow.clockwise") { model.refresh() }.disabled(model.scanning).accessibilityIdentifier("refresh") }
             ToolbarItem { Button("Update All", systemImage: "square.and.arrow.down") { model.updateAll() }
                 .disabled(model.scanning || model.activeUpdates > 0 || !model.hasBulkUpdates).accessibilityIdentifier("update-all") }
@@ -102,17 +99,88 @@ private struct InventoryFooter: View {
     }
 }
 
-struct SourceTitle: View {
-    let source: UpdateSource
-    var body: some View {
-        switch source {
-        case .appStore: Text("App Store")
-        case .homebrew: Text("Homebrew")
-        case .sparkle: Text("Sparkle")
-        case .catalogue: Text("Catalogue Hint")
-        case .unknown: Text("Unknown Source")
+/// Native controls own keyboard/AX behavior; the adapter only forwards selection.
+struct NativeSegmentedChoice<Value: Equatable>: NSViewRepresentable {
+    @Binding var selection: Value
+    let options: [(Value, LocalizedStringResource)]
+    let label: LocalizedStringResource
+    let identifier: String
+    let scale: Double
+
+    func makeCoordinator() -> Coordinator { Coordinator(selection: $selection, values: options.map(\.0)) }
+    func makeNSView(context: Context) -> NSSegmentedControl {
+        NSSegmentedControl(labels: options.map { String(localized: $0.1) }, trackingMode: .selectOne,
+                           target: context.coordinator, action: #selector(Coordinator.select(_:)))
+    }
+    func updateNSView(_ control: NSSegmentedControl, context: Context) {
+        context.coordinator.selection = $selection
+        context.coordinator.values = options.map(\.0)
+        for (index, option) in options.enumerated() { control.setLabel(String(localized: option.1), forSegment: index) }
+        control.selectedSegment = options.firstIndex { $0.0 == selection } ?? -1
+        control.font = .systemFont(ofSize: 14 * scale)
+        control.controlSize = scale >= 1.3 ? .large : .regular
+        control.isEnabled = context.environment.isEnabled
+        control.setAccessibilityLabel(String(localized: label))
+        control.setAccessibilityIdentifier(identifier)
+    }
+    @MainActor final class Coordinator: NSObject {
+        var selection: Binding<Value>
+        var values: [Value]
+        init(selection: Binding<Value>, values: [Value]) { self.selection = selection; self.values = values }
+        @objc func select(_ control: NSSegmentedControl) {
+            guard values.indices.contains(control.selectedSegment) else { return }
+            selection.wrappedValue = values[control.selectedSegment]
         }
     }
+}
+
+private struct NativeSourcePicker: NSViewRepresentable {
+    @Binding var selection: UpdateSource?
+    let scale: Double
+    private var values: [UpdateSource?] { [nil] + UpdateSource.allCases.map(Optional.some) }
+    func makeCoordinator() -> Coordinator { Coordinator(selection: $selection, values: values) }
+    func makeNSView(context: Context) -> NSPopUpButton {
+        let control = NSPopUpButton(frame: .zero, pullsDown: false)
+        control.addItem(withTitle: String(localized: "All Sources"))
+        for source in UpdateSource.allCases { control.addItem(withTitle: String(localized: source.interfaceTitle)) }
+        control.target = context.coordinator; control.action = #selector(Coordinator.select(_:))
+        return control
+    }
+    func updateNSView(_ control: NSPopUpButton, context: Context) {
+        context.coordinator.selection = $selection
+        control.selectItem(at: values.firstIndex(of: selection) ?? 0)
+        control.font = .systemFont(ofSize: 14 * scale)
+        control.menu?.font = control.font
+        control.controlSize = scale >= 1.3 ? .large : .regular
+        control.isEnabled = context.environment.isEnabled
+        control.setAccessibilityLabel(String(localized: "Source"))
+        control.setAccessibilityIdentifier("source-filter")
+    }
+    @MainActor final class Coordinator: NSObject {
+        var selection: Binding<UpdateSource?>
+        let values: [UpdateSource?]
+        init(selection: Binding<UpdateSource?>, values: [UpdateSource?]) { self.selection = selection; self.values = values }
+        @objc func select(_ control: NSPopUpButton) {
+            guard values.indices.contains(control.indexOfSelectedItem) else { return }
+            selection.wrappedValue = values[control.indexOfSelectedItem]
+        }
+    }
+}
+
+extension UpdateSource {
+    var interfaceTitle: LocalizedStringResource {
+        switch self {
+        case .appStore: "App Store"
+        case .homebrew: "Homebrew"
+        case .sparkle: "Sparkle"
+        case .catalogue: "Catalogue Hint"
+        case .unknown: "Unknown Source"
+        }
+    }
+}
+struct SourceTitle: View {
+    let source: UpdateSource
+    var body: some View { Text(source.interfaceTitle) }
 }
 struct StatusTitle: View {
     let status: AppStatus

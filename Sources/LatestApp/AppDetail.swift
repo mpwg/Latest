@@ -90,10 +90,12 @@ private struct AppDetailMetadata: View {
                 Text(row.record.app.bundleID).font(.system(size: 12 * model.preferences.fontScale))
                     .accessibilityValue(row.record.app.bundleID).accessibilityIdentifier("selected-app-bundle-id")
             }
-            Picker("Release Channel", selection: Binding(get: { model.preferences.channels[row.id.path, default: .stable] }, set: { model.preferences.channels[row.id.path] = $0 })) {
-                Text("Stable").font(.system(size: 14 * model.preferences.fontScale)).tag(ReleaseChannel.stable)
-                Text("Beta").font(.system(size: 14 * model.preferences.fontScale)).tag(ReleaseChannel.beta)
-            }.pickerStyle(.segmented).frame(maxWidth: 360).accessibilityIdentifier("release-channel")
+            LabeledContent("Release Channel") {
+                NativeSegmentedChoice(selection: Binding(get: { model.preferences.channels[row.id.path, default: .stable] }, set: { model.preferences.channels[row.id.path] = $0 }),
+                                      options: [(ReleaseChannel.stable, LocalizedStringResource("Stable")), (.beta, LocalizedStringResource("Beta"))],
+                                      label: "Release Channel", identifier: "release-channel", scale: model.preferences.fontScale)
+                    .fixedSize()
+            }
             ViewThatFits(in: .horizontal) {
                 HStack { AppPreferenceButtons(row: row, model: model) }.fixedSize(horizontal: true, vertical: false)
                 VStack(alignment: .leading, spacing: 10) { AppPreferenceButtons(row: row, model: model) }

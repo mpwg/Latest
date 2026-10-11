@@ -72,6 +72,16 @@ minimum content sizes are explicit, metadata paths can wrap without a line cap,
 and every job-phase label has an English/German literal translation. This
 follow-up still requires native large-text and progress acceptance.
 
+Actual German interaction at `9edf286` confirms scaled body/header/status,
+metadata, fully wrapped paths, footer and scrollable settings. It revealed
+unchanged native control captions and blue status text on a blue selected row.
+At `8071367`, explicit button-label fonts and native large control sizing make
+action/helper captions visibly larger; the selected available status is white
+and readable. Native source/channel/settings selectors still retain small
+captions. These three selectors now use native AppKit controls with explicit
+fonts and bindings; that final adapter change awaits native EN/DE, keyboard and
+selection-persistence checks. No update has been invoked in these UI checks.
+
 | Criterion | Status | Evidence / next step |
 |---|---|---|
 | Native baseline interaction and concrete defects | passed | Actual signed app screenshots/AX and keyboard sequences above |
