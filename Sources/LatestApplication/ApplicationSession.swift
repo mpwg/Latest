@@ -21,7 +21,9 @@ import LatestCore
     public var preferences = Preferences() { didSet {
         guard preferencesLoaded, preferences != oldValue else { return }
         save()
-        if preferences.directories != oldValue.directories || preferences.channels != oldValue.channels || preferences.showCatalogueHints != oldValue.showCatalogueHints { refresh() }
+        if preferences.directories != oldValue.directories || preferences.channels != oldValue.channels ||
+           preferences.ignoredBundleIDs != oldValue.ignoredBundleIDs || preferences.skippedVersions != oldValue.skippedVersions ||
+           preferences.showCatalogueHints != oldValue.showCatalogueHints { refresh() }
     } }
     public private(set) var scanning = false
     public private(set) var checked = 0
@@ -153,13 +155,12 @@ import LatestCore
         guard let row = rows.first(where: { $0.id == id }) else { return }
         if preferences.ignoredBundleIDs.contains(row.record.app.bundleID) { preferences.ignoredBundleIDs.remove(row.record.app.bundleID) }
         else { preferences.ignoredBundleIDs.insert(row.record.app.bundleID) }
-        refresh()
     }
     public func skip(_ id: AppInstanceID) {
         guard let candidate = rows.first(where: { $0.id == id })?.record.candidate else { return }
-        preferences.skippedVersions[id.path] = candidate.id; refresh()
+        preferences.skippedVersions[id.path] = candidate.id
     }
-    public func clearSkip(_ id: AppInstanceID) { preferences.skippedVersions.removeValue(forKey: id.path); refresh() }
+    public func clearSkip(_ id: AppInstanceID) { preferences.skippedVersions.removeValue(forKey: id.path) }
     public func canUpdate(_ id: AppInstanceID) -> Bool {
         guard let row = rows.first(where: { $0.id == id }) else { return false }
         return !scanning && !isUpdating(id) && [.available, .external].contains(row.record.status) && row.record.candidate != nil

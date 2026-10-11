@@ -300,6 +300,18 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
         #expect(restarted.preferences.directories.filter { $0.path == root.path }.count == 1)
         #expect(restarted.rows.first?.record.status == .skipped)
     }
+    @Test func directPreferenceCommandsRefreshEligibilityWithoutViewHooks() async {
+        let a = candidate(); let runtime = ApplicationTestRuntime([a]); let app = await session(runtime)
+        app.preferences.ignoredBundleIDs.insert(a.app.bundleID)
+        #expect(app.scanning); #expect(!app.canUpdate(a.app.id))
+        await app.waitForScan(); #expect(app.rows.first?.record.status == .ignored)
+        app.preferences.ignoredBundleIDs.remove(a.app.bundleID); await app.waitForScan()
+        app.preferences.skippedVersions[a.app.id.path] = a.id
+        #expect(!app.canUpdate(a.app.id)); await app.waitForScan()
+        #expect(app.rows.first?.record.status == .skipped)
+        app.preferences.skippedVersions.removeValue(forKey: a.app.id.path); await app.waitForScan()
+        #expect(app.canUpdate(a.app.id)); #expect(await runtime.installed.isEmpty)
+    }
     @Test func externalUpdaterIsAnEffectWithoutInstallation() async {
         let url = URL(string: "https://example.invalid/update")!
         let a = candidate(action: .external(url)); let runtime = ApplicationTestRuntime([a]); let app = await session(runtime)
