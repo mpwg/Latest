@@ -27,8 +27,8 @@ The platform-boundary document records commands, scope, retained evidence and
 the remaining dependencies for running shared Swift application tests on Linux.
 
 The [current frozen-source rebuild](docs/source-release-acceptance.md) at
-`d628184` passes fresh bootstrap, Release build, headless tests and controlled
-development packaging from the archive. Build1506 has exact source/licence
+`28d6632` passes fresh bootstrap, Release build, headless tests and controlled
+development packaging from the archive. Build1511 has exact source/licence
 metadata and reuses the existing approved signing certificate. Production
 Developer ID/notarization and self-update acceptance remain open.
 
