@@ -86,6 +86,7 @@ class AppcastHistoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             merge(ET.tostring(history), '1.2.0', 12)
 
+class AppcastSigningIntegrationTests(unittest.TestCase):
     def test_actual_signed_history_and_resigned_merged_feed(self):
         tool = ROOT / '.build/debug/LatestRelease'
         self.assertTrue(tool.is_file(), 'Build LatestRelease before running signing integration tests.')
