@@ -379,6 +379,55 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
 
     }
 
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_COMPATIBILITY"] != nil,
+                   "Requires explicitly prepared signed compatibility targets and localhost HTTPS."))
+    func realSparkleCompatibilityWithoutGUIAutomation() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        let mode = try #require(environment["LATEST_HEADLESS_COMPATIBILITY"])
+        try #require(["architecture", "minimum-os", "incomparable", "build-policy"].contains(mode))
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent(".build/native-install-tests")
+        let selected = root.appendingPathComponent("applications/Latest Sparkle Fixture.app")
+        let before = try #require(AppInventory.snapshot(at: selected))
+        try #require(before.bundleID == "io.github.mpwg.Latest.NativeFixture.Sparkle" && before.signatureTeam != nil)
+        let state = root.appendingPathComponent("preferences/headless-compatibility")
+        let preferencesURL = state.appendingPathComponent("preferences.json")
+        if environment["LATEST_HEADLESS_COMPATIBILITY_RESTART"] == nil {
+            try await PreferencesStore(url: preferencesURL).save(.init(directories: [.init(path: root.appendingPathComponent("applications").path)]))
+        }
+        let runtime = LiveApplicationRuntime(cacheDirectory: state.appendingPathComponent("Cache"),
+            homebrewExecutable: root.appendingPathComponent("homebrew/bin/brew"))
+        let app = ApplicationSession(runtime: runtime, preferencesURL: preferencesURL,
+            diagnosticURL: state.appendingPathComponent("diagnostics.log"), monitoringInterval: nil,
+            jobJournal: state.appendingPathComponent("job-events.jsonl"))
+        await app.start(); await app.waitForScan()
+        let row = try #require(app.rows.first { $0.id == before.id })
+        app.selectedID = before.id
+        print("Real compatibility \(mode): \(row.record.status), \(row.record.reason ?? "none")")
+        if mode == "build-policy" {
+            if environment["LATEST_HEADLESS_COMPATIBILITY_RESTART"] == nil {
+                try #require(row.record.status == .available && app.canUpdate(before.id))
+                #expect(row.record.candidate?.version.display == "0.9.0")
+                #expect(row.record.candidate?.version.build == "2")
+                app.requestUpdate(before.id); await app.waitForUpdates()
+                #expect(row.event?.phase == .succeeded)
+            } else { #expect(row.event == nil) }
+            #expect(row.record.app.version.display == "0.9.0" && row.record.app.version.build == "2")
+            #expect(row.record.status == .current)
+        } else {
+            let reason = mode == "architecture" ? "This Sparkle update targets a different architecture or insecure URL. Use the app's own updater."
+                : mode == "minimum-os" ? "The update requires a newer operating system." : "The versions cannot be compared reliably."
+            #expect(row.record.status == (mode == "minimum-os" ? .incompatible : .unknown))
+            #expect(row.record.reason == reason)
+            #expect(!app.canUpdate(before.id))
+            app.requestUpdate(before.id); await app.waitForUpdates()
+            #expect(row.event == nil)
+            #expect(AppInventory.snapshot(at: selected)?.fingerprint == before.fingerprint)
+        }
+        #expect(app.activeUpdates == 0 && app.canQuit)
+        await app.flushPreferences()
+    }
+
     @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_HOMEBREW"] != nil,
                    "Requires explicitly prepared isolated Homebrew and signed disposable apps."))
     func realHomebrewRuntimeWithoutGUIAutomation() async throws {
