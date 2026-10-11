@@ -117,9 +117,9 @@ def run_case(case, test_runner=None, evidence_directory='l17', state_directory='
     if (evidence / 'scan-requested').exists(): (evidence / 'scan-requested').unlink()
     markers = ['SCAN', 'BULK'] if case == 'bulk' else (['CHANGED_MAJOR'] if case == 'changed-major' else ['CANCEL_MAJOR'])
     for name in markers:
-        path = ROOT / 'evidence' / evidence_directory / (name + '-ready')
-        if path.exists():
-            path.unlink()
+        for suffix in ['ready', 'requested']:
+            path = ROOT / 'evidence' / evidence_directory / (name + '-' + suffix)
+            if path.exists(): path.unlink()
 
     try:
         version = '2.0.0' if case == 'major' else '1.1.0'
@@ -185,7 +185,9 @@ def run_case(case, test_runner=None, evidence_directory='l17', state_directory='
         def coordinate(log):
             for name in markers:
                 marker = ROOT / 'evidence' / evidence_directory / (name + '-ready')
-                if f'L17_READY_{name}' in log and not marker.exists():
+                requested = ROOT / 'evidence' / evidence_directory / (name + '-requested')
+                reached = f'L17_READY_{name}' in log or (test_runner is not None and requested.exists())
+                if reached and not marker.exists():
                     events = [json.loads(line) for line in journal.read_text().splitlines()]
                     if any(digest_app(targets[key]) != expected for key, expected in before_targets.items()):
                         raise ValueError('A target changed before native consent/gated bulk release.')

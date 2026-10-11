@@ -810,6 +810,8 @@ struct NativeMajorBulkTests {
         try #require(condition(), "The actual shared-session major/bulk state did not reach its checkpoint.")
     }
     private func checkpoint(_ name: String, evidence: URL) async throws {
+        try Data("Actual shared session reached its major/bulk checkpoint.\n".utf8)
+            .write(to: evidence.appendingPathComponent(name + "-requested"), options: .atomic)
         FileHandle.standardOutput.write(Data(("L17_READY_" + name + "\n").utf8))
         try await wait { FileManager.default.fileExists(atPath: evidence.appendingPathComponent(name + "-ready").path) }
     }
