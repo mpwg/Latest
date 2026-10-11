@@ -8,6 +8,24 @@ import LatestTrust
     private var connections: [UUID: NSXPCConnection] = [:]
     var activeConnectionCount: Int { connections.count }
     private func invalidate(_ token: UUID) { connections.removeValue(forKey: token)?.invalidate() }
+    private nonisolated static func connectionEvent(_ gate: CompletionGate<Data>, message: String) -> @Sendable () -> Void {
+        { Task { await gate.finish(.failure(LatestFailure.process(message))) } }
+    }
+    private nonisolated static func proxyError(_ gate: CompletionGate<Data>) -> @Sendable (any Error) -> Void {
+        { error in
+            let message = error.localizedDescription
+            Task { await gate.finish(.failure(LatestFailure.process(message))) }
+        }
+    }
+    private nonisolated static func reply(_ gate: CompletionGate<Data>) -> @Sendable (Data?, NSError?) -> Void {
+        { data, error in
+            let result: Result<Data, LatestFailure>
+            if let error { result = .failure(.process(error.localizedDescription)) }
+            else if let data { result = .success(data) }
+            else { result = .failure(.process("The update helper returned no result.")) }
+            Task { await gate.finish(result) }
+        }
+    }
     public init() {}
     @MainActor public static var status: SMAppService.Status {
         SMAppService.daemon(plistName: ForkIdentity.broker + ".plist").status
@@ -35,8 +53,8 @@ import LatestTrust
         connection.setCodeSigningRequirement(requirement)
         connection.remoteObjectInterface = NSXPCInterface(with: LatestBrokerProtocol.self)
         let gate = CompletionGate<Data>()
-        connection.invalidationHandler = { Task { await gate.finish(.failure(LatestFailure.process("The update helper disconnected."))) } }
-        connection.interruptionHandler = { Task { await gate.finish(.failure(LatestFailure.process("The update helper was interrupted."))) } }
+        connection.invalidationHandler = Self.connectionEvent(gate, message: "The update helper disconnected.")
+        connection.interruptionHandler = Self.connectionEvent(gate, message: "The update helper was interrupted.")
         connection.resume()
         let timeout = Task { @MainActor in try await Task.sleep(for: .seconds(1200)); await gate.finish(.failure(LatestFailure.timeout)); self.invalidate(token) }
         defer { timeout.cancel(); invalidate(token) }
@@ -44,18 +62,10 @@ import LatestTrust
         _ = try await withTaskCancellationHandler {
             try Task.checkCancellation()
             let dispatch = Task { @MainActor in
-                guard let proxy = connection.remoteObjectProxyWithErrorHandler({ error in
-                    Task { await gate.finish(.failure(LatestFailure.process(error.localizedDescription))) }
-                }) as? any LatestBrokerProtocol else {
+                guard let proxy = connection.remoteObjectProxyWithErrorHandler(Self.proxyError(gate)) as? any LatestBrokerProtocol else {
                     Task { await gate.finish(.failure(LatestFailure.process("The update helper is unavailable."))) }; return
                 }
-                proxy.update(payload) { data, error in
-                    Task {
-                        if let error { await gate.finish(.failure(LatestFailure.process(error.localizedDescription))) }
-                        else if let data { await gate.finish(.success(data)) }
-                        else { await gate.finish(.failure(LatestFailure.process("The update helper returned no result."))) }
-                    }
-                }
+                proxy.update(payload, reply: Self.reply(gate))
             }
             defer { dispatch.cancel() }
             return try await gate.wait()
