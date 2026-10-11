@@ -16,6 +16,25 @@ def run(args, capture=False):
     result = subprocess.run(args, cwd=ROOT, check=True, text=True, capture_output=capture)
     return result.stdout.strip() if capture else None
 
+def select_signing_identity(requested, available):
+    """Resolve an exact certificate name or fingerprint; never select a partial match."""
+    fingerprint = requested.upper() if re.fullmatch(r'[0-9a-fA-F]{40}', requested) else None
+    matches = set()
+    for line in available.splitlines():
+        entry = re.fullmatch(r'\s*\d+\)\s+([0-9a-fA-F]{40})\s+"(.*)"\s*', line)
+        if entry and (entry[1].upper() == fingerprint or entry[2] == requested):
+            matches.add(entry[1].upper())
+    if len(matches) != 1:
+        raise ValueError('Signing requires exactly one valid identity matching the full certificate name or SHA-1 fingerprint.')
+    return matches.pop()
+
+
+def resolve_signing_identity(requested):
+    if requested == '-':
+        return requested
+    return select_signing_identity(requested, run(['security', 'find-identity', '-v', '-p', 'codesigning'], capture=True))
+
+
 def package_identity(configuration, build_number, source_revision):
     if (build_number is None) != (source_revision is None):
         raise ValueError('Build number and source revision must be provided together.')
@@ -34,6 +53,7 @@ def package_identity(configuration, build_number, source_revision):
 
 def package(configuration, identity, team, public_key, version, build_number=None, source_revision=None):
     build_number, source_revision = package_identity(configuration, build_number, source_revision)
+    identity = resolve_signing_identity(identity)
     run(["python3", "scripts/bootstrap.py"])
     run(["swift", "build", "-c", configuration])
     binaries = Path(run(["swift", "build", "-c", configuration, "--show-bin-path"], capture=True))

@@ -27,7 +27,7 @@ jobs:
         run: python3 scripts/validate.py --portable
       - name: Verify frozen sources, artifact bindings and appcast history
         run: |
-          python3 -m unittest discover -s Tests/ReleaseTests -p test_source_snapshot.py -v
+          PYTHONPATH=Tests/ReleaseTests python3 -m unittest test_source_snapshot test_signing_identity -v
           PYTHONPATH=Tests/ReleaseTests python3 -m unittest test_appcast.AppcastHistoryTests -v
   verify:
     needs: verify-portable
