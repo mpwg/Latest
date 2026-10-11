@@ -817,3 +817,108 @@ struct NativeMajorBulkTests {
     }
 }
 
+@Suite("Native directories and real volume recovery") @MainActor
+struct NativeDirectoryTests {
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_DIRECTORIES"] != nil,
+                   "Requires disposable signed directory fixtures and actual owned test-volume images."))
+    func realDirectoriesWithoutGUIAutomation() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        let mode = try #require(environment["LATEST_HEADLESS_DIRECTORIES"])
+        try #require(["actions", "volume", "empty-volume", "stale"].contains(mode))
+        let restart = environment["LATEST_HEADLESS_DIRECTORIES_RESTART"] != nil
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent(".build/native-install-tests")
+        let evidence = root.appendingPathComponent("evidence/headless-directories")
+        let paths = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: evidence.appendingPathComponent("paths.json")))
+        let state = root.appendingPathComponent("preferences/headless-directories")
+        let runtime = LiveApplicationRuntime(cacheDirectory: state.appendingPathComponent("Cache"),
+            homebrewExecutable: root.appendingPathComponent("homebrew/bin/brew"))
+        let monitor: Duration? = !restart && (mode == "volume" || mode == "empty-volume") ? .seconds(5) : nil
+        let app = ApplicationSession(runtime: runtime, preferencesURL: state.appendingPathComponent("preferences.json"),
+            diagnosticURL: state.appendingPathComponent("diagnostics.log"), monitoringInterval: monitor,
+            jobJournal: state.appendingPathComponent("job-events.jsonl"))
+        defer { app.stopMonitoring() }
+        await app.start()
+        if restart {
+            await app.waitForScan()
+            if mode == "actions" {
+                let added = try #require(paths["added"])
+                #expect(app.rows.map { $0.id.path } == [added + "/Latest L19 Added Fixture.app"])
+                #expect(app.preferences.directories.contains { $0.path == added && $0.enabled })
+                #expect(!app.preferences.directories.contains { $0.path == paths["initial"] })
+                #expect(app.preferences.directories.filter { $0.path != added }.allSatisfy { !$0.enabled })
+                try await checkpoint("PERSISTED", evidence: evidence)
+            } else if mode == "stale" {
+                #expect(app.preferences.directories.isEmpty && app.rows.isEmpty)
+            } else {
+                #expect(app.rows.count == (mode == "volume" ? 1 : 0))
+            }
+            #expect(app.warnings.isEmpty && app.activeUpdates == 0 && app.canQuit)
+            return
+        }
+        switch mode {
+        case "actions":
+            let initial = try #require(paths["initial"]), added = try #require(paths["added"])
+            await app.waitForScan()
+            #expect(app.rows.map { $0.id.path } == [initial + "/Latest L19 Initial Fixture.app"])
+            let index = try #require(app.preferences.directories.firstIndex { $0.path == initial })
+            app.preferences.directories[index].enabled = false; await app.waitForScan(); await app.flushPreferences()
+            #expect(app.rows.isEmpty && app.visibleRows.isEmpty)
+            try await checkpoint("DISABLED", evidence: evidence)
+            app.preferences.directories[index].enabled = true; await app.waitForScan()
+            app.addDirectory(URL(fileURLWithPath: added)); app.addDirectory(URL(fileURLWithPath: added))
+            await app.waitForScan()
+            #expect(Set(app.rows.map { $0.id.path }) == [initial + "/Latest L19 Initial Fixture.app", added + "/Latest L19 Added Fixture.app"])
+            #expect(app.preferences.directories.filter { $0.path == added }.count == 1)
+            app.preferences.directories.removeAll { $0.path == initial }; await app.waitForScan(); await app.flushPreferences()
+            #expect(app.rows.map { $0.id.path } == [added + "/Latest L19 Added Fixture.app"])
+            #expect(app.preferences.directories.filter { $0.path != added }.allSatisfy { !$0.enabled })
+            try await checkpoint("REMOVED", evidence: evidence)
+        case "volume", "empty-volume":
+            let volume = try #require(paths["volume"])
+            await app.waitForScan()
+            #expect(app.warnings.isEmpty && app.rows.count == (mode == "volume" ? 1 : 0))
+            app.selectedID = app.rows.first?.id
+            try await checkpoint("EJECT", evidence: evidence)
+            try await wait { !app.scanning && app.rows.isEmpty && app.warnings == ["Cannot read directory: " + volume] }
+            #expect(app.selectedRow == nil && app.visibleRows.isEmpty)
+            try await checkpoint("REMOUNT", evidence: evidence)
+            try await wait { !app.scanning && app.warnings.isEmpty && app.rows.count == (mode == "volume" ? 1 : 0) }
+            try await checkpoint("RECOVERED", evidence: evidence)
+        case "stale":
+            let volume = try #require(paths["volume"])
+            try await wait { app.scanning && app.rows.count == 1 &&
+                FileManager.default.fileExists(atPath: evidence.appendingPathComponent("stale/request-received").path) }
+            let oldID = try #require(app.rows.first?.id)
+            app.selectedID = oldID
+            var waitingForOldScan = false
+            let oldScan = Task { @MainActor in waitingForOldScan = true; await app.waitForScan() }
+            try await wait { waitingForOldScan }
+            try await checkpoint("HELD", evidence: evidence)
+            app.preferences.directories.removeAll { $0.path == volume }
+            await app.waitForScan(); await app.flushPreferences()
+            #expect(app.rows.isEmpty && app.selectedRow == nil && app.warnings.isEmpty && !app.canUpdate(oldID))
+            try await checkpoint("LATE", evidence: evidence)
+            await oldScan.value
+            #expect(app.rows.isEmpty && app.visibleRows.isEmpty && app.selectedRow == nil && app.warnings.isEmpty)
+            try await checkpoint("SUPERSEDED", evidence: evidence)
+            app.refresh(); await app.waitForScan()
+            #expect(app.preferences.directories.isEmpty && app.rows.isEmpty && app.warnings.isEmpty)
+        default: Issue.record("Unexpected native directories mode.")
+        }
+        #expect(app.activeUpdates == 0 && app.canQuit && !app.showingError)
+        #expect(app.rows.allSatisfy { $0.event == nil })
+        await app.flushPreferences()
+    }
+    private func wait(_ condition: @MainActor () -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+        while !condition() && ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(50)) }
+        try #require(condition(), "The actual directory/volume state did not reach its checkpoint.")
+    }
+    private func checkpoint(_ name: String, evidence: URL) async throws {
+        try Data("Actual shared session reached its directory/volume checkpoint.\n".utf8)
+            .write(to: evidence.appendingPathComponent(name + "-requested"), options: .atomic)
+        try await wait { FileManager.default.fileExists(atPath: evidence.appendingPathComponent(name + "-ready").path) }
+    }
+}
+

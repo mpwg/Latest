@@ -22,16 +22,19 @@ ROOT = fixtures.ROOT
 REPO = fixtures.REPO
 
 
-def run_case(case):
-    prepared = ROOT / 'evidence/l19/prepared' / uuid.uuid4().hex
+def run_case(case, test_runner=None, evidence_directory='l19', state_directory='l03'):
+    prepared = ROOT / 'evidence' / evidence_directory / 'prepared' / uuid.uuid4().hex
     prepared.mkdir(parents=True)
-    evidence = ROOT / 'evidence/l19' / case
+    evidence = ROOT / 'evidence' / evidence_directory / case
     evidence.mkdir(parents=True, exist_ok=True)
     markers = ['DISABLED', 'REMOVED', 'PERSISTED'] if case == 'actions' else (['HELD', 'LATE', 'SUPERSEDED'] if case == 'stale' else ['EJECT', 'REMOUNT', 'RECOVERED'])
     for name in markers:
-        marker = ROOT / f'evidence/l19/{name}-ready'
-        if marker.exists(): marker.unlink()
-    controls = [ROOT / 'applications/Latest Sparkle Fixture.app', ROOT / 'applications/Secondary/Latest Sparkle Fixture.app', ROOT / 'applications/Latest Homebrew Fixture.app']
+        for suffix in ['ready', 'requested']:
+            marker = ROOT / 'evidence' / evidence_directory / (name + '-' + suffix)
+            if marker.exists(): marker.unlink()
+    if (evidence / 'request-received').exists(): (evidence / 'request-received').unlink()
+    controls = [ROOT / 'applications/Latest Sparkle Fixture.app', ROOT / 'applications/Secondary/Latest Sparkle Fixture.app',
+                ROOT / 'applications/Latest Homebrew Fixture.app', ROOT / 'applications/Unmanaged/Latest Homebrew Fixture.app']
     before_controls = [digest_app(app) for app in controls]
     mounted = False
     image = prepared / 'controlled-volume.dmg'
@@ -49,6 +52,8 @@ def run_case(case):
         def do_GET(self):
             if self.path != '/held.xml': self.send_error(404); return
             received.set()
+            if test_runner is not None:
+                (evidence / 'request-received').write_text('Actual old-generation HTTPS request received.\n')
             gate.wait(120)
             try:
                 self.send_response(200); self.send_header('Content-Length', str(len(payload))); self.end_headers()
@@ -112,8 +117,8 @@ def run_case(case):
         native_before = {str(app): digest_app(app) for directory in directories if directory['enabled']
                          for app in Path(directory['path']).glob('*.app')}
         if case == 'actions': native_before.update({str(app): digest_app(app) for app in added.glob('*.app')})
-        (ROOT / 'evidence/l19/paths.json').write_text(json.dumps(paths, indent=2) + '\n')
-        state = ROOT / 'preferences/l03'
+        (ROOT / 'evidence' / evidence_directory / 'paths.json').write_text(json.dumps(paths, indent=2) + '\n')
+        state = ROOT / 'preferences' / state_directory
         state.mkdir(parents=True, exist_ok=True)
         preferences = state / 'preferences.json'
         preferences.write_text(json.dumps(dict(directories=directories)))
@@ -121,8 +126,10 @@ def run_case(case):
 
         def coordinate(log):
             for name in markers:
-                marker = ROOT / f'evidence/l19/{name}-ready'
-                if f'L19_READY_{name}' not in log or marker.exists(): continue
+                marker = ROOT / 'evidence' / evidence_directory / (name + '-ready')
+                requested = ROOT / 'evidence' / evidence_directory / (name + '-requested')
+                reached = f'L19_READY_{name}' in log or (test_runner is not None and requested.exists())
+                if not reached or marker.exists(): continue
                 current = json.loads(preferences.read_text())
                 entries = current['directories']
                 if name == 'DISABLED':
@@ -147,7 +154,7 @@ def run_case(case):
 
         test = {'actions': 'testNativeDirectoryActionsAndPersistence', 'stale': 'testNativeSupersededVolumeScanCannotRestoreRemovedApps',
                 'volume': 'testNativeVolumeLossAndRecovery', 'empty-volume': 'testNativeVolumeLossAndRecovery'}[case]
-        outcome = run_native_test(test, evidence, coordinate=coordinate)
+        outcome = (test_runner or run_native_test)(test, evidence, coordinate=coordinate)
         if set(checkpoints) != set(markers): raise ValueError('A required actual native checkpoint is missing.')
         if any(digest_app(app) != expected for app, expected in zip(controls, before_controls)):
             raise ValueError('An unrelated controlled app changed.')
@@ -158,10 +165,11 @@ def run_case(case):
                       environment=dict(macOS=fixtures.run(['sw_vers', '-productVersion'], capture=True), xcode=fixtures.run(['xcodebuild', '-version'], capture=True), architecture='arm64'),
                       sourceSHA256={str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest() for path in
                                     [REPO / 'Sources/LatestPlatform/Inventory.swift', REPO / 'Sources/LatestApp/AppModel.swift', REPO / 'Sources/LatestApp/LatestSettings.swift', REPO / 'Sources/LatestApp/LatestWindow.swift', REPO / 'Tests/LatestUITests/LatestUITests.swift', Path(__file__)]},
-                      paths=paths, checkpoints=checkpoints, transport=transport, nativeTest=test, **outcome,
+                      paths=paths, checkpoints=checkpoints, transport=transport, nativeTest=outcome.get('testIdentifier', test), **outcome,
                       scannedBundlesUnchanged=True, unrelatedControlsUnchanged=True, noInstallJobs=True)
         (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(f'Native directories {case}: passed; actual directory/volume actions and unchanged bundles.')
+        return result
     finally:
         gate.set(); server.shutdown(); server.server_close()
         if mounted: detach()
