@@ -77,8 +77,12 @@ private struct InventoryFooter: View {
     let model: AppModel
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if model.scanning { ProgressView(value: Double(model.checked), total: Double(max(1, model.total))); Text("Checking \(model.checked) of \(model.total)").font(.caption) }
-            else { Text("\(model.visibleRows.count) apps").font(.caption) }
+            if model.scanning {
+                ProgressView(value: Double(model.checked), total: Double(max(1, model.total)))
+                Text(LocalizedStringResource("Checking %lld of %lld", defaultValue: "Checking \(model.checked) of \(model.total)")).font(.caption)
+            } else {
+                Text(LocalizedStringResource("%lld apps", defaultValue: "\(model.visibleRows.count) apps")).font(.caption)
+            }
             if !model.warnings.isEmpty { Text(model.warnings.joined(separator: "\n")).font(.caption).foregroundStyle(.orange).accessibilityIdentifier("inventory-warnings") }
         }.padding().frame(maxWidth: .infinity, alignment: .leading).background(.bar)
     }
