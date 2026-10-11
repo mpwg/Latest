@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import Testing
 import LatestProcess
 @testable import LatestCore
@@ -470,6 +471,86 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
             try await Task.sleep(for: .milliseconds(50))
         }
         try #require(FileManager.default.fileExists(atPath: released.path), "The real external fixture operation did not complete.")
+    }
+
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_SPARKLE_LIFECYCLE"] != nil,
+                   "Requires explicitly prepared signed fixtures and controlled HTTPS gates."))
+    func realSparkleLifecycleWithoutGUIAutomation() async throws {
+        let repository = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let root = repository.appendingPathComponent(".build/native-install-tests")
+        let mode = try #require(ProcessInfo.processInfo.environment["LATEST_HEADLESS_SPARKLE_LIFECYCLE"])
+        try #require(["cancellation", "download-error", "handoff", "checked"].contains(mode))
+        let selected = root.appendingPathComponent("applications/Latest Sparkle Fixture.app")
+        let before = try #require(AppInventory.snapshot(at: selected))
+        try #require(before.bundleID == "io.github.mpwg.Latest.NativeFixture.Sparkle" && before.signatureTeam != nil)
+        if mode != "checked" { try #require(before.version.display == "1.0.0") }
+        let state = root.appendingPathComponent("preferences/headless-lifecycle")
+        let preferencesURL = state.appendingPathComponent("preferences.json")
+        if mode != "checked" {
+            try await PreferencesStore(url: preferencesURL).save(.init(directories: [.init(path: root.appendingPathComponent("applications").path)]))
+        }
+        let runtime = LiveApplicationRuntime(cacheDirectory: state.appendingPathComponent("Cache"),
+            homebrewExecutable: root.appendingPathComponent("homebrew/bin/brew"))
+        let app = ApplicationSession(runtime: runtime, preferencesURL: preferencesURL,
+            diagnosticURL: state.appendingPathComponent("diagnostics.log"), monitoringInterval: nil,
+            jobJournal: state.appendingPathComponent("job-events.jsonl"))
+        await app.start(); await app.waitForScan()
+        let row = try #require(app.rows.first { $0.id == before.id })
+        if mode == "checked" {
+            #expect(row.record.app.version.display == "1.1.0"); #expect(row.record.status == .current)
+            #expect(app.activeUpdates == 0); #expect(app.canQuit); return
+        }
+        try #require(row.record.status == .available)
+        app.selectedID = before.id
+        if mode == "handoff" {
+            let pid = try #require(ProcessInfo.processInfo.environment["LATEST_HEADLESS_HANDOFF_PID"].flatMap(Int32.init))
+            try await waitForNativeState { NSRunningApplication(processIdentifier: pid)?.bundleURL?.resolvingSymlinksInPath() == selected }
+            try await sparkleLifecycleCheckpoint("fixture-ready", root: root)
+        }
+        app.requestUpdate(before.id)
+        if mode == "cancellation" {
+            try await waitForNativeState { row.event?.phase == .downloading && (row.event?.progress ?? 0) > 0 && app.canCancel(before.id) }
+            #expect(!app.canQuit)
+            app.cancel(before.id); app.cancel(before.id)
+            await app.waitForUpdates()
+            try #require(row.event?.phase == .cancelled)
+            #expect(!app.showingError); #expect(row.record.app.version.display == "1.0.0")
+            try await sparkleLifecycleCheckpoint("cancellation", root: root)
+        } else if mode == "download-error" {
+            await app.waitForUpdates()
+            try #require(row.event?.phase == .failed)
+            #expect(app.showingError); #expect(row.record.app.version.display == "1.0.0")
+            try await sparkleLifecycleCheckpoint("download-error", root: root)
+            app.showingError = false
+        } else {
+            try await waitForNativeState { row.event?.phase == .installing }
+            #expect(!app.canCancel(before.id)); #expect(!app.canQuit)
+            app.cancel(before.id)
+            #expect(app.activeUpdates == 1)
+            try await sparkleLifecycleCheckpoint("handoff", root: root)
+        }
+        if mode != "handoff" {
+            app.refresh(); await app.waitForScan()
+            try #require(app.canUpdate(before.id))
+            app.requestUpdate(before.id)
+        }
+        await app.waitForUpdates(); await app.flushPreferences()
+        #expect(row.event?.phase == .succeeded)
+        #expect(row.record.app.version.display == "1.1.0")
+        #expect(row.record.status == .current); #expect(app.canQuit)
+    }
+
+    private func waitForNativeState(_ condition: @MainActor () -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+        while !condition() && ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(50)) }
+        try #require(condition(), "The actual native lifecycle did not reach the required state.")
+    }
+
+    private func sparkleLifecycleCheckpoint(_ phase: String, root: URL) async throws {
+        let coordination = root.appendingPathComponent("evidence/headless-lifecycle/coordination")
+        try Data("Actual shared session reached its native lifecycle checkpoint.\n".utf8)
+            .write(to: coordination.appendingPathComponent(phase + "-ready"), options: .atomic)
+        try await waitForNativeState { FileManager.default.fileExists(atPath: coordination.appendingPathComponent(phase + "-released").path) }
     }
 
 }
