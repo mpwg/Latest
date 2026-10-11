@@ -21,7 +21,8 @@ def run_case(case):
     selected = ROOT / 'applications/Latest Sparkle Fixture.app'
     other = ROOT / 'applications/Secondary/Latest Sparkle Fixture.app'
     stop_selected_fixture(selected)
-    reset_sparkle(selected); reset_sparkle(other)
+    if case != 'retry':
+        reset_sparkle(selected); reset_sparkle(other)
     controls = [other, ROOT / 'applications/Latest Homebrew Fixture.app',
                 ROOT / 'applications/Unmanaged/Latest Homebrew Fixture.app']
     host_vendor = Path('/opt/homebrew/Library/Homebrew/vendor/portable-ruby')
@@ -40,7 +41,7 @@ def run_case(case):
     journal.write_text('')
     evidence = ROOT / 'evidence/headless-sparkle' / case
     evidence.mkdir(parents=True, exist_ok=True)
-    expected = 'succeeded' if case == 'valid' else 'failed'
+    expected = 'succeeded' if case in ['valid', 'retry'] else 'failed'
     environment = fixtures.brew_environment()
     environment['LATEST_HEADLESS_NATIVE_SPARKLE'] = expected
     try:
@@ -56,11 +57,19 @@ def run_case(case):
         if outcome.returncode or 'realSparkleRuntimeWithoutGUIAutomation() passed' not in text:
             print(text[-9000:])
             raise ValueError('The required headless real runtime test did not pass; skipped tests are not evidence.')
-        expected_version = '1.1.0' if case == 'valid' else '1.0.0'
+        expected_version = '1.1.0' if case in ['valid', 'retry'] else '1.0.0'
+        restart_environment = dict(environment, LATEST_HEADLESS_NATIVE_SPARKLE='checked',
+                                   LATEST_HEADLESS_NATIVE_EXPECTED_VERSION=expected_version)
+        with (evidence / 'restart.log').open('w') as log:
+            restart = subprocess.run(arguments, cwd=REPO, env=restart_environment,
+                                     stdout=log, stderr=subprocess.STDOUT, timeout=180)
+        restart_text = (evidence / 'restart.log').read_text()
+        if restart.returncode or 'realSparkleRuntimeWithoutGUIAutomation() passed' not in restart_text:
+            print(restart_text[-9000:]); raise ValueError('A new native process did not observe the expected installed state.')
         info = plistlib.loads((selected / 'Contents/Info.plist').read_bytes())
         if info['CFBundleShortVersionString'] != expected_version:
             raise ValueError('The installed fixture version does not match the required outcome.')
-        if case != 'valid' and digest_app(selected) != before:
+        if case not in ['valid', 'retry'] and digest_app(selected) != before:
             raise ValueError('A rejected archive changed the selected fixture.')
         if any(digest_app(app) != old for app, old in zip(controls, controls_before)):
             raise ValueError('An unrelated canonical instance/provider fixture changed.')
@@ -84,7 +93,7 @@ def run_case(case):
                                        xcode=fixtures.run(['xcodebuild', '-version'], capture=True), architecture=architectures),
                       arguments=arguments, selectedPath=str(selected), installedVersion=expected_version,
                       events=events, unrelatedFixturesUnchanged=True, signatureVerified=True,
-                      directProductionSession=True, GUIAutomation=False, normalRuntimeRescan=True,
+                      directProductionSession=True, GUIAutomation=False, newProcessRestartVerified=True,
                       ordinaryHomebrewRuntimeUnchanged=True)
         (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(f'Headless native Sparkle {case}: passed, {expected_version}, verified signature/architecture, unchanged controls.')
@@ -95,7 +104,7 @@ def run_case(case):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('case', choices=['valid', 'tampered', 'signature', 'all'])
+    parser.add_argument('case', choices=['valid', 'tampered', 'signature', 'retry', 'all'])
     args = parser.parse_args()
-    for case in (['valid', 'tampered', 'signature'] if args.case == 'all' else [args.case]):
+    for case in (['valid', 'tampered', 'signature', 'retry'] if args.case == 'all' else [args.case]):
         run_case(case)
