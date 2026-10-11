@@ -28,3 +28,18 @@ public actor PreferencesStore {
 }
 
 public enum PreferenceValue: Sendable { case strings([String]), bool(Bool) }
+
+/// Shared native legacy reader for the GUI, headless sessions and a future CLI.
+public enum LegacyPreferences {
+    public static func read(domain: String = "com.max-langer.Latest") -> [String: PreferenceValue] {
+        let legacy = UserDefaults.standard.persistentDomain(forName: domain) ?? [:]
+        var values: [String: PreferenceValue] = [:]
+        for key in ["directoryPaths", "IgnoredAppsKey"] {
+            if let value = legacy[key] as? [String] { values[key] = .strings(value) }
+        }
+        for key in ["ShowInstalledUpdatesKey", "ShowIgnoredUpdatesKey", "ShowUnsupportedUpdatesKey"] {
+            if let value = legacy[key] as? Bool { values[key] = .bool(value) }
+        }
+        return values
+    }
+}

@@ -44,17 +44,11 @@ extension ApplicationRow {
     #else
     let root = support.appendingPathComponent("io.github.mpwg.Latest")
     #endif
-    let legacy = UserDefaults.standard.persistentDomain(forName: domain) ?? [:]
-    var values: [String: PreferenceValue] = [:]
-    for key in ["directoryPaths", "IgnoredAppsKey"] { if let value = legacy[key] as? [String] { values[key] = .strings(value) } }
-    for key in ["ShowInstalledUpdatesKey", "ShowIgnoredUpdatesKey", "ShowUnsupportedUpdatesKey"] {
-        if let value = legacy[key] as? Bool { values[key] = .bool(value) }
-    }
     let runtime = LiveApplicationRuntime(cacheDirectory: root.appendingPathComponent("Cache"),
         homebrewExecutable: nativeRoot?.appendingPathComponent("homebrew/bin/brew"),
         masURL: Bundle.main.url(forResource: "mas", withExtension: nil), catalogueURL: catalogueURL)
     return ApplicationSession(runtime: runtime, preferencesURL: root.appendingPathComponent("preferences.json"),
-        diagnosticURL: root.appendingPathComponent("diagnostics.log"), legacy: values,
+        diagnosticURL: root.appendingPathComponent("diagnostics.log"), legacy: LegacyPreferences.read(domain: domain),
         monitoringInterval: monitoringInterval,
         jobJournal: nativeRoot?.appendingPathComponent("preferences/l03/job-events.jsonl"), fixtureRecords: fixtureRecords)
 }

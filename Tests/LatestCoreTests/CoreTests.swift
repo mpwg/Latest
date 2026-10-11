@@ -704,6 +704,76 @@ struct NativePreferencesTests {
     }
 }
 
+/// Only discovery is scoped; real CFPreferences reading and JSON migration are unchanged.
+private struct MigrationInventoryRuntime: ApplicationRuntime {
+    let profile: URL
+    func scan(_ directories: [DirectoryPreference]) async -> ApplicationInventory {
+        let inventory = AppInventory.collect(directories.filter { $0.path.hasPrefix(profile.path + "/") })
+        return .init(apps: inventory.apps, warnings: inventory.warnings)
+    }
+    func check(_ app: AppSnapshot, context: CheckContext) async -> AppRecord { .init(app: app) }
+    func validate(_ expected: AppSnapshot) async throws -> AppSnapshot { throw LatestFailure.rejected("Migration acceptance cannot install apps.") }
+    func install(_ candidate: UpdateCandidate, context: CheckContext,
+                 event: @escaping @MainActor @Sendable (UpdateEvent) -> Void) async throws { throw LatestFailure.rejected("Migration acceptance cannot install apps.") }
+    func verify(_ candidate: UpdateCandidate, context: CheckContext) async throws { throw LatestFailure.rejected("Migration acceptance cannot install apps.") }
+    func releaseNotes(_ url: URL) async throws -> String { "" }
+    func enableBroker() async throws -> Bool { throw LatestFailure.rejected("Migration acceptance cannot register a broker.") }
+}
+
+@Suite("Actual CFPreferences migration through the shared core") @MainActor
+struct NativeMigrationTests {
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_MIGRATION_PHASE"] != nil,
+                   "Requires an explicitly isolated real macOS preferences domain and private profile."))
+    func realLegacyMigrationWithoutGUIAutomation() async throws {
+        let environment = ProcessInfo.processInfo.environment
+        let phase = try #require(environment["LATEST_HEADLESS_MIGRATION_PHASE"])
+        try #require(["migrated", "edited", "restarted", "malformed", "malformed-restart"].contains(phase))
+        let domain = try #require(environment["LATEST_HEADLESS_MIGRATION_DOMAIN"])
+        try #require(domain.hasPrefix("io.github.mpwg.Latest.NativeMigration.Headless."))
+        let path = try #require(environment["LATEST_HEADLESS_MIGRATION_PROFILE"])
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent(".build/native-install-tests/evidence/headless-migration")
+        try #require(path.hasPrefix(root.path + "/"))
+        let profile = URL(fileURLWithPath: path)
+        let support = profile.appendingPathComponent("Library/Application Support/io.github.mpwg.Latest")
+        let legacy = LegacyPreferences.read(domain: domain)
+        let app = ApplicationSession(runtime: MigrationInventoryRuntime(profile: profile),
+            preferencesURL: support.appendingPathComponent("preferences.json"),
+            diagnosticURL: support.appendingPathComponent("diagnostics.log"), legacy: legacy,
+            monitoringInterval: nil, jobJournal: support.appendingPathComponent("job-events.jsonl"))
+        await app.start(); await app.waitForScan()
+        let migrated = profile.appendingPathComponent("Ältere Apps").path
+        if phase == "malformed" || phase == "malformed-restart" {
+            #expect(Set(legacy.keys) == ["directoryPaths"])
+            #expect(app.preferences == Preferences())
+            #expect(app.rows.isEmpty)
+        } else {
+            #expect(app.preferences.directories.filter { $0.path == migrated }.count == 1)
+            #expect(!app.preferences.directories.contains { $0.path == "relative" || $0.path.hasSuffix("Should Not Migrate") })
+            #expect(app.preferences.ignoredBundleIDs == ["io.github.mpwg.Latest.LegacyIgnored"])
+            #expect(app.rows.count == 1 && app.rows.first?.record.app.signatureTeam != nil)
+            if phase == "migrated" || phase == "edited" {
+                try #require(!app.preferences.showCurrent && app.preferences.showIgnored && !app.preferences.showUnknown)
+                #expect(app.visibleRows.isEmpty)
+            }
+            if phase == "edited" {
+                app.preferences.showCurrent = true; app.preferences.showIgnored = false
+                app.preferences.showUnknown = true; app.preferences.sortBySource = true
+                app.preferences.fontScale = 1.4
+            }
+            if phase == "restarted" {
+                if case .strings(let paths) = legacy["directoryPaths"] { #expect(paths == [profile.appendingPathComponent("Should Not Migrate").path]) }
+                else { Issue.record("The actual changed legacy domain was not read.") }
+                #expect(app.preferences.showCurrent && !app.preferences.showIgnored && app.preferences.showUnknown)
+                #expect(app.preferences.sortBySource && app.preferences.fontScale == 1.4)
+                #expect(app.visibleRows.count == 1)
+            }
+        }
+        await app.flushPreferences()
+        #expect(app.activeUpdates == 0 && app.canQuit && !app.showingError)
+    }
+}
+
 @Suite("Native major consent and scoped bulk installation") @MainActor
 struct NativeMajorBulkTests {
     @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_MAJOR_BULK"] != nil,
