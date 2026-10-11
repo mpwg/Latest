@@ -205,6 +205,7 @@ private actor ExclusiveStoreTestRuntime: ApplicationRuntime {
     var maximumStores = 0
     var failures = Set<AppInstanceID>()
     var holdVerification = false
+    var verificationFailures = Set<AppInstanceID>()
     let firstStore = CompletionGate<AppInstanceID>()
     let otherProvider = CompletionGate<Void>()
     let releaseStore = CompletionGate<Void>()
@@ -215,6 +216,7 @@ private actor ExclusiveStoreTestRuntime: ApplicationRuntime {
     }
     func failOnce(_ id: AppInstanceID) { failures.insert(id) }
     func pauseVerification() { holdVerification = true }
+    func failVerificationOnce(_ id: AppInstanceID) { verificationFailures.insert(id) }
     func changeOffer(_ offer: UpdateCandidate) { offers[offer.app.id] = offer }
     func scan(_ directories: [DirectoryPreference]) -> ApplicationInventory { .init(apps: apps) }
     func check(_ app: AppSnapshot, context: CheckContext) -> AppRecord {
@@ -253,6 +255,7 @@ private actor ExclusiveStoreTestRuntime: ApplicationRuntime {
         if case .appStore = candidate.action, holdVerification {
             await verification.finish(.success(candidate.app.id)); try await releaseVerification.wait()
         }
+        if verificationFailures.remove(candidate.app.id) != nil { throw LatestFailure.process("Controlled Store verification failure.") }
     }
     func releaseNotes(_ url: URL) -> String { "" }
     func enableBroker() -> Bool { true }
@@ -302,13 +305,15 @@ struct StoreWorkflowTests {
         let a = offer("A", storeID: 1), b = offer("B", storeID: 2)
         let runtime = ExclusiveStoreTestRuntime([a,b]); let app = await session(runtime)
         app.requestUpdate(a.app.id); _ = try await runtime.firstStore.wait()
-        app.requestUpdate(b.app.id); try await wait { app.canCancel(b.app.id) }
+        app.requestUpdate(b.app.id); try await wait { app.queuedStoreUpdates == 1 }
+        #expect(app.canCancel(b.app.id))
         app.cancel(b.app.id); app.cancel(b.app.id)
         try await wait { !app.isUpdating(b.app.id) }
         #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .cancelled)
         #expect(app.activeUpdates == 1 && !app.canQuit && !app.showingError)
         #expect(await runtime.installed == [a.app.id]); #expect(await runtime.validated == [a.app.id])
         await app.waitForScan(); app.requestUpdate(b.app.id)
+        try await wait { app.queuedStoreUpdates == 1 }
         await runtime.releaseStore.finish(.success(())); await app.waitForUpdates()
         #expect(await runtime.installed == [a.app.id,b.app.id]); #expect(await runtime.maximumStores == 1)
         #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .succeeded)
@@ -336,6 +341,30 @@ struct StoreWorkflowTests {
         #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .failed)
         #expect(app.errorMessage == "The queued App Store update changed. Check for updates again.")
         #expect(app.canQuit)
+    }
+    @Test func ignoredQueuedStoreNeverReachesInstaller() async throws {
+        let a = offer("A", storeID: 1), b = offer("B", storeID: 2)
+        let runtime = ExclusiveStoreTestRuntime([a,b]); let app = await session(runtime)
+        app.requestUpdate(a.app.id); _ = try await runtime.firstStore.wait(); app.requestUpdate(b.app.id)
+        try await wait { app.queuedStoreUpdates == 1 }
+        app.ignore(b.app.id); await app.waitForScan()
+        await runtime.releaseStore.finish(.success(())); await app.waitForUpdates()
+        #expect(await runtime.installed == [a.app.id])
+        #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .failed)
+        #expect(app.rows.first { $0.id == b.app.id }?.record.status == .ignored)
+        #expect(app.queuedStoreUpdates == 0 && app.canQuit)
+    }
+    @Test func failedVerificationReleasesQueuedStore() async throws {
+        let a = offer("A", storeID: 1), b = offer("B", storeID: 2)
+        let runtime = ExclusiveStoreTestRuntime([a,b]); await runtime.failVerificationOnce(a.app.id)
+        let app = await session(runtime)
+        app.requestUpdate(a.app.id); _ = try await runtime.firstStore.wait(); app.requestUpdate(b.app.id)
+        try await wait { app.queuedStoreUpdates == 1 }
+        await runtime.releaseStore.finish(.success(())); await app.waitForUpdates()
+        #expect(app.rows.first { $0.id == a.app.id }?.event?.phase == .failed)
+        #expect(app.rows.first { $0.id == b.app.id }?.event?.phase == .succeeded)
+        #expect(await runtime.installed == [a.app.id,b.app.id]); #expect(await runtime.maximumStores == 1)
+        #expect(app.queuedStoreUpdates == 0 && app.canQuit)
     }
 }
 

@@ -7,6 +7,7 @@ import LatestCore
     struct Permit { let id: UUID; let waited: Bool }
     private var owner: UUID?
     private var waiters: [(UUID, CheckedContinuation<Permit, any Error>)] = []
+    var waitingCount: Int { waiters.count }
     func acquire() async throws -> Permit {
         try Task.checkCancellation()
         let id = UUID()
@@ -80,6 +81,7 @@ import LatestCore
     private let scanLedger = ScanLedger()
     private var jobLedger = JobState()
     private let storeQueue = StoreUpdateQueue()
+    var queuedStoreUpdates: Int { storeQueue.waitingCount }
     private let runtime: any ApplicationRuntime
     private let monitoringInterval: Duration?
     private let fixtureRecords: (@MainActor @Sendable (Preferences) -> [AppRecord])?
