@@ -1,6 +1,6 @@
 # Native directories, volumes and scan ownership through the shared core
 
-Observed on 2026-10-11 at `1dd0240`, macOS 27.0.1 / Xcode 27.0 /
+Observed again on 2026-10-11 at `e75ed99`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. Four actual cases use ApplicationSession,
 LiveApplicationRuntime, real signed bundles, uniquely owned HFS+ disk images
 and controlled HTTPS. Each also passes in a separate restart process.

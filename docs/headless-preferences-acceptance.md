@@ -1,6 +1,6 @@
 # Native preferences through the shared session
 
-Observed again on 2026-10-11 at `1dd0240`, macOS 27.0.1 / Xcode 27.0 /
+Observed again on 2026-10-11 at `e75ed99`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. Two actual signed Sparkle instances share a bundle identifier
 and use real signed localhost HTTPS appcasts. Nine separate Swift processes
 exercise the production ApplicationSession and LiveApplicationRuntime without
@@ -38,7 +38,7 @@ Private logs and `result.json` live under
 `.build/native-install-tests/evidence/headless-preferences/{ignore-skip,channels}/`.
 JSON records revision, relevant source hashes, environment, canonical paths,
 command/PID/log and independently read preferences for every fresh process.
-Default runs execute 24 deterministic functions and skip eight native opt-ins;
+Default runs execute 25 deterministic functions and skip nine native opt-ins;
 those skips do not establish native acceptance. The project was managed through
 Xcode MCP; its serialized project objects/settings remain semantically identical.
 

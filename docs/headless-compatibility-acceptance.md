@@ -1,6 +1,6 @@
 # Direct native Sparkle compatibility without GUI automation
 
-Observed again on 2026-10-11 at `1dd0240`, macOS 27.0.1 / Xcode 27.0 / Swift 6.4,
+Observed again on 2026-10-11 at `e75ed99`, macOS 27.0.1 / Xcode 27.0 / Swift 6.4,
 arm64. The actual production ApplicationSession and LiveApplicationRuntime
 discover signed bundles and check real signed HTTPS appcasts. No injected
 provider result, installer or GUI automation participates.

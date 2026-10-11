@@ -32,7 +32,28 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
-## Current native directories, migration and regression run
+## Current broker client boundaries and regression run
+
+At `e75ed99` (driver `ead92fc`), [nine native client/resource cases](headless-broker-boundary-acceptance.md)
+pass with actual development-signed bundles and native Security/NSXPC APIs.
+The unavailable-service case exposed a SIGTRAP in the MainActor-inferred proxy
+error callback; nonisolated Sendable factories fix it and two actual failed
+connection attempts now finish cleanly. Malformed ID/identifier/path requests
+are rejected before host validation or XPC. Preflight hashes/signatures run off
+MainActor with cancellation, and first-tool cleanup is owned before verifier staging.
+
+These are client/resource checks; root peer authentication, staging ownership,
+handoff/disconnect/timeout and authentic Store installation remain open. Shared
+Store bulk serialization also remains open. All twenty-eight prior native
+scenarios pass again; thirty-seven current source maps match relevant files.
+Default tests execute 25 deterministic functions and skip nine native opt-ins;
+Xcode MCP runs 25 selected functions with zero failures/skips. Debug/Release
+warnings-as-errors, 84 invariants, fourteen Python tests and 74 localized keys pass.
+Logs: `.build/headless-broker-boundary-all.log`,
+`.build/headless-regression-after-broker.log`, `.build/broker-current-native-evidence.json`
+and `.build/broker-xcode-evidence.json` with its native xcresult.
+
+## Native directories, migration and regression run
 
 At `1dd0240`, [four native directory/volume cases](headless-directory-acceptance.md)
 and [two real legacy/JSON migration cases](headless-migration-acceptance.md) pass.

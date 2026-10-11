@@ -66,6 +66,12 @@ legacy reader with real isolated CFPreferences and JSON across five processes;
 only inventory/provider capabilities are scoped for isolation. Run
 `python3 scripts/native_headless_migration.py all`.
 
+The [native broker boundary suite](docs/headless-broker-boundary-acceptance.md)
+checks real signed host/tool rejection and missing-helper retries without GUI
+automation. It fixed an observed XPC callback isolation crash and uses the same
+existing signing identity. Run `python3 scripts/native_headless_broker_boundary.py all`.
+Privileged system approval, Store installation and batch serialization remain open.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and
