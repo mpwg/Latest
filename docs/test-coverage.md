@@ -1,6 +1,6 @@
 # Test coverage and evidence
 
-## Current headless application verification
+## Original headless extraction evidence (historical)
 
 At `78c4548`, 23 deterministic Swift test functions pass without GUI automation,
 including 12 application workflows. One additional native Sparkle test is

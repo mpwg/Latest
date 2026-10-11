@@ -51,7 +51,8 @@ swift build -c release -Xswiftc -warnings-as-errors
 ```
 
 `ApplicationTests` drives the actual production session with an injected runtime.
-It covers exact-instance selection/update, filtering, sanitized notes, major
+It covers exact-instance selection/update, filtering, sanitized notes, separated
+real subprocess stdout/stderr and aggregate diagnostics bounds, major
 cancellation/consent/stale consent, bulk eligibility, changed-instance preflight
 rejection, duplicate starts, failure/retry, callbacks from an obsolete job during
 a retry, download cancellation, installer handoff/quit protection, independent
@@ -75,7 +76,8 @@ transitively; no external project regeneration is needed.
 Current checked revision/results are recorded in acceptance.md. Local evidence
 lives under `.build/headless-*`; Xcode MCP also returns its unit-test xcresult.
 A successful headless test of an injected installer establishes workflow policy,
-not a real provider installation. [Four actual signed Sparkle outcomes](headless-native-acceptance.md) now pass
+not a real provider installation. [Five actual Homebrew outcomes](headless-homebrew-acceptance.md) and
+[four actual signed Sparkle outcomes](headless-native-acceptance.md) now pass
 through the shared runtime, including a separate process restart after each and
 retry without resetting the rejected bundle. Remaining native provider/lifecycle
 scopes must be rerun through the shared runtime after this extraction.
