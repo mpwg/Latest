@@ -1,10 +1,13 @@
 # Frozen release sources and rebuild evidence (L30 / #35)
 
-Implementation checked at `56a593b7c3e0cc2f983dea0089761b8804625ff6`, on
-2026-10-11, macOS 27.0.1 / Xcode 27.0 / Swift 6.4 / arm64. Main CI
-[38153797844](https://github.com/mpwg/Latest/actions/runs/38153797844) passed at
-this exact commit. The controlled archive rebuild also uses this exact revision,
-without a .git directory in the exported source.
+Archive rebuilt at `d62818494971831309b1329999c05145a96850f0`, on
+2026-10-12, macOS 27.0.1 / Xcode 27.0 / Swift 6.4 / Python 3.15 / arm64.
+The controlled archive rebuild uses this exact revision, without a .git
+directory in the exported source. Both CI jobs pass at
+[4422057 / 38178452561](https://github.com/mpwg/Latest/actions/runs/38178452561),
+with the same implementation/test sources; `d628184` changes CI assessment
+documentation only. Its separate CI run is
+[38179000708](https://github.com/mpwg/Latest/actions/runs/38179000708).
 
 ## Implemented boundary
 
@@ -33,9 +36,9 @@ python3 scripts/release.py --version 1.0.0 --prepare-source-only
 ```
 
 Retained directory:
-`.release/source-preparation/1.0.0-56a593b7c3e0-1skad2gn/`.
-Archive: **918862 bytes**, SHA-256
-`422b3a73f9149868db5820e5325823eba76c7d4b9acec7925be7b66ecdb01328`.
+`.release/source-preparation/1.0.0-d62818494971-nzdvgsd0/`.
+Archive: **974761 bytes**, SHA-256
+`019f3224c8db5b202f4423588720b3225df427e170d372bf146c2a03b8cc69e4`.
 It contains only committed source files; no .git, Vendor, .build or private
 .release data. The source manifest retains every source hash plus dependency
 pins and the two reviewed mas patches. A checksum-verified Sparkle ZIP cache was
@@ -48,11 +51,11 @@ Observed in that workspace:
 |---|---|
 | Bootstrap exported pins and reviewed patches | Sparkle distribution checksum and mas exact source revision verified; both applicable patches applied; actual mas compiled |
 | Release build with warnings as errors | passed |
-| Headless Swift tests | 23 deterministic functions passed; separate native opt-in skipped as intended |
+| Headless Swift tests | 35 regular functions passed; nine isolated native opt-ins explicitly skipped in the exported workspace |
 | Compiled production invariants | 84 passed |
 | Source/metadata and signed-feed regressions | 14 passed; notarization subprocesses are simulated in these contract tests only |
-| Localization and boundary validation | 74 English/German keys and project/source checks passed |
-| Controlled development packaging | Exact source commit above, version 1.0.0, build **1458** in the actual signed Info.plist |
+| Localization and boundary validation | 85 English/German keys and project/source checks passed |
+| Controlled development packaging | Exact source commit above, version 1.0.0, build **1506** in the actual signed Info.plist |
 | Licence and source comparison after packaging | All exported source hashes unchanged; GPL/Sparkle/mas notice bytes match their pinned input |
 | Real signature and executable | Deep/strict verification passed; actual Apple Development signer/team PZV43D6HWT and arm64 executable independently inspected |
 
@@ -62,11 +65,22 @@ application, read the production update seed or contact notarization. The 1.0.0
 label belongs to this controlled rebuild; it does not authorize a release version
 or publication.
 
+The first packaging attempt could not resolve the certificate's non-ASCII
+display name. The retained failed log records that result. Retrying with the
+existing certificate's SHA-1 identifier
+`F2DB5A6D5AF5BAD3F219ED222128B7B09956A2FA` succeeded; actual signature inspection
+confirmed the same signer and team. No certificate/key/trust was changed.
+
 The directory retains source.tar.gz, source-manifest.json, source-revision.txt,
 bootstrap.log, release-build.log, swift-tests.log, invariants.log,
-release-tests.log, validation.log, development-package.log and rebuild-result.json.
+release-tests.log, validation.log, development-package.log,
+development-package-retry.log, rebuild-progress.json and rebuild-result.json.
 The JSON records environment, exact revision/build/archive, observed flow, actual
 signer/architecture, unchanged-source/licence checks and all log hashes.
+
+The earlier `56a593b` rebuild remains retained separately as historical evidence.
+It used build1458 and 23 regular functions/74 translations; it does not replace
+the current shared-session/runtime/GUI source rebuild above.
 
 ## Criteria and remaining prerequisites
 

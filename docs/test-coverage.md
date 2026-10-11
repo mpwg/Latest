@@ -1,5 +1,17 @@
 # Test coverage and evidence
 
+## Current archive rebuild
+
+The [frozen-source rebuild](source-release-acceptance.md) at `d628184`, checked
+on 2026-10-12, uses a fresh extracted archive without .git or prebuilt Vendor
+dependencies. Actual bootstrap, warnings-as-errors Release compilation, 35
+regular Swift functions (nine explicit native skips), 84 invariants, fourteen
+release/feed tests and 85 translations pass. The development-signed bundle
+carries exact build1506/source metadata and arm64; source hashes and pinned
+licence bytes remain unchanged. The same approved certificate is selected by
+its fingerprint after a display-name lookup failure. This is archive-rebuild
+evidence, with production signing/notarization/self-update still open.
+
 ## Shared host self-update entry and current regression
 
 At `0d6728f`, four new [host self-update tests](shared-self-update-acceptance.md)

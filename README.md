@@ -26,6 +26,12 @@ Both jobs pass at [4422057](https://github.com/mpwg/Latest/actions/runs/38178452
 The platform-boundary document records commands, scope, retained evidence and
 the remaining dependencies for running shared Swift application tests on Linux.
 
+The [current frozen-source rebuild](docs/source-release-acceptance.md) at
+`d628184` passes fresh bootstrap, Release build, headless tests and controlled
+development packaging from the archive. Build1506 has exact source/licence
+metadata and reuses the existing approved signing certificate. Production
+Developer ID/notarization and self-update acceptance remain open.
+
 [Native interactive UI acceptance](docs/native-ui-acceptance.md) records actual
 English/German search and window shortcuts, selected-instance accessibility and
 large-text repairs. Five native selector keyboard cycles pass at `44c6958`,
