@@ -50,6 +50,12 @@ keychain profile, run:
 python3 scripts/release.py --version 1.0.0 --identity 'Developer ID Application: …' --team YOUR_TEAM_ID --notary-profile YOUR_PROFILE --first-release
 ```
 
+Use the exact complete name or SHA-1 fingerprint shown by
+`security find-identity -v -p codesigning`. Packaging resolves one valid existing
+certificate and signs by its fingerprint, including names with non-ASCII text.
+Missing, partial or ambiguous names are rejected before build/bundle replacement.
+This lookup only reads the keychain; it never creates or rotates a certificate.
+
 `SPARKLE_PRIVATE_KEY` supplies the base64 Ed25519 seed. The script refuses a key
 that differs from the committed public key. It packages and signs own identities,
 notarizes, staples, rebuilds the final archive, signs archive and feed, and exports

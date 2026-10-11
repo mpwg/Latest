@@ -1,5 +1,16 @@
 # Test coverage and evidence
 
+## Stable signing certificate selection
+
+[Signing identity acceptance](signing-identity-acceptance.md) at `fb17000`
+fixes the actual Unicode display-name codesign failure by resolving the same
+existing certificate to its fingerprint before packaging. Four new portable
+contracts pass; the full Python suite now has eighteen tests, with seventeen in
+Ubuntu CI and the real signer integration on macOS. Actual native named
+packaging and missing-identity rejection pass, preserving the generated bundle
+on rejection. All nine signed broker boundary cases were rerun; all 37 current
+provider/broker source maps match. No certificate/trust changes occur.
+
 ## Native production networking and cache
 
 [L23 network acceptance](native-network-acceptance.md) at `ecae2d0` runs thirteen

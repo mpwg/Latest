@@ -41,6 +41,7 @@ native wrapper build and controlled debug packaging.
 | Source boundaries, all current 85 EN/DE keys and placeholder parity | Ubuntu 24.04 | Python text/JSON validation, without Apple SDKs |
 | Config plist parsing, shared-scheme XML, Python script syntax | Ubuntu 24.04 | Standard-library parsers; actual Xcode project parsing remains on macOS |
 | Seven frozen-source/artifact-binding tests | Ubuntu 24.04 | Real disposable Git repositories, exports, symlinks, hashes and metadata; external signing/notary orchestration is explicitly mocked |
+| Four existing signing-identity selection tests | Ubuntu 24.04 | Pure certificate inventory parsing and mocked read-only lookup; Unicode and missing/ambiguous/partial inputs, without keychain access |
 | Six appcast-history/metadata rejection tests | Ubuntu 24.04 | Python XML/history contracts, without the native signing executable |
 | Actual Ed25519 signed-feed integration test | macOS 27 | Builds and runs the real LatestRelease tool; no substituted signer |
 | Swift application/invariant/native-adapter tests | macOS 27 | Current package includes Sparkle and LatestPlatform; tests include AppKit/native adapters |
@@ -54,7 +55,7 @@ Ubuntu CI uses Python 3.14 and Git, without Swift or Vendor bootstrap:
 
 ```sh
 python3 scripts/validate.py --portable
-python3 -m unittest discover -s Tests/ReleaseTests -p test_source_snapshot.py -v
+PYTHONPATH=Tests/ReleaseTests python3 -m unittest test_source_snapshot test_signing_identity -v
 PYTHONPATH=Tests/ReleaseTests python3 -m unittest test_appcast.AppcastHistoryTests -v
 ```
 
@@ -66,9 +67,10 @@ The macOS signing test is:
 PYTHONPATH=Tests/ReleaseTests python3 -m unittest test_appcast.AppcastSigningIntegrationTests -v
 ```
 
-Local full discovery remains unchanged in scope: fourteen Python tests, including
-the real signer integration. CI executes thirteen on Ubuntu and one on macOS.
-All fourteen passed locally after splitting the signing test into its own class.
+Local full discovery now runs eighteen Python tests, including the real signer
+integration. The workflow runs seventeen on Ubuntu and one on macOS. The actual
+Ubuntu results above precede the four selection tests; their native/portable
+proof is recorded in [signing-identity-acceptance.md](signing-identity-acceptance.md).
 
 ## Swift Linux assessment
 

@@ -18,7 +18,7 @@ policy; they do not import Sparkle. Four new headless tests cover capability,
 request ownership, active-job exclusion and retry. Production self-update still
 requires its separate native/signing acceptance.
 
-[CI platform boundaries](docs/ci-platforms.md) separate thirteen portable Python
+[CI platform boundaries](docs/ci-platforms.md) separate seventeen portable Python
 release tests and repository/localization checks onto Ubuntu 24.04. The native
 macOS job keeps the real signing integration, Swift tests, locked adapters,
 Xcode build and packaging, and starts only after the portable checks pass.
@@ -31,6 +31,11 @@ The [current frozen-source rebuild](docs/source-release-acceptance.md) at
 development packaging from the archive. Build1506 has exact source/licence
 metadata and reuses the existing approved signing certificate. Production
 Developer ID/notarization and self-update acceptance remain open.
+
+[Stable signing identity selection](docs/signing-identity-acceptance.md) resolves
+the exact full certificate name or fingerprint before packaging. Unicode names
+use the same existing certificate reliably; missing/ambiguous identities fail
+before modifying the generated bundle. No certificate or trust is changed.
 
 The [native networking acceptance](docs/native-network-acceptance.md) checks
 the production HTTPS/cache client without GUI automation: actual current
