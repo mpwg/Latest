@@ -30,7 +30,7 @@ def identity():
 def prepare():
     manifest = fixtures.manifest()
     fixtures.run(['python3', 'scripts/package_app.py', '--identity', identity(), '--team', manifest['fixtures'][0]['team'],
-                  '--public-key', manifest['publicKey']], cwd=REPO)
+                  '--public-key', manifest['publicKey']])
     destination = ROOT / 'evidence/headless-broker-boundary/baseline/Latest.app'
     if destination.exists(): shutil.rmtree(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
