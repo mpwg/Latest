@@ -89,10 +89,9 @@ def run_case(case):
         terminals = [event['phase'] for event in events if event['phase'] in ['succeeded', 'failed', 'cancelled']]
         if terminals != [expected] or any(event['path'] != str(selected) for event in events):
             raise ValueError('The exact target did not produce exactly one required terminal outcome.')
-        sources = list((REPO / 'Sources/LatestApplication').glob('*.swift')) + [
-            REPO / 'Sources/LatestPlatform/LiveApplicationRuntime.swift', REPO / 'Sources/LatestPlatform/SparkleProvider.swift',
-            REPO / 'Sources/LatestPlatform/Inventory.swift', REPO / 'Sources/LatestCore/Resolution.swift',
-            REPO / 'Tests/LatestCoreTests/CoreTests.swift', REPO / 'scripts/native_fixtures.py', Path(__file__)]
+        sources = [path for layer in ['LatestCore', 'LatestApplication', 'LatestPlatform', 'LatestProcess', 'LatestTrust', 'LatestContracts']
+                   for path in sorted((REPO / 'Sources' / layer).glob('*.swift'))]
+        sources += [REPO / 'Tests/LatestCoreTests/CoreTests.swift', REPO / 'scripts/native_fixtures.py', Path(__file__)]
         result = dict(case=case, sourceRevision=fixtures.run(['git', 'rev-parse', 'HEAD'], capture=True),
                       sourceSHA256={str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sources},
                       environment=dict(macOS=fixtures.run(['sw_vers', '-productVersion'], capture=True),

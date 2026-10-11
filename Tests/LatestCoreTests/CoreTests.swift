@@ -445,7 +445,8 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
             if mode == "swap" { #expect(app.errorMessage.contains("selected app changed")) }
             if mode == "retry" {
                 #expect(row.record.app.version.display == "1.0.0")
-                #expect(app.errorMessage.contains("SHA256 mismatch"))
+                #expect(app.errorMessage.lowercased().contains("checksum") || app.errorMessage.contains("SHA256 mismatch"))
+                #expect(app.errorMessage.contains(String(repeating: "0", count: 64)))
                 print("Actual failed upgrade: \(app.errorMessage)")
                 try await nativeHomebrewCheckpoint("retry", root: root)
                 app.showingError = false; app.refresh(); await app.waitForScan()

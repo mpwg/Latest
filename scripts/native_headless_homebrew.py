@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 import plistlib
 import shutil
 import signal
@@ -55,11 +56,11 @@ def execute(arguments, environment, log_path, coordinate=None):
         finally:
             if process.poll() is None:
                 os_group = process.pid
-                try: __import__('os').killpg(os_group, signal.SIGTERM)
+                try: os.killpg(os_group, signal.SIGTERM)
                 except ProcessLookupError: pass
                 try: process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
-                    try: __import__('os').killpg(os_group, signal.SIGKILL)
+                    try: os.killpg(os_group, signal.SIGKILL)
                     except ProcessLookupError: pass
                     process.wait()
     text = log_path.read_text()
