@@ -81,7 +81,7 @@ private final class PackageDescription: NSObject, XMLParserDelegate {
             let payload = try await runner.run(executable: URL(fileURLWithPath: "/usr/sbin/pkgutil"), arguments: ["--payload-files", package.path], environment: environment)
             guard payload.exitCode == 0 else { throw LatestFailure.rejected("Cannot enumerate package payload.") }
             try PackagePolicy.validate(bundleIDs: description.bundleIDs, installLocations: description.locations,
-                                       payloadPaths: payload.text.split(whereSeparator: \.isNewline).map(String.init),
+                                       payloadPaths: payload.stdoutText.split(whereSeparator: \.isNewline).map(String.init),
                                        containsScripts: description.containsScripts, claim: claim)
             // Existing symlinks must not redirect extraction outside the selected bundle.
             if let existing = FileManager.default.enumerator(at: URL(fileURLWithPath: claim.path), includingPropertiesForKeys: [.isSymbolicLinkKey]) {

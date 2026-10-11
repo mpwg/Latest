@@ -5,10 +5,13 @@ import LatestCore
 public struct CommandResult: Sendable {
     public let exitCode: Int32
     public let output: Data
-    public var text: String { String(decoding: output, as: UTF8.self) }
+    public let errorOutput: Data
+    public var stdoutText: String { String(decoding: output, as: UTF8.self) }
+    public var stderrText: String { String(decoding: errorOutput, as: UTF8.self) }
+    public var text: String { stdoutText + (errorOutput.isEmpty ? "" : "\n" + stderrText) }
 }
 
-/// Each invocation owns a process group, nonblocking output pipe and bounded lifetime.
+/// Each invocation owns a process group, separate nonblocking output pipes and bounded lifetime.
 public actor CommandRunner {
     public init() {}
 
@@ -22,15 +25,21 @@ public actor CommandRunner {
         guard pipe(&descriptors) == 0 else { throw LatestFailure.process("Could not create process output pipe.") }
         let input = descriptors[0], output = descriptors[1]
         defer { close(input); close(output) }
+        var errorDescriptors: [Int32] = [0, 0]
+        guard pipe(&errorDescriptors) == 0 else { throw LatestFailure.process("Could not create process diagnostics pipe.") }
+        let errorInput = errorDescriptors[0], errorOutput = errorDescriptors[1]
+        defer { close(errorInput); close(errorOutput) }
         var actions: posix_spawn_file_actions_t?
         var attributes: posix_spawnattr_t?
         posix_spawn_file_actions_init(&actions); posix_spawnattr_init(&attributes)
         defer { posix_spawn_file_actions_destroy(&actions); posix_spawnattr_destroy(&attributes) }
         posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0)
         posix_spawn_file_actions_adddup2(&actions, output, STDOUT_FILENO)
-        posix_spawn_file_actions_adddup2(&actions, output, STDERR_FILENO)
+        posix_spawn_file_actions_adddup2(&actions, errorOutput, STDERR_FILENO)
         posix_spawn_file_actions_addclose(&actions, input)
         posix_spawn_file_actions_addclose(&actions, output)
+        posix_spawn_file_actions_addclose(&actions, errorInput)
+        posix_spawn_file_actions_addclose(&actions, errorOutput)
         posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_CLOEXEC_DEFAULT))
         posix_spawnattr_setpgroup(&attributes, 0)
         let argv = ([executable.path] + arguments).map { strdup($0) } + [nil]
@@ -45,6 +54,7 @@ public actor CommandRunner {
         }
         guard result == 0 else { throw LatestFailure.process("Could not start \(executable.lastPathComponent): \(result).") }
         _ = fcntl(input, F_SETFL, fcntl(input, F_GETFL) | O_NONBLOCK)
+        _ = fcntl(errorInput, F_SETFL, fcntl(errorInput, F_GETFL) | O_NONBLOCK)
         var reaped = false
         defer {
             if !reaped {
@@ -54,18 +64,20 @@ public actor CommandRunner {
                 while waitpid(pid, &ignored, 0) < 0 && errno == EINTR {}
             }
         }
-        var data = Data()
+        var data = Data(), diagnostics = Data()
         let deadline = ContinuousClock.now.advanced(by: timeout)
         var status: Int32 = 0
         while true {
             try Task.checkCancellation()
-            try Self.drain(input, into: &data, limit: maximumBytes)
+            try Self.drain(input, into: &data, limit: maximumBytes - diagnostics.count)
+            try Self.drain(errorInput, into: &diagnostics, limit: maximumBytes - data.count)
             let waited = waitpid(pid, &status, WNOHANG)
             if waited == pid {
                 reaped = true
-                try Self.drain(input, into: &data, limit: maximumBytes)
+                try Self.drain(input, into: &data, limit: maximumBytes - diagnostics.count)
+                try Self.drain(errorInput, into: &diagnostics, limit: maximumBytes - data.count)
                 let signal = status & 0x7f
-                return CommandResult(exitCode: signal == 0 ? (status >> 8) & 0xff : 128 + signal, output: data)
+                return CommandResult(exitCode: signal == 0 ? (status >> 8) & 0xff : 128 + signal, output: data, errorOutput: diagnostics)
             }
             if waited < 0 && errno != EINTR { throw LatestFailure.process("Lost process completion.") }
             if ContinuousClock.now >= deadline { throw LatestFailure.timeout }

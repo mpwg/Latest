@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import LatestProcess
 @testable import LatestCore
 @testable import LatestPlatform
 
@@ -43,6 +44,25 @@ import Testing
     @Test func caskSchemaDriftIsContained() throws {
         let data = Data(#"{"casks":[{"token":"valid","version":"1","artifacts":[]},{"token":"empty-os","version":"2","artifacts":[],"depends_on":{"macos":{">=":[""]}}}]}"#.utf8)
         #expect(try Metadata.casks(data).count == 2)
+    }
+    @Test func structuredProcessOutputRemainsSeparateFromDiagnostics() async throws {
+        let runner = CommandRunner()
+        let program = "import sys; sys.stderr.write('Diagnostic warning\\n'); sys.stdout.write('{\"ok\":true}'); sys.stderr.write('Follow-up warning\\n')"
+        let result = try await runner.run(executable: URL(fileURLWithPath: "/usr/bin/python3"),
+            arguments: ["-c", program], environment: CommandRunner.userEnvironment())
+        #expect(result.exitCode == 0)
+        let value = try JSONDecoder().decode([String: Bool].self, from: result.output)
+        #expect(value["ok"] == true)
+        #expect(result.stderrText.contains("Diagnostic warning"))
+        #expect(result.text.contains("Follow-up warning"))
+        let flood = "import sys,time; sys.stderr.write('x'*8192); sys.stderr.flush(); time.sleep(60)"
+        do {
+            _ = try await runner.run(executable: URL(fileURLWithPath: "/usr/bin/python3"), arguments: ["-c", flood],
+                environment: CommandRunner.userEnvironment(), timeout: .seconds(5), maximumBytes: 1024)
+            Issue.record("An oversized diagnostic stream was accepted.")
+        } catch let error as LatestFailure {
+            #expect(error == .process("The process output exceeds the size limit."))
+        }
     }
     @Test func packageCannotWriteOutsideSelectedApp() {
         let claim = AppStoreClaim(storeID: 123, bundleID: "org.example.Test", path: "/Applications/Test.app")
@@ -356,6 +376,99 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
         #expect(row.record.app.version.display == (expected == "succeeded" ? "1.1.0" : "1.0.0"))
         #expect(app.canQuit)
 
+    }
+
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_HOMEBREW"] != nil,
+                   "Requires explicitly prepared isolated Homebrew and signed disposable apps."))
+    func realHomebrewRuntimeWithoutGUIAutomation() async throws {
+        let repository = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let root = repository.appendingPathComponent(".build/native-install-tests")
+        let mode = try #require(ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_HOMEBREW"])
+        try #require(["valid", "loss", "swap", "catalogue", "retry", "checked"].contains(mode))
+        let unmanaged = mode == "catalogue" || ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_HOMEBREW_TARGET"] == "unmanaged"
+        let appURL = root.appendingPathComponent(unmanaged
+            ? "applications/Unmanaged/Latest Homebrew Fixture.app" : "applications/Latest Homebrew Fixture.app")
+        let before = try #require(AppInventory.snapshot(at: appURL))
+        try #require(before.bundleID == "io.github.mpwg.Latest.NativeFixture.Homebrew" && before.signatureTeam != nil)
+        if mode != "checked" { try #require(before.version.display == "1.0.0") }
+        let state = root.appendingPathComponent("preferences/headless-homebrew")
+        let preferencesURL = state.appendingPathComponent("preferences.json")
+        var preferences = Preferences(directories: [.init(path: root.appendingPathComponent("applications").path)])
+        preferences.showCatalogueHints = mode == "catalogue"
+        if mode != "checked" { try await PreferencesStore(url: preferencesURL).save(preferences) }
+        let catalogueURL = ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_CATALOGUE"].flatMap(URL.init(string:))
+        let runtime = LiveApplicationRuntime(cacheDirectory: state.appendingPathComponent("Cache"),
+            homebrewExecutable: root.appendingPathComponent("homebrew/bin/brew"), catalogueURL: catalogueURL)
+        let app = ApplicationSession(runtime: runtime, preferencesURL: preferencesURL,
+            diagnosticURL: state.appendingPathComponent("diagnostics.log"), monitoringInterval: nil,
+            jobJournal: state.appendingPathComponent("job-events.jsonl"))
+        await app.start(); await app.waitForScan()
+        let row = try #require(app.rows.first { $0.id == before.id })
+        print("Real Homebrew mode \(mode), checked status \(row.record.status), reason \(row.record.reason ?? "none")")
+        app.selectedID = before.id
+        if mode == "checked" {
+            let version = try #require(ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_EXPECTED_VERSION"])
+            #expect(row.record.app.version.display == version)
+            let status = try #require(ProcessInfo.processInfo.environment["LATEST_HEADLESS_NATIVE_EXPECTED_STATUS"])
+            #expect(row.record.status.rawValue == status)
+            #expect(app.activeUpdates == 0); #expect(app.canQuit)
+            return
+        }
+        if mode == "catalogue" {
+            #expect(row.record.candidate?.source == .catalogue)
+            #expect(row.record.status == .unknown)
+            #expect(row.record.candidate?.authoritative == false)
+            app.sourceFilter = .catalogue
+            #expect(app.visibleRows.contains { $0.id == before.id })
+            #expect(!app.canUpdate(before.id)); app.requestUpdate(before.id)
+            #expect(app.activeUpdates == 0); #expect(row.event == nil)
+            return
+        }
+        try #require(row.record.status == .available && row.record.candidate?.source == .homebrew)
+        if mode == "loss" || mode == "swap" {
+            try await nativeHomebrewCheckpoint(mode, root: root)
+            let changed = try #require(AppInventory.snapshot(at: appURL))
+            if mode == "loss" { try #require(changed.fingerprint == before.fingerprint) }
+            else { try #require(changed.fingerprint != before.fingerprint) }
+        }
+        app.requestUpdate(before.id); app.requestUpdate(before.id)
+        #expect(app.activeUpdates == 1); #expect(!app.canQuit)
+        await app.waitForUpdates(); await app.flushPreferences()
+        if mode == "valid" {
+            #expect(row.event?.phase == .succeeded)
+            #expect(row.record.app.version.display == "1.1.0")
+            #expect(row.record.status == .current)
+        } else {
+            try #require(row.event?.phase == .failed)
+            #expect(app.showingError)
+            if mode == "loss" { #expect(row.record.status == .unknown) }
+            if mode == "swap" { #expect(app.errorMessage.contains("selected app changed")) }
+            if mode == "retry" {
+                #expect(row.record.app.version.display == "1.0.0")
+                #expect(app.errorMessage.contains("SHA256 mismatch"))
+                print("Actual failed upgrade: \(app.errorMessage)")
+                try await nativeHomebrewCheckpoint("retry", root: root)
+                app.showingError = false; app.refresh(); await app.waitForScan()
+                try #require(app.canUpdate(before.id))
+                app.requestUpdate(before.id); await app.waitForUpdates()
+                #expect(row.event?.phase == .succeeded)
+                #expect(row.record.app.version.display == "1.1.0")
+                #expect(row.record.status == .current)
+            }
+        }
+        #expect(app.canQuit)
+    }
+
+    private func nativeHomebrewCheckpoint(_ phase: String, root: URL) async throws {
+        let directory = root.appendingPathComponent("evidence/headless-homebrew/coordination")
+        let ready = directory.appendingPathComponent(phase + "-ready")
+        let released = directory.appendingPathComponent(phase + "-released")
+        try Data("Actual production session reached the native checkpoint.\n".utf8).write(to: ready, options: .atomic)
+        let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+        while !FileManager.default.fileExists(atPath: released.path) && ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        try #require(FileManager.default.fileExists(atPath: released.path), "The real external fixture operation did not complete.")
     }
 
 }

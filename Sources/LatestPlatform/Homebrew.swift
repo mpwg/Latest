@@ -17,11 +17,11 @@ public actor HomebrewProvider: UpdateProvider {
         if Date().timeIntervalSince(loadedAt) < 30 { return }
         let environment = CommandRunner.userEnvironment()
         let prefixResult = try await runner.run(executable: executable, arguments: ["--prefix"], environment: environment)
-        guard prefixResult.exitCode == 0, prefixResult.text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("/") else { throw LatestFailure.process("Cannot determine the Homebrew prefix.") }
+        guard prefixResult.exitCode == 0, prefixResult.stdoutText.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("/") else { throw LatestFailure.process("Cannot determine the Homebrew prefix.") }
         let result = try await runner.run(executable: executable, arguments: ["info", "--cask", "--json=v2", "--installed"], environment: environment)
         guard result.exitCode == 0 else { throw LatestFailure.process("Cannot read installed Homebrew casks.") }
         entries = try Metadata.casks(result.output)
-        prefix = URL(fileURLWithPath: prefixResult.text.trimmingCharacters(in: .whitespacesAndNewlines))
+        prefix = URL(fileURLWithPath: prefixResult.stdoutText.trimmingCharacters(in: .whitespacesAndNewlines))
         loadedAt = Date()
     }
     public func check(_ app: AppSnapshot, context: CheckContext) async throws -> UpdateCandidate? {
