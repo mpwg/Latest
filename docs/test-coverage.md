@@ -22,6 +22,19 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
+## Current direct native Homebrew verification
+
+[Five actual Homebrew cases](headless-homebrew-acceptance.md) pass at 01939db
+through the production session/runtime, followed by five new-process restarts.
+The unchanged-identity ownership-loss case reaches fresh provider validation;
+the changed-instance case fails preflight before any upgrade process. Real
+checksum failure/retry and HTTPS catalogue denial preserve controls and the
+ordinary registry/Ruby runtime. The new real process-stream test ensures
+successful stdout JSON survives unrelated stderr warnings while diagnostics
+retain the aggregate output limit. Default Swift tests execute 24 functions and
+skip only the two explicit native opt-ins. The four signed native Sparkle cases
+also pass again after this shared process-adapter change.
+
 ## Frozen release source verification
 
 [source-release-acceptance.md](source-release-acceptance.md) records the actual

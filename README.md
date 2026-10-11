@@ -20,6 +20,14 @@ Run `python3 scripts/native_headless_sparkle.py all` after preparing the fixture
 and compiling the opt-in Swift test. Its fixture certificate is reused until
 natural expiry, without changing trust between test runs.
 
+The [direct native Homebrew suite](docs/headless-homebrew-acceptance.md) checks
+real targeted upgrade, lost ownership with unchanged app identity, changed
+selected instance, nonauthorizing HTTPS catalogue hints and real checksum
+failure/retry. Each case restarts in a new process and preserves other apps and
+the normal Homebrew registry/runtime. Run
+`python3 scripts/native_headless_homebrew.py all` after compiling the opt-in test.
+Structured subprocess output remains separate from bounded diagnostics.
+
 The [L06 native Sparkle lifecycle suite](docs/sparkle-lifecycle-acceptance.md)
 checks actual download cancellation, failure, installer handoff and successful
 retry/restart. The adapter rejects cancellation from extraction onward and
