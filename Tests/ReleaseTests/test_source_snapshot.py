@@ -124,6 +124,9 @@ class FrozenSourceTests(unittest.TestCase):
         for build, commit_id in [(None, None), ('10', None), (None, revision), ('01', revision), ('10', 'HEAD')]:
             with self.subTest(build=build, revision=commit_id), self.assertRaises(ValueError):
                 package_app.package_identity('release', build, commit_id)
+        exported = self.root / '.release/export'; exported.mkdir(parents=True)
+        with patch.object(package_app, 'ROOT', exported), self.assertRaisesRegex(ValueError, 'ancestor Git history'):
+            package_app.package_identity('debug', None, None)
         app = bundle(Path(self.temporary.name) / 'Latest.app', revision=revision, build='10')
         verify_bundle(app, version='1.0.0', build='10', revision=revision)
         for values in [dict(version='2.0.0', build='10', revision=revision),

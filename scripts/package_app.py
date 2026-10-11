@@ -22,6 +22,9 @@ def package_identity(configuration, build_number, source_revision):
     if build_number is None:
         if configuration == 'release':
             raise ValueError('Use release.py to package a production release from its frozen source export.')
+        top = Path(run(['git', 'rev-parse', '--show-toplevel'], capture=True)).resolve()
+        if top != ROOT.resolve():
+            raise ValueError('Exported source requires explicit build/source metadata; ancestor Git history is not its identity.')
         source_revision = run(['git', 'rev-parse', '--verify', 'HEAD^{commit}'], capture=True)
         build_number = run(['git', 'rev-list', '--count', source_revision], capture=True)
     if not re.fullmatch(r'[1-9][0-9]*', build_number) or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', source_revision):
