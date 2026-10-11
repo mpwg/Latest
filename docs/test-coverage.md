@@ -32,7 +32,25 @@ extraction. Their result bundles remain useful, but fresh final acceptance of
 remaining scenarios must use the shared API or a separate manual native check.
 
 
-## Current broker client boundaries and regression run
+## Current shared Store queue and regression run
+
+At `ead2e13`, [six exclusive Store workflow tests](store-queue-acceptance.md)
+pass through the production session with injected capabilities. Waiting ownership
+spans verification, actual registered waiters cancel before the active job ends,
+failure/verification failure release the next job, changed/ignored queued offers
+fail before installation and other providers continue independently. These
+workflow tests do not establish actual privileged Store installation.
+
+All thirty-seven prior native scenarios pass again at this revision, and every
+relevant result source hash matches. Default tests execute 31 deterministic
+functions and skip nine native opt-ins; Xcode MCP selects 31 functions with zero
+failures/skips. Warnings-as-errors Debug/Release, 84 invariants, fourteen Python
+tests and 74 localized keys pass. Evidence includes `.build/store-queue-tests.log`,
+`.build/headless-regression-after-store-queue.log`,
+`.build/headless-broker-boundary-after-store-queue.log`,
+`.build/store-queue-native-evidence.json`, and `.build/store-queue-xcode-evidence.json`.
+
+## Broker client boundaries and regression run
 
 At `e75ed99` (driver `ead92fc`), [nine native client/resource cases](headless-broker-boundary-acceptance.md)
 pass with actual development-signed bundles and native Security/NSXPC APIs.

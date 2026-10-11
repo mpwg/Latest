@@ -1,7 +1,7 @@
 # Native broker client and signed resource boundaries
 
-Application/runtime code checked at `e75ed99`, fixture/evidence driver at
-`ead92fc`, 2026-10-11, macOS 27.0.1 / Xcode 27.0 / Swift 6.4 / arm64,
+Application/runtime/driver checked again at `ead2e13`, 2026-10-11,
+macOS 27.0.1 / Xcode 27.0 / Swift 6.4 / arm64,
 UID 501. All relevant source hashes match the current files. Nine actual native
 cases use the existing Apple Development identity/team PZV43D6HWT; no certificate
 is created, rotated or retrusted. No GUI automation or privileged service
@@ -58,9 +58,9 @@ These cases do not establish privileged peer authentication, root tool execution
 timeout/disconnect after installer handoff, authentic Store receipt/package
 installation or SMAppService approval. Those require the signed service's native
 system approval and the still unavailable controlled authentic Store target.
-Concurrent App Store bulk requests also need shared-session serialization because
-the broker intentionally owns one update at a time; that implementation/check
-remains open. Production signing/notarization/self-update and manual UI remain
+The [shared Store queue](store-queue-acceptance.md) now serializes application jobs
+because the broker owns one update at a time; six injected workflow tests verify
+that policy. Actual privileged Store bulk remains open. Production signing/notarization/self-update and manual UI remain
 separate release criteria.
 
 Private evidence:
@@ -68,7 +68,7 @@ Private evidence:
 contains the signed/mutated bundle, `test.log` and `result.json`, with revision,
 source hashes, actual signed host architecture/team, command/PID, service absence
 observation and unchanged-control result. The baseline is in `baseline/Latest.app`.
-Default tests execute 25 deterministic functions and skip nine native opt-ins;
+Default tests now execute 31 deterministic functions and skip nine native opt-ins;
 the skips do not count as native evidence. Xcode MCP runs 25 selected functions
 with zero failures/skips. All 28 previous native scenarios also pass again at
 `e75ed99` after the trust/client changes.

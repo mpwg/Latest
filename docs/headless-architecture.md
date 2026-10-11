@@ -94,7 +94,10 @@ owned disk images and the production monitor. The [shared legacy reader](headles
 uses actual CFPreferences/JSON across five processes with scoped discovery.
 The [native broker client boundaries](headless-broker-boundary-acceptance.md)
 check real signed resources and absent-service XPC retries. Privileged service
-approval/installation and Store batch serialization remain open.
+approval/installation remain open. The [shared Store queue](store-queue-acceptance.md)
+serializes Store jobs through verification and supports queued cancellation,
+fresh offer checks and other-provider parallelism. Actual Store installation
+still needs its separate native prerequisites.
 Remaining native provider/platform
 scopes must be rerun through the shared runtime after this extraction.
 Manual keyboard, VoiceOver, large-text and English/German view acceptance remain

@@ -1,6 +1,6 @@
 # Actual native legacy preferences and JSON migration
 
-Observed again on 2026-10-11 at `e75ed99`, macOS 27.0.1 / Xcode 27.0 /
+Observed again on 2026-10-11 at `ead2e13`, macOS 27.0.1 / Xcode 27.0 /
 Swift 6.4 / arm64. The production `LegacyPreferences.read` now lives in
 LatestCore; the GUI composition root calls the same reader available to a
 future CLI. Reading/type conversion no longer needs duplication in a front end.
