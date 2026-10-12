@@ -16,7 +16,21 @@ frames. Both locales pass major warning/cancel with zero archive requests/jobs
 and unchanged bytes. Native pointer text selection, sanitized notes, zero
 pre-action/trap requests and the explicit original-link → real Safari URL/heading
 pass at e533. Native quit/private cleanup and normal-default preservation pass.
-L22 is accepted; VoiceOver and full keyboard flows remain open.
+L22 is accepted; VoiceOver remains open.
+
+## Current keyboard-only control and dialog checks
+
+The [native keyboard record](native-ui-acceptance.md) at `e533199` proves exact
+instance/source/channel focus and keyboard commands, settings/chooser cancellation,
+major Escape cancellation and actual503 failures through selected Update/retry
+and Update All. Exactly three failed jobs affect only Secondary; all four app
+byte maps/signatures and normal defaults remain unchanged, private state and
+Keyboard Navigation are restored and the controlled process quits. Editable
+search Cmd-A/replacement works without clipboard use. A separate e533 instance
+proves actual long-note keyboard PageDown reading through visible END/value1 and
+PageUp restoration with individual observations. L20 is accepted; static-note
+keyboard selection is not claimed. VoiceOver and privileged helper execution
+remain separate gates.
 
 ## Current native German lifecycle after unlock
 
@@ -27,7 +41,7 @@ download/install close/quit guards, real503 diagnosis and valid signed retry at
 accompany the exact stopped/registered fixture handoff. Cleanup restores private
 feed/preferences/journal and preserves normal defaults. At `557597f`, clearer
 Finder diagnosis labels pass actual German/English503 interaction. Spoken
-VoiceOver and full keyboard-only flows remain open.
+VoiceOver remains open.
 
 ## Stable signing certificate selection
 

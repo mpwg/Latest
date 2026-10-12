@@ -99,8 +99,64 @@ text; the actual native drag selection is the acceptance evidence.
 
 L22 is accepted for these controlled native scopes. Interactive height clamping
 is not inferred from owner-authorized AX sizing and is not a criterion of L22.
-Spoken VoiceOver and the full keyboard-only flow remain open. The historical
-sections below retain their then-current scopes.
+Spoken VoiceOver remains open. Current L20 keyboard evidence below is distinct
+from that required reader/speech proof. Historical sections retain their scopes.
+
+## Current keyboard-only native control and dialog proof
+
+On 2026-10-12, signed `e533199` English PID67835 runs with native Keyboard
+Navigation temporarily enabled. All input inside Latest uses keys, without mouse
+fallback. Native arrows select the exact primary; Cmd-F/search/Escape and source
+Space/arrows/Return change4→2→4 rows. Cmd-R refreshes. Stable→Beta and back to
+Stable survive Settings; General/Locations, Show Current toggle and text slider
+160→157→160 work. Settings Escape/Cmd-W dismiss. Update/Open/Reveal/helper
+controls have explicit native keyboard focus; Open/Reveal/helper are not invoked.
+Add Folder opens the real native chooser by Space, and Escape cancels without
+changing directories, returning focus to Add Folder.
+
+Primary Update/Space opens the major warning; Escape cancels with Update focus
+restored and zero jobs/download requests. With a real signed minor feed, selected
+Secondary Update and retry produce two actual HTTP503 failures; toolbar Update
+All produces a third for exactly that one eligible instance. OK initially has
+focus, Return/Escape dismiss. Error dismissal returns visible Source focus;
+Tab×4 reaches Update again without a mouse. This behavior is recorded, rather
+than assuming focus automatically returns to the initiating button. Cmd-A visibly
+selects editable search text, replacement typing and Escape clear it, without
+using the clipboard.
+
+Independent evidence proves exactly three failed Secondary-only jobs/requests,
+no successful installation, all four app byte maps/strict signatures unchanged,
+restored private feed/preferences/journal, unchanged normal defaults, Keyboard
+Navigation restored to mode0 and native quit. The owned launcher's transient
+zombie is reaped after the UI has quit. VoiceOver remains off without being
+toggled. No window resize occurs in this scope; no new final CG frame reading is
+claimed. Proof: `evidence/native-ui-keyboard/current-e533-en/`, including exact
+`keyboard-sequences.json`, numbered AX/focus screenshots, source map and
+`independent-result.json`.
+
+A separate signed `e533199` English instance (PID72274) loads the40,950-character
+feed at160%. With Stable channel focus, individually held300 ms PageDown keys,
+each followed by a fresh native capture, reach scrollbar value1 and the visible
+paragraphs197–200/END sentinel. PageUp returns to the start. Open App focus does
+not scroll the notes; the functioning detail/channel focus path is recorded.
+Rapid key batches coalesce and are not evidence of multiple page transitions.
+Actual text is readable throughout the observed pages. Native pointer text
+selection is accepted in L22; no keyboard selection of static notes is claimed.
+Editable search text selection/editing above supplies the tested text actions.
+Proof: `evidence/native-ui-keyboard/long-e533-en/`, with per-page scroll values,
+AX/pixels, restored native state and independent zero-job/byte/default checks.
+
+| L20 criterion | Status | Current evidence |
+|---|---|---|
+| Focus order, search, source/app selection and update actions without mouse | passed | Native keyboard-only exact instance/source/channel/selected Update/Update All sequences and visible focus/AX |
+| Settings, confirmations/error dialogs and useful returned focus | passed | General/Locations/toggles/font, chooser Escape, major Escape, actual503 Return/Escape and reachable Source→Update path |
+| Cmd-R/Cmd-comma/Cmd-Q and text actions without unintended installation | passed | Real refresh/settings/native quit, search Cmd-A/editing, long-note PageDown/PageUp reading; zero major jobs and only three failed Secondary jobs |
+| Revision/environment/results and repairs recorded | passed | e533 source map, exact key sequences, native captures, independent cleanup and current README/test matrix |
+
+L20 is accepted for the native keyboard scopes above, alongside the retained
+German selector/shortcut evidence. Privileged helper installation remains a
+separate gate; only helper focus is exercised here. Spoken VoiceOver, authentic
+Store workflows and production release gates remain open.
 
 ## Baseline observed on 2026-10-11
 

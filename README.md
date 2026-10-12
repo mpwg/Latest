@@ -49,7 +49,7 @@ English/German search and window shortcuts, selected-instance accessibility and
 large-text repairs. Five native selector keyboard cycles pass at `44c6958`,
 including real refresh without losing arrow focus; only the selected primary's
 channel changes in persisted JSON. Native source/channel/settings controls
-forward shared bindings. Full VoiceOver and keyboard-only acceptance remain separate and open.
+forward shared bindings. VoiceOver remains open; current native keyboard scopes are recorded below.
 
 Current German layout checks load40,950-character real signed-feed notes and
 reach their end at100%/160% in prescribed small main/settings frames. Narrow
@@ -59,8 +59,7 @@ interaction at `e533199`; English prescribed small frames also pass100%/160%.
 Both locales pass real major warning/cancel with zero archive requests/jobs and
 unchanged fixture bytes. Native notes selection and sanitized plain-text rendering
 also pass; only the explicit original-notes action opens the actual browser, with
-zero active-markup requests. L22 is accepted; VoiceOver and full keyboard-only
-flows remain open.
+zero active-markup requests. L22 is accepted; VoiceOver remains a separate open gate.
 
 [Native interactive lifecycle acceptance](docs/native-ui-lifecycle-acceptance.md)
 adds actual English cancellation, HTTP503 failure, valid retry and installer
@@ -69,7 +68,16 @@ reaches signed1.1 arm64 while three other instances retain identical bytes.
 After owner unlock, current German restart/cancellation/progress AX, real503,
 diagnosis and guarded handoff/retry also pass at `c1febdc`, with signed1.1 and
 unchanged controls. The clarified diagnosis label at `557597f` is verified in
-both locales. VoiceOver and full keyboard-only flows remain separate open gates.
+both locales. VoiceOver remains a separate open gate.
+
+Current keyboard-only checks at `e533199` cover exact app/source/channel
+selection, settings and chooser cancellation, major consent, two selected-update
+HTTP503 failures and a third through Update All. Editable search selection works;
+all app bytes/signatures/defaults remain unchanged and system keyboard navigation
+is restored. A separate long-note run reaches the visible40k END by individually
+observed PageDown keys and returns with PageUp. L20 is accepted; static-note
+keyboard selection is not claimed, while editable search text actions and L22
+pointer selection pass. See the [native keyboard record](docs/native-ui-acceptance.md).
 
 The current lifecycle record also measures three increasing native progress
 values across real staged HTTPS bytes at `e533199`, followed by exactly one
