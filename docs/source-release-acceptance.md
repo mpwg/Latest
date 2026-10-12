@@ -1,6 +1,39 @@
 # Frozen release sources and rebuild evidence (L30 / #35)
 
-## Current source rebuild after native UI acceptance
+## Current application-source rebuild
+
+On 2026-10-12, clean `3b58be5289ac50d422cc31294ec6385278944efc` was exported
+and freshly rebuilt on macOS 27.0.1 / Xcode 27 / Swift 6.4 / Python 3.15 / arm64.
+This includes the shared launch-policy and observation fixes. Retained directory:
+`.release/source-preparation/1.0.0-3b58be5289ac-74174azu/`.
+Source archive: **997111 bytes**, SHA-256
+`c02df570c567fc57fc2211ba7104a0a81b8be22b4eade0db47987639c9c2b475`.
+
+The seven exact commands and hashed logs in `rebuild-result.json` all pass:
+fresh bootstrap, warnings-as-errors Release build, 38 regular Swift functions
+with nine default native skips, 84 compiled invariants, 18 Python contracts,
+85 EN/DE keys/source/project checks and development packaging. Only the verified
+Sparkle ZIP distribution cache was copied; mas and pinned dependencies were
+rebuilt from fresh sources. Deep/strict signature, actual arm64, unchanged
+exported source/checkout, pinned licence bytes and exact source metadata pass.
+The existing approved development certificate signs controlled version 1.0.0,
+build **1525**, team PZV43D6HWT. No certificate or trust is changed.
+
+The actual packaged Release binary was also started with the unavailable
+`--native-install-test-directory` argument. It exits 1 with the intended rejection
+message in 0.42 seconds; normal support state remains absent and normal defaults
+remain unchanged. No GUI automation is involved. Exact argv, binary SHA-256,
+revision, archive and environment are retained in
+`evidence/production-launch-rejection/immutable-3b58be5/result.json`.
+
+CI [38227462764](https://github.com/mpwg/Latest/actions/runs/38227462764) was
+running when this record was written. The preceding source-equivalent application
+CI at [e915db9](https://github.com/mpwg/Latest/actions/runs/38222853545) passes
+both Ubuntu and macOS. This development checkpoint does not establish final
+native UI acceptance, Developer ID signing, notarization or actual self-update.
+L30 remains open for the production artifact set; no release is published.
+
+## Retained source rebuild after native UI acceptance
 
 On 2026-10-12, clean immutable `66add91bd7451ed19ed5aacd10172d2e168ec925`
 (the L20/L22 documentation checkpoint, with the current GUI repairs) is exported

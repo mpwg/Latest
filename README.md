@@ -79,11 +79,11 @@ observed PageDown keys and returns with PageUp. L20 is accepted; static-note
 keyboard selection is not claimed, while editable search text actions and L22
 pointer selection pass. See the [native keyboard record](docs/native-ui-acceptance.md).
 
-The source archive at `66add91` also rebuilds from fresh pinned sources:
-35 regular Swift functions,84 invariants, 18 Python contracts and 85 translations
-pass. The existing development identity signs build1520 with exact source/licence
-metadata. This is a historical checkpoint after the later application changes; production
-Developer ID, notarization and self-update remain open.
+The source archive at `3b58be5` rebuilds from fresh pinned sources: 38 regular
+Swift functions, 84 invariants, 18 Python contracts and 85 translations pass.
+The existing development identity signs build1525 with exact source/licence
+metadata. The actual packaged Release rejects unavailable test arguments before
+normal persistence. Production Developer ID, notarization and self-update remain open.
 
 Release builds now reject Debug-only fixture arguments before creating GUI or
 normal persistence. Shared selection preserves pending notes on repeated commands,

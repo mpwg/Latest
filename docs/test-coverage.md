@@ -9,6 +9,11 @@ An actual development-signed Release process returns1 with the intended message,
 without creating normal support/cache state or changing normal defaults; its
 pre-commit patch/source SHA map is retained under
 `evidence/production-launch-rejection/`.
+The immutable packaged Release at `3b58be5` repeats that actual rejection with
+exit 1, unchanged normal defaults and absent normal support state; exact binary
+hash/argv/environment are in its `immutable-3b58be5/result.json`. The full fresh
+archive rebuild and existing development-signed build1525 are recorded in
+[source-release-acceptance.md](source-release-acceptance.md).
 
 At `b8bc85c`, repeated selection preserves a gated remote-notes request rather
 than cancelling/refetching it. Row reference equality allows Observation to keep
