@@ -68,6 +68,11 @@ unchanged controls. The clarified diagnosis label at `557597f` is verified in
 both locales. Full VoiceOver, narrow layout, long notes and major dialogs remain
 separate open gates.
 
+The current lifecycle record also measures three increasing native progress
+values across real staged HTTPS bytes at `e533199`, followed by exactly one
+success after installed-app verification and normal quit. L24 presentation is
+accepted; privileged Store/XPC/package and full accessibility gates remain open.
+
 The [direct native Sparkle suite](docs/headless-native-acceptance.md) now checks
 actual signed installation, archive/signature rejection and successful retry
 through that same core, without GUI automation. A separate process restart

@@ -70,6 +70,45 @@ claiming its fast retry separately held an installer process.
 
 The sections below retain earlier checkpoints and their then-open scopes.
 
+## Current major consent and measured progress at e533199
+
+The same controlled German process PID58537 checks a real signed2.0.0/build3
+offer without installing it. Native Cmd-R/selection shows the major warning;
+Update All is disabled. The actual confirmation displays the full German
+licence/compatibility warning and Install/Cancel actions at160%. Escape cancels.
+Independent checks show zero jobs, zero archive requests and unchanged bytes for
+all four apps. The signed offer is restored afterward. Private proof:
+`evidence/native-ui-major/current-e533-de/` under the fixture root.
+
+A separate real staged1.1 download in that process exposes three actual native
+AX update-progress values:0.04744694652951534,0.1428505235844685 and
+0.2383931053655824. Each later value is greater; actual transport byte counts
+and screenshots/AX accompany each checkpoint. The rest of the signed archive
+is then released. The independent journal has verifying before exactly one
+succeeded terminal state; selected1.1.0(2)/arm64 passes deep/strict signature
+verification and all three controls keep their byte maps. The native UI shows
+Aktuell/disabled Update. Proof: `evidence/native-ui-progress/current-e533-de/`.
+This supplies measured native progress rather than inferring monotonicity from
+a single capture. The owner's broader permission then allows System Events
+restoration only for controlled Latest test instances. Main1000×702 at(364,108)
+is restored and read through CGWindow;160%, primary/All Sources/empty query/Stable
+are retained. Native Cmd-Q quits after completion. Parent stops the private
+server and restores feed/private preferences/journal; all four app byte maps
+match the initial read-only checkpoint and normal Latest defaults remain
+unchanged. Native success/restoration pixels/AX and independent cleanup are saved.
+
+### L24 current criteria
+
+| Criterion | Status | Evidence |
+|---|---|---|
+| Monotonic visible progress and exactly one terminal result after verification | passed | Three increasing native AX values, actual staged bytes; verifying precedes one succeeded event; strict signed1.1/arm64 check |
+| Useful pre-handoff cancellation, disabled handoff cancellation and active close/quit guards | passed | Current German/English native cancellation; exact stopped fixture installer handoff, disabled Cancel and both guarded commands |
+| Usable failure/diagnosis and normal quit after completion | passed | Actual503 and exact private Finder log reveal in both locales; native quit after terminal success |
+| Revision, environment, actual flow and defects/repairs documented | passed | c1/557/e533 signed native copies, screenshots/AX, source/PID/event/transport/hash evidence, README and matrix |
+
+L24 is accepted for the shared application's native lifecycle presentation.
+This does not close the separate privileged Store/XPC/receipt/package gates.
+
 ## Main-window close baseline
 
 Observed on 2026-10-11, macOS 27.0.1 / Xcode 27.0 / arm64. The development-signed

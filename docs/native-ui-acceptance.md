@@ -31,9 +31,18 @@ now shows the complete Apps suchen prompt. Cmd-F filtering4→2 and Escape4 pass
 primary1.1/Aktuell has no false new-version line while secondary1.0 retains its
 real1.1 offer. Native Source selection changes Sparkle2↔All4 and the long-note
 END remains reachable. Proof: `evidence/native-ui-layout/repaired-e533-de/`.
-Its exact original-frame restoration and further English/VoiceOver scopes are
-still pending at this checkpoint; the prescribed557 small-height proof remains
-separate from the repaired narrow-width run.
+Its original frame is now restored with owner-authorized System Events targeted
+only to the controlled process, independently read as1000×702 at(364,108), and
+native quit/private state cleanup passes. Further English/VoiceOver scopes remain
+open; the prescribed557 small-height proof remains separate from the repaired
+narrow-width run.
+
+The actual VoiceOver trial records the settings switch Off→On but neither the
+Quickstart nor actual reader binding becomes usable, and no reader process,
+caption or speech is observed. Bounded attempts end with VoiceOverOff and
+original Keyboard NavigationOff/settings pane restored. A pre-existing hidden
+Quickstart process is not killed. This is an environment/startup limitation,
+not a VoiceOver navigation or speech pass. Native AX remains a separate proof.
 
 Spoken VoiceOver, English small-frame/long-note interaction and major consent
 remain open. The historical sections below retain their then-current scopes.
