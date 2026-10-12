@@ -28,3 +28,17 @@ public extension ApplicationRuntime {
     func configureSelfUpdates() async throws -> Bool { false }
     func checkSelfUpdates() async throws { throw LatestFailure.rejected("Latest self-updates are unavailable in this runtime.") }
 }
+
+/// Reject unavailable test profiles before a frontend creates runtime or persistence.
+public enum ApplicationLaunchPolicy {
+    public static func validate(arguments: [String], testProfilesAllowed: Bool) throws {
+        guard !testProfilesAllowed else { return }
+        let testFlags: Set<String> = ["--ui-testing", "--ui-test-directory",
+            "--native-install-test-directory", "--native-install-test-catalogue-url",
+            "--native-install-test-hold-scans", "--native-migration-test-domain"]
+        if let flag = arguments.lazy.compactMap({ $0.split(separator: "=", maxSplits: 1).first.map(String.init) })
+            .first(where: { testFlags.contains($0) }) {
+            throw LatestFailure.rejected("Test-only launch argument \(flag) is unavailable in this build.")
+        }
+    }
+}

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import LatestApplication
 
 /// AppKit owns the macOS lifecycle; all application content uses SwiftUI views.
 @MainActor final class LatestApplicationDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuItemValidation {
@@ -104,6 +105,18 @@ import AppKit
 
 @main @MainActor enum LatestApplication {
     static func main() {
+        #if DEBUG
+        let testProfilesAllowed = true
+        #else
+        let testProfilesAllowed = false
+        #endif
+        do {
+            try ApplicationLaunchPolicy.validate(arguments: CommandLine.arguments,
+                testProfilesAllowed: testProfilesAllowed)
+        } catch {
+            FileHandle.standardError.write(Data((error.localizedDescription + "\n").utf8))
+            exit(EXIT_FAILURE)
+        }
         let app = NSApplication.shared
         app.setActivationPolicy(.regular)
         let delegate = LatestApplicationDelegate()

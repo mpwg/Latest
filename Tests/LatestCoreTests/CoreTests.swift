@@ -459,6 +459,25 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
 }
 
 @MainActor @Suite("Headless application workflows") struct ApplicationTests {
+    @Test func productionLaunchRejectsUnavailableTestProfiles() throws {
+        for arguments in [
+            ["Latest", "--native-install-test-directory", "/tmp/isolated"],
+            ["Latest", "--native-install-test-directory=/tmp/isolated"],
+            ["Latest", "--ui-testing"],
+            ["Latest", "--ui-test-directory", "/tmp/isolated"],
+            ["Latest", "--native-install-test-catalogue-url", "https://localhost/catalogue.json"],
+            ["Latest", "--native-install-test-hold-scans"],
+            ["Latest", "--native-migration-test-domain", "io.github.mpwg.Latest.NativeMigration.Test"]
+        ] {
+            #expect(throws: LatestFailure.self) {
+                try ApplicationLaunchPolicy.validate(arguments: arguments, testProfilesAllowed: false)
+            }
+        }
+        try ApplicationLaunchPolicy.validate(arguments: ["Latest", "--native-install-test-directory", "/tmp/isolated"],
+            testProfilesAllowed: true)
+        try ApplicationLaunchPolicy.validate(arguments: ["Latest", "", "-AppleLanguages", "(de)", "-psn_0_123"],
+            testProfilesAllowed: false)
+    }
     @Test func selfUpdateCapabilityIsConfiguredOnceAndUnavailableChecksAreNotDispatched() async {
         let runtime = ApplicationTestRuntime([]); let app = await session(runtime)
         await app.start(); await app.checkForLatestUpdates()
