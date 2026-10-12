@@ -52,6 +52,12 @@ channel changes in persisted JSON. Native source/channel/settings controls
 forward shared bindings. Full VoiceOver, narrow-window, long
 release-note and update-dialog acceptance remains separate and open.
 
+Current German layout checks load40,950-character real signed-feed notes and
+reach their end at100%/160% in prescribed small main/settings frames. Narrow
+search clipping is repaired with native sidebar search; current apps no longer
+show misleading New version text. These repairs pass actual German800-wide
+interaction at `e533199`; full English/VoiceOver/major-dialog scopes remain open.
+
 [Native interactive lifecycle acceptance](docs/native-ui-lifecycle-acceptance.md)
 adds actual English cancellation, HTTP503 failure, valid retry and installer
 handoff. The main window and app stay open during active jobs; installation

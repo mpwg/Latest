@@ -4,6 +4,40 @@ This is interactive acceptance of the actual signed macOS application. It is
 separate from automated correctness tests of the shared application session.
 No GUI automation is required by the application's regression suite or CI.
 
+## Current German long-note and narrow-window proof
+
+On 2026-10-12, the signed `557597f` GUI (PID56056) loads 40,950 characters of
+inline notes from the real signed controlled HTTPS feed. Native scrolling reaches
+the END sentinel at both100% and160%; text and long metadata paths wrap and
+remain reachable without overlapping controls. Actual main frame800×572 and
+Settings560×472 are observed at both scales, with usable General/Locations and
+scroll access to their lower controls. The main's interactive right-edge resize
+clamps width800. Height clamping through interactive dragging was not proved.
+
+The owner expressly authorized one-off System Events sizing for PID56056 only.
+This supplies the prescribed small frame tests, not an interactive minimum-height
+claim: AX can also force700×400 below the native interactive size limit. Exact
+original main1000×702 at(364,108) and Settings680×592 at(524,135) bounds were
+restored and independently read through CGWindow before native quit, with160%
+restored. Parent checks all four fixture byte maps unchanged, zero jobs,
+restored feed/private preferences/journal and unchanged normal Latest defaults.
+Proof: `evidence/native-ui-layout/current-557-de/` under the fixture root.
+
+At800-wide/160%, this run exposed a clipped toolbar search prompt. `e807ae4`
+uses SwiftUI's native sidebar search placement; the shared query/focus commands
+stay unchanged. `e533199` also removes misleading New version wording when the
+shared status already says current. Actual signed German PID58537 at800×702
+now shows the complete Apps suchen prompt. Cmd-F filtering4→2 and Escape4 pass;
+primary1.1/Aktuell has no false new-version line while secondary1.0 retains its
+real1.1 offer. Native Source selection changes Sparkle2↔All4 and the long-note
+END remains reachable. Proof: `evidence/native-ui-layout/repaired-e533-de/`.
+Its exact original-frame restoration and further English/VoiceOver scopes are
+still pending at this checkpoint; the prescribed557 small-height proof remains
+separate from the repaired narrow-width run.
+
+Spoken VoiceOver, English small-frame/long-note interaction and major consent
+remain open. The historical sections below retain their then-current scopes.
+
 ## Baseline observed on 2026-10-11
 
 Application/runtime revision `ead2e13`, documentation head `2971c3c`; macOS

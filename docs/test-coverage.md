@@ -1,5 +1,17 @@
 # Test coverage and evidence
 
+## Current long-note and narrow-width native checks
+
+[German native layout](native-ui-acceptance.md) at `557597f` proves real signed
+40,950-character notes, END scrolling and readable prescribed main800×572 /
+Settings560×472 frames at100%/160%. Owner-authorized AX sizing only applies to
+the recorded PID; interactive width clamp800 is distinct from unproved
+interactive height clamping. Exact original frames, private state and normal
+defaults are restored; all four fixture byte maps match with zero jobs.
+At `e533199`, actual800×702 German search/current-version/source/long-note
+interaction confirms the clipped-prompt and false-new-version repairs. Original
+frame restoration, English layout, VoiceOver and major dialogs remain open.
+
 ## Current native German lifecycle after unlock
 
 The [interactive lifecycle record](native-ui-lifecycle-acceptance.md) now proves
