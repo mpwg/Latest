@@ -4,13 +4,19 @@
 
 [German native layout](native-ui-acceptance.md) at `557597f` proves real signed
 40,950-character notes, END scrolling and readable prescribed main800×572 /
-Settings560×472 frames at100%/160%. Owner-authorized AX sizing only applies to
-the recorded PID; interactive width clamp800 is distinct from unproved
+Settings560×472 frames at100%/160%. Owner-authorized AX sizing targets
+each controlled test PID; interactive width clamp800 is distinct from unproved
 interactive height clamping. Exact original frames, private state and normal
 defaults are restored; all four fixture byte maps match with zero jobs.
 At `e533199`, actual800×702 German search/current-version/source/long-note
 interaction confirms the clipped-prompt and false-new-version repairs. Original
-frame restoration, English layout, VoiceOver and major dialogs remain open.
+frame restoration and native quit/private cleanup pass. Actual English e533
+main800×572/settings560×472 checks also pass100%/160% and restore original
+frames. Both locales pass major warning/cancel with zero archive requests/jobs
+and unchanged bytes. Native pointer text selection, sanitized notes, zero
+pre-action/trap requests and the explicit original-link → real Safari URL/heading
+pass at e533. Native quit/private cleanup and normal-default preservation pass.
+L22 is accepted; VoiceOver and full keyboard flows remain open.
 
 ## Current native German lifecycle after unlock
 
@@ -21,7 +27,7 @@ download/install close/quit guards, real503 diagnosis and valid signed retry at
 accompany the exact stopped/registered fixture handoff. Cleanup restores private
 feed/preferences/journal and preserves normal defaults. At `557597f`, clearer
 Finder diagnosis labels pass actual German/English503 interaction. Spoken
-VoiceOver, narrow layout, long notes and major dialogs remain open.
+VoiceOver and full keyboard-only flows remain open.
 
 ## Stable signing certificate selection
 

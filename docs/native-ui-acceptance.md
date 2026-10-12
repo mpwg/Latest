@@ -33,9 +33,9 @@ real1.1 offer. Native Source selection changes Sparkle2↔All4 and the long-note
 END remains reachable. Proof: `evidence/native-ui-layout/repaired-e533-de/`.
 Its original frame is now restored with owner-authorized System Events targeted
 only to the controlled process, independently read as1000×702 at(364,108), and
-native quit/private state cleanup passes. Further English/VoiceOver scopes remain
-open; the prescribed557 small-height proof remains separate from the repaired
-narrow-width run.
+native quit/private state cleanup passes. The English repaired-layout proof below now covers prescribed small frames;
+the prescribed557 German small-height proof remains separate from the repaired
+German narrow-width run.
 
 The actual VoiceOver trial records the settings switch Off→On but neither the
 Quickstart nor actual reader binding becomes usable, and no reader process,
@@ -44,8 +44,63 @@ original Keyboard NavigationOff/settings pane restored. A pre-existing hidden
 Quickstart process is not killed. This is an environment/startup limitation,
 not a VoiceOver navigation or speech pass. Native AX remains a separate proof.
 
-Spoken VoiceOver, English small-frame/long-note interaction and major consent
-remain open. The historical sections below retain their then-current scopes.
+## Current English repaired layout and major consent
+
+On 2026-10-12, the signed `e533199` English GUI (PID63657) passes actual
+main800×572 and Settings560×472 interaction at100% and160%. Full Search apps
+sidebar text, Cmd-F filtering4→2/Escape4, correct primary-current and secondary
+new-version details, wrapped paths, action/channel controls and General/Locations
+remain readable and reachable. Native scrolling reaches the real40,950-character
+notes END at both scales. The owner now authorizes System Events sizing and
+restoration for all controlled Latest instances of this goal; each action is
+restricted to its recorded PID. This does not establish interactive height
+clamping. Actual CGWindow readings confirm restoration of main1000×702 at(364,108)
+and Settings680×592 at(524,135), then160%/primary/All Sources/empty query/Stable.
+Proof: `evidence/native-ui-layout/current-e533-en/`.
+
+The same source also passes real signed2.0.0(3) major consent in both languages:
+German PID58537 and English PID63657 show the complete160% warning about licence
+and compatibility, with Install/Cancel controls. Escape cancels consent. Update
+All excludes these major offers; independently, zero archive requests and zero
+jobs are recorded and all four app byte maps remain unchanged. These scopes never
+install the major target. Proof: `evidence/native-ui-major/current-e533-de/` and
+`current-e533-en/`. Production installation/consent correctness remains covered
+by the separate headless native suite.
+
+## Plain-text selection and explicit original-notes action
+
+The same signed `e533199` GUI/PID63657 loads a real signed controlled feed with
+inline script/style/iframe/image/anchor markup and an original HTTPS notes URL.
+Actual native pixels/AX show only sanitized plain text; the inline anchor remains
+ordinary text. Native pointer dragging visibly selects the exact notes sentinel
+without using the clipboard. Before the separate Open Original Release Notes
+action, an independent server checkpoint records zero requests. Clicking that
+native action then opens the default Safari browser at the exact controlled URL
+and displays its expected heading. Server logs show the browser request after
+the checkpoint and no active-markup trap requests throughout. Only the newly
+created test tab is closed; the pre-existing browser tab is untouched.
+
+Afterwards main/settings original frames,160%, General, primary1.1/current,
+All Sources, empty query and Stable are retained, and native Command-Q quits
+the controlled process. Independent checks confirm all four fixture app byte
+maps/signatures unchanged, zero installation jobs, restored private feed,
+preferences/journal, and unchanged normal Latest defaults. All current Sources
+hashes match the tested GUI revision. Certificate/trust were never changed.
+Proof: `evidence/native-ui-notes/current-e533-en/`, plus layout `source-map.json`
+and `cleanup.json`. Bounded AX selectText alone did not visibly select static
+text; the actual native drag selection is the acceptance evidence.
+
+| L22 criterion | Status | Current evidence |
+|---|---|---|
+| Maximum text size preserves essential actions/status | passed | Actual DE and repaired EN100%/160% small/narrow frames, scroll-reachable controls and paths |
+| Details/settings/long notes remain readable, scrollable and selectable | passed |40,950-character END at both scales, General/Locations checks and actual native notes selection |
+| Notes are plain text; original link opens browser only through intended action | passed | Sanitized pixels/AX, zero pre-action requests, explicit native action → exact Safari URL/heading, zero trap requests |
+| Revision/environment, repairs, current result and cleanup are recorded | passed |557/e533 scoped captures, source hashes, independent byte/signature/job/private/defaults checks, README/test matrix updated |
+
+L22 is accepted for these controlled native scopes. Interactive height clamping
+is not inferred from owner-authorized AX sizing and is not a criterion of L22.
+Spoken VoiceOver and the full keyboard-only flow remain open. The historical
+sections below retain their then-current scopes.
 
 ## Baseline observed on 2026-10-11
 

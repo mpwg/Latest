@@ -8,14 +8,13 @@ core shared with a later CLI; automated tests run without GUI automation;
 direct work/commits on main are authorized, without PRs yet. Reuse the approved
 localhost certificate/trust until its natural expiry on 2026-10-17.
 
-Checked application/runtime/test code: `0d6728f`, macOS 27.0.1 / Xcode 27.0 /
-Swift 6.4 / arm64. Native GUI repairs are separately checked at `44c6958` in
-native-ui-acceptance.md and English lifecycle outcomes at `77e9b92` in
-native-ui-lifecycle-acceptance.md. The `b59d5e9` presentation repair still requires
-manual Mac unlock for German native interaction. The final docs may have a later revision; native JSON source
-maps must still match every relevant source file. Both Ubuntu and macOS main CI
-on `0d6728f` passed, including the shared host self-update entry. Later changes still
-require corresponding current CI and relevant source-map checks.
+Checked GUI implementation: `e533199`; shared runtime/native source maps are
+recorded with each evidence package. macOS27.0.1 / Xcode27 / Swift6.4 / arm64.
+Owner unlock enabled current German/English lifecycle and layout interaction;
+there is no remaining lock-screen prerequisite. The current documentation head
+may be later than a tested source revision: relevant source hashes must still
+match. [CI at93619a0](https://github.com/mpwg/Latest/actions/runs/38210387002)
+passes Ubuntu and macOS; final whole-goal CI must match its final head.
 
 | Criterion | Status | Current evidence / next step |
 |---|---|---|
@@ -39,13 +38,13 @@ require corresponding current CI and relevant source-map checks.
 | Native English lifecycle UI with close/quit guard and real installation | passed | native-ui-lifecycle-acceptance.md at 77e9b92: actual cancel, HTTP503, retry, stopped registered fixture handoff, disabled Cancel, guarded main close/quit in download/install, signed1.1 arm64 and unchanged3controls |
 | Current cancellation/progress presentation and German GUI restart | passed | native-ui-lifecycle-acceptance.md at c1febdc: owner unlock, actual German restart1.1/Aktuell/disabled Update, neutral Abgebrochen and semantic progress AX; real503/diagnosis/retry, guarded stopped-fixture handoff and signed1.1 installation; 3controls unchanged |
 | Native monotonic job progress, diagnosis and terminal quit (L24) | passed | native-ui-lifecycle-acceptance.md: actual e533 three increasing AX values and stagedbytes, one succeeded afterverifying, strictsigned1.1/controlchecks, originalframe/privateprefs/defaults restoration and nativequit; separate Store gates remain open |
-| Keyboard, VoiceOver, large text and full EN/DE view interaction | open | native-ui-acceptance.md: prior EN/DE shortcuts/focus and actual German40k-note/prescribed-small-frame100%/160% checks pass; e533199 repairs narrow search/current-version text and passes800-wide German interaction. Exact repaired-frame restoration, further English layout, spoken VoiceOver and major dialogs remain open; error/progress are separately accepted above |
+| Keyboard, VoiceOver, large text and full EN/DE view interaction | open | native-ui-acceptance.md: current e533 EN prescribed-small-frame100%/160% and DE narrow-width repairs, real40k notes END, restored frames, and both major warning/cancel scopes pass. Native sanitized-note selection and explicit Safari action pass with zero trap requests; L22 is accepted. Full keyboard-only flow and spoken VoiceOver remain open |
 | Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 28d6632: actual fresh archive/bootstrap/build, 35 regular functions, 84 invariants, 18 contracts, 85 translations and development-signed build1511 with exact source/licence checks; repaired full-name packaging passes from the archive; production artifact set remains open |
 | Stable existing signing certificate selection | passed | signing-identity-acceptance.md at fb17000: exact full-name/fingerprint selection, four portable contracts, actual Unicode-name packaging and missing-identity rejection before bundle modification; all nine native broker cases rerun with the same approved certificate |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
-| Current local build/regression checks | passed | 0d6728f: warnings-as-errors Debug/Release, Xcode MCP GUI build, 35 regular Swift functions plus nine explicit default native skips, 84 invariants, 14 source/feed regressions, 85 localized keys; all nine native drivers rerun and 37 current result maps match |
-| Portable CI on actual Ubuntu | passed | ci-platforms.md at 4422057: actual Ubuntu 24.04 / CPython 3.14.8; thirteen Python source/history tests and all 85 translations/resource/source checks pass; further Swift candidates and compile-time blockers assessed |
-| Verified implementation main CI | passed | [0d6728f / 38177801106](https://github.com/mpwg/Latest/actions/runs/38177801106): Ubuntu and macOS jobs pass; final whole-goal CI must match its final head |
+| Current local build/regression checks | passed | Current layout regression: 35 regular Swift functions, nine default native skips and 18 Python contracts; warnings-as-errors/Xcode MCP build, 84 invariants, 85 translations and 37 native source maps documented with their scope-specific revisions |
+| Portable CI on actual Ubuntu | passed | ci-platforms.md: actual Ubuntu24.04 / CPython3.14.8; 17 portable Python contracts and all85 translations/resource/source checks pass. The actual signer integration and Swift/native adapters remain on macOS |
+| Verified implementation main CI | passed | [93619a0 / 38210387002](https://github.com/mpwg/Latest/actions/runs/38210387002): Ubuntu and macOS jobs pass; final whole-goal CI must match its final head |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following
