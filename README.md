@@ -225,6 +225,11 @@ material. Dependencies are pinned in
 Config/dependencies.json and mas's committed upstream Package.resolved;
 bootstrap applies the reviewed SDK and package-verification patches.
 
+[Renovate dependency updates](docs/dependency-updates.md) cover GitHub Actions
+and the pinned Sparkle/mas manifest, including archive checksums and source
+revisions. Every update requires dashboard approval before a PR is created;
+automerge is disabled.
+
 Create an app bundle with your Apple Development identity and team:
 
 ```sh

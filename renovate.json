@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "forkProcessing": "enabled",
+  "enabledManagers": ["github-actions", "swift", "custom.regex"],
+  "branchPrefix": "codex/renovate/",
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": true,
+  "automerge": false,
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "timezone": "Europe/Vienna",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^Config/dependencies\\.json$/"],
+      "matchStrings": [
+        "\"sparkle\": \\{\\s*\"version\": \"(?<currentValue>[^\"]+)\",\\s*\"url\": \"https://github\\.com/sparkle-project/Sparkle/releases/download/[^\"]+/Sparkle-for-Swift-Package-Manager\\.zip\",\\s*\"sha256\": \"(?<currentDigest>[a-f0-9]{64})\"\\s*\\}"
+      ],
+      "depNameTemplate": "sparkle-project/Sparkle",
+      "datasourceTemplate": "github-release-attachments",
+      "versioningTemplate": "semver",
+      "autoReplaceStringTemplate": "\"sparkle\": {\n    \"version\": \"{{{newValue}}}\",\n    \"url\": \"https://github.com/sparkle-project/Sparkle/releases/download/{{{newValue}}}/Sparkle-for-Swift-Package-Manager.zip\",\n    \"sha256\": \"{{{newDigest}}}\"\n  }"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^Config/dependencies\\.json$/"],
+      "matchStrings": [
+        "\"mas\": \\{\\s*\"repository\": \"https://github\\.com/mas-cli/mas\\.git\",\\s*\"tag\": \"(?<currentValue>[^\"]+)\",\\s*\"revision\": \"(?<currentDigest>[a-f0-9]{40})\"\\s*\\}"
+      ],
+      "depNameTemplate": "mas-cli/mas",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver",
+      "autoReplaceStringTemplate": "\"mas\": {\n    \"repository\": \"https://github.com/mas-cli/mas.git\",\n    \"tag\": \"{{{newValue}}}\",\n    \"revision\": \"{{{newDigest}}}\"\n  }"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    },
+    {
+      "matchPackageNames": ["sparkle-project/Sparkle", "mas-cli/mas"],
+      "pinDigests": true,
+      "prBodyNotes": [
+        "Validate this dependency in a fresh checkout with no existing Vendor directory. Run bootstrap, headless correctness tests and the relevant isolated native adapter acceptance before merging. Review the mas SDK/package-verification patches and dependency version references in Package.swift, bootstrap output and documentation."
+      ]
+    }
+  ]
+}
