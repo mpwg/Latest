@@ -29,7 +29,7 @@ struct LatestWindow: View {
                 }
             }
             .accessibilityIdentifier("app-list")
-            .searchable(text: $model.query, prompt: "Search apps")
+            .searchable(text: $model.query, placement: .sidebar, prompt: "Search apps")
             .searchFocused($searchFocused)
             .navigationTitle("Applications")
             .navigationSplitViewColumnWidth(min: 300, ideal: 380)
