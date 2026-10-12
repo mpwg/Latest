@@ -1,6 +1,8 @@
 import Foundation
 import AppKit
 import Testing
+import Observation
+import Synchronization
 import LatestProcess
 import LatestTrust
 @testable import LatestCore
@@ -390,6 +392,10 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
     var selfUpdateChecks = 0
     let selfUpdateStarted = CompletionGate<Void>()
     let releaseSelfUpdate = CompletionGate<Void>()
+    var holdNotes = false
+    var notesRequests = 0
+    let notesStarted = CompletionGate<Void>()
+    let notesRelease = CompletionGate<Void>()
     var savedCallback: (@MainActor @Sendable (UpdateEvent) -> Void)?
     init(_ candidates: [UpdateCandidate]) {
         self.apps = candidates.map(\.app)
@@ -401,6 +407,7 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
     func setApps(_ apps: [AppSnapshot]) { self.apps = apps }
     func setCandidate(_ candidate: UpdateCandidate) { candidates[candidate.app.id] = candidate }
     func holdProviderCheck() { holdChecks = true }
+    func holdReleaseNotes() { holdNotes = true }
     func configureSelfUpdate(enabled: Bool, configurationFailure: Bool = false, checkFailure: Bool = false, hold: Bool = false) {
         selfUpdateEnabled = enabled; selfUpdateConfigurationFailure = configurationFailure
         selfUpdateCheckFailure = checkFailure; holdSelfUpdateCheck = hold
@@ -454,11 +461,39 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
         if rejectVerification { throw LatestFailure.process("Installed version does not match.") }
     }
     func lateFailure() async { await savedCallback?(.init(.failed, message: "Late obsolete callback")) }
-    func releaseNotes(_ url: URL) -> String { "<script>bad()</script><p>Remote notes</p>" }
+    func releaseNotes(_ url: URL) async throws -> String {
+        notesRequests += 1
+        if holdNotes {
+            await notesStarted.finish(.success(()))
+            try await withTaskCancellationHandler { try await notesRelease.wait() }
+                onCancel: { Task { await self.notesRelease.finish(.failure(.cancelled)) } }
+        }
+        return "<script>bad()</script><p>Remote notes</p>"
+    }
     func enableBroker() -> Bool { true }
 }
 
 @MainActor @Suite("Headless application workflows") struct ApplicationTests {
+    @Test func providerRefreshUpdatesRowsWithoutRepublishingTheSameProjection() async {
+        let offer = candidate(); let runtime = ApplicationTestRuntime([offer])
+        let app = await session(runtime)
+        let row = app.visibleRows[0]
+        let mutations = Mutex((projection: 0, record: 0))
+        withObservationTracking { _ = app.visibleRows } onChange: {
+            mutations.withLock { $0.projection += 1 }
+        }
+        withObservationTracking { _ = row.record } onChange: {
+            mutations.withLock { $0.record += 1 }
+        }
+        let changed = UpdateCandidate(app: offer.app, source: offer.source,
+            version: .init(display: "3.0", build: "3"), action: offer.action, authoritative: true)
+        await runtime.setCandidate(changed)
+        app.refresh(); await app.waitForScan()
+        #expect(mutations.withLock { $0.projection } == 0)
+        #expect(mutations.withLock { $0.record } == 1)
+        #expect(app.visibleRows[0] === row)
+        #expect(row.record.candidate?.version == changed.version)
+    }
     @Test func productionLaunchRejectsUnavailableTestProfiles() throws {
         for arguments in [
             ["Latest", "--native-install-test-directory", "/tmp/isolated"],
@@ -477,6 +512,24 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
             testProfilesAllowed: true)
         try ApplicationLaunchPolicy.validate(arguments: ["Latest", "", "-AppleLanguages", "(de)", "-psn_0_123"],
             testProfilesAllowed: false)
+    }
+    @Test func repeatedSelectionPreservesThePendingNotesRequest() async throws {
+        let base = candidate()
+        let offer = UpdateCandidate(app: base.app, source: base.source, version: base.version,
+            action: base.action, authoritative: true, releaseNotesURL: URL(string: "https://example.invalid/notes"))
+        let runtime = ApplicationTestRuntime([offer]); await runtime.holdReleaseNotes()
+        let app = await session(runtime)
+        app.selectedID = offer.app.id
+        try await runtime.notesStarted.wait()
+        #expect(app.loadingNotes)
+        app.selectedID = offer.app.id
+        await runtime.notesRelease.finish(.success(()))
+        await app.waitForNotes()
+        #expect(await runtime.notesRequests == 1)
+        #expect(app.notes.contains("Remote notes"))
+        #expect(!app.notes.contains("bad()"))
+        #expect(!app.loadingNotes)
+        #expect(app.selectedRow?.id == offer.app.id)
     }
     @Test func selfUpdateCapabilityIsConfiguredOnceAndUnavailableChecksAreNotDispatched() async {
         let runtime = ApplicationTestRuntime([]); let app = await session(runtime)

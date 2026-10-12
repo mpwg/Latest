@@ -33,7 +33,8 @@ import LatestCore
     }
 }
 
-@MainActor @Observable public final class ApplicationRow: Identifiable {
+@MainActor @Observable public final class ApplicationRow: Identifiable, Equatable {
+    public nonisolated static func == (lhs: ApplicationRow, rhs: ApplicationRow) -> Bool { lhs === rhs }
     public let id: AppInstanceID
     public internal(set) var record: AppRecord
     public internal(set) var event: UpdateEvent?
@@ -45,7 +46,10 @@ import LatestCore
 @MainActor @Observable public final class ApplicationSession {
     public private(set) var rows: [ApplicationRow] = []
     public private(set) var visibleRows: [ApplicationRow] = []
-    public var selectedID: AppInstanceID? { didSet { selectedRow = rows.first { $0.id == selectedID }; selectNotes() } }
+    public var selectedID: AppInstanceID? { didSet {
+        guard selectedID != oldValue else { return }
+        selectedRow = rows.first { $0.id == selectedID }; selectNotes()
+    } }
     public private(set) var selectedRow: ApplicationRow?
     public var query = "" { didSet { filter() } }
     public var sourceFilter: UpdateSource? { didSet { filter() } }
@@ -209,6 +213,7 @@ import LatestCore
     }
     public var canQuit: Bool { jobs.isEmpty }
     public func waitForScan() async { await scanTask?.value }
+    public func waitForNotes() async { await notesTask?.value }
     public func waitForUpdates() async { while let job = jobs.values.first { await job.value }; await waitForScan() }
     public func flushPreferences() async { await saveTask?.value }
     public func stopMonitoring() { monitoringTask?.cancel(); monitoringTask = nil }
