@@ -18,8 +18,12 @@ passes Ubuntu and macOS; final whole-goal CI must match its final head.
 
 | Criterion | Status | Current evidence / next step |
 |---|---|---|
+| Shared startup rejects unavailable test profiles before side effects | passed | 5bff569: headless flag/ordinary-argument cases and actual Release status1; normal support remains absent/defaults unchanged |
+| Repeated selection and stable observed row projection | passed | b8bc85c: two meaningful headless gated-note/projection regressions fail before and pass after |
+| Native table reentrancy diagnostic | open | #54: controlled35-instance startup/refresh reproduces warning; bounded hypotheses reverted; obtain actual warning call stack and verify a justified fix |
+| Native backend revalidation after application observation changes | open | Prior37 maps are historical until source/test changes at b8bc85c are rerun through all current native drivers |
 | GUI-independent application core and shared future CLI API | passed | LatestApplication depends only on LatestCore; source-boundary validator; GUI forwards ID commands and renders core state |
-| Complete default workflow testing without GUI automation | passed | 35 deterministic Swift functions including four host self-update command tests, six exclusive Store workflows and malformed actual client requests; nine native opt-ins skipped by default; Xcode MCP builds current GUI without UI automation |
+| Complete default workflow testing without GUI automation | passed | 38 deterministic Swift functions including four host self-update command tests, six exclusive Store workflows and malformed actual client requests; nine native opt-ins skipped by default; Xcode MCP builds current GUI without UI automation |
 | Shared host self-update entry | passed | shared-self-update-acceptance.md: native SDK ownership moved from GUI into runtime; shared capability/ownership/ordinary-job/error policy, four headless tests and portable no-Sparkle-in-GUI validator |
 | Scans, exact selection, preferences, migration and consent | passed | Direct core tests include supersession, ordered persistence/restart, ignored/skipped direct mutations, channel settings, stale major consent and bulk eligibility |
 | Jobs, rejection, duplicate starts, cancellation, handoff and quit policy | passed | Direct core tests exercise the actual session and job transitions; actual signed provider lifecycle outcomes are recorded below |

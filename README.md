@@ -85,6 +85,13 @@ pass. The existing development identity signs build1520 with exact source/licenc
 metadata. This prepares a verified current-source checkpoint; production
 Developer ID, notarization and self-update remain open.
 
+Release builds now reject Debug-only fixture arguments before creating GUI or
+normal persistence. Shared selection preserves pending notes on repeated commands,
+and row projections avoid redundant observation events. Their headless regressions
+pass;38 regular functions and nine explicit native skips are current. A separate
+native table reentrancy diagnostic remains open in [#54](https://github.com/mpwg/Latest/issues/54);
+no warning fix or final whole-goal acceptance is claimed.
+
 The current lifecycle record also measures three increasing native progress
 values across real staged HTTPS bytes at `e533199`, followed by exactly one
 success after installed-app verification and normal quit. L24 presentation is

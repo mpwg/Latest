@@ -1,5 +1,26 @@
 # Test coverage and evidence
 
+## Shared launch and observation regression follow-up
+
+At `5bff569`, unavailable Debug-only test arguments are rejected in the shared
+application layer before GUI/runtime/persistence creation. Headless cases cover
+reserved profiles, equals syntax, empty strings and ordinary macOS arguments.
+An actual development-signed Release process returns1 with the intended message,
+without creating normal support/cache state or changing normal defaults; its
+pre-commit patch/source SHA map is retained under
+`evidence/production-launch-rejection/`.
+
+At `b8bc85c`, repeated selection preserves a gated remote-notes request rather
+than cancelling/refetching it. Row reference equality allows Observation to keep
+the same visible projection while individual metadata still changes. Both
+headless regressions fail before and pass after. The current default suite has
+38 regular functions and nine explicit native skips. No GUI automation is
+required. The separate native35-instance runs still reproduce the table
+reentrancy diagnostic tracked in [#54](https://github.com/mpwg/Latest/issues/54);
+these changes are not claimed as its fix. Earlier complete native source maps
+must be revalidated against the changed application/test sources.
+
+
 ## Current long-note and narrow-width native checks
 
 [German native layout](native-ui-acceptance.md) at `557597f` proves real signed
