@@ -30,7 +30,9 @@ private struct AppDetailHeader: View {
                     .accessibilityLabel(Text(verbatim: row.record.app.name)).accessibilityIdentifier("selected-app-name")
                 Text(row.record.app.version.description).foregroundStyle(.secondary)
                     .accessibilityValue(row.record.app.version.description).accessibilityIdentifier("installed-version")
-                if let candidate = row.record.candidate { Text("New version: \(candidate.version.description)") }
+                if let candidate = row.record.candidate, row.record.status != .current {
+                    Text("New version: \(candidate.version.description)")
+                }
                 StatusTitle(status: row.record.status).accessibilityIdentifier("selected-status")
             }
         }
