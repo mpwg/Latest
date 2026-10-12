@@ -1,5 +1,49 @@
 # Frozen release sources and rebuild evidence (L30 / #35)
 
+## Current source rebuild after native UI acceptance
+
+On 2026-10-12, clean immutable `66add91bd7451ed19ed5aacd10172d2e168ec925`
+(the L20/L22 documentation checkpoint, with the current GUI repairs) is exported
+and freshly rebuilt on macOS27.0.1 / Xcode27 / Swift6.4 / Python3.15 / arm64.
+The actual exported tree has no .git, previous Vendor or .build directory.
+Only the checksum-verified Sparkle ZIP is reused as a distribution cache;
+its framework is extracted again, and pinned mas/dependencies are compiled from
+fresh sources with the committed reviewed patches.
+
+Retained source preparation:
+`.release/source-preparation/1.0.0-66add91bd745-mgxtunw3/`.
+Archive: **993803 bytes**, SHA-256
+`c0c5873ab0c6c649d0d4b584db3947983eb325761627d9393699f231efaef403`.
+Actual development package metadata: version1.0.0, build **1520**, exact source
+commit above. This version label is for the controlled rebuild and does not
+authorize publication or a production version decision.
+
+All seven recorded steps pass: bootstrap, warnings-as-errors Release build,
+35 regular Swift functions with nine explicit native skips,84 compiled production
+invariants,18 Python source/signing/feed contracts,85 EN/DE resource validations,
+and actual development packaging. Deep/strict signatures, actual arm64,
+TeamIdentifierPZV43D6HWT, exact bundle source/build/version and all pinned licence
+bytes pass independent verification. Exported source hashes and the original
+clean checkout remain unchanged after the entire build/package sequence.
+
+The approved existing identity and fingerprint
+`F2DB5A6D5AF5BAD3F219ED222128B7B09956A2FA` are reused; no certificate/trust is
+created, rotated or changed. Production private update keys and notarization are
+not used. `rebuild-result.json` records source/archive/build, environment, exact
+commands, durations, log hashes, actual signature and explicit false production
+notarization/publication flags. No native UI proof is inferred from this build;
+the current interactive evidence remains separately bound to matching sources.
+[CI for66add91](https://github.com/mpwg/Latest/actions/runs/38213347484) was running
+when this archive result was recorded; the source-equivalent
+[7671787 CI](https://github.com/mpwg/Latest/actions/runs/38211555693) is fully green.
+The final documentation head still requires its own current CI result.
+
+L30 remains open for the actual Developer-ID/notarized archive/appcast artifact
+set; the fresh current-source development rebuild does not replace that gate.
+
+## Retained earlier archive rebuild
+
+
 Archive rebuilt at `28d6632e48fba1a0a6845652724443aaffbfdce0`, on
 2026-10-12, macOS 27.0.1 / Xcode 27.0 / Swift 6.4 / Python 3.15 / arm64.
 The controlled archive rebuild uses this exact revision, without a .git

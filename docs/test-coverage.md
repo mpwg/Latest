@@ -69,16 +69,16 @@ occurs. macOS CI compiles the opt-in harness; default CI does not alter trust.
 
 ## Current archive rebuild
 
-The [frozen-source rebuild](source-release-acceptance.md) at `28d6632`, checked
-on 2026-10-12, uses a fresh extracted archive without .git or prebuilt Vendor
-dependencies. Actual bootstrap, warnings-as-errors Release compilation, 35
-regular Swift functions (nine explicit native skips), 84 invariants, eighteen
-release/feed tests and 85 translations pass. The development-signed bundle
-carries exact build1511/source metadata and arm64; source hashes and pinned
-licence bytes remain unchanged. All eighteen Python tests pass. The repaired
-packager resolves the full display name to the same approved fingerprint and
-succeeds on its first attempt. This is archive-rebuild
-evidence, with production signing/notarization/self-update still open.
+The [frozen-source rebuild](source-release-acceptance.md) at `66add91`, checked
+on 2026-10-12 after L20/L22 native acceptance, freshly bootstraps pinned sources
+in an exported tree without .git or prebuilt Vendor/.build. Warnings-as-errors
+Release,35 regular Swift functions with nine explicit native skips,84 invariants,
+18 Python contracts,85 localized keys and actual development packaging all pass.
+Build1520 records the exact source, arm64 and unchanged licence/source bytes;
+strict signatures use the existing approved identity. The archive is993803 bytes
+with the SHA-256 recorded in the source manifest/result. Production notarization,
+artifact-set/appcast agreement and self-update remain open. The earlier28d6632
+archive remains separately retained as historical evidence.
 
 ## Shared host self-update entry and current regression
 

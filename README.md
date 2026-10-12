@@ -79,6 +79,12 @@ observed PageDown keys and returns with PageUp. L20 is accepted; static-note
 keyboard selection is not claimed, while editable search text actions and L22
 pointer selection pass. See the [native keyboard record](docs/native-ui-acceptance.md).
 
+The current source archive at `66add91` also rebuilds from fresh pinned sources:
+35 regular Swift functions,84 invariants,18 Python contracts and85 translations
+pass. The existing development identity signs build1520 with exact source/licence
+metadata. This prepares a verified current-source checkpoint; production
+Developer ID, notarization and self-update remain open.
+
 The current lifecycle record also measures three increasing native progress
 values across real staged HTTPS bytes at `e533199`, followed by exactly one
 success after installed-app verification and normal quit. L24 presentation is
