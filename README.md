@@ -56,8 +56,11 @@ release-note and update-dialog acceptance remains separate and open.
 adds actual English cancellation, HTTP503 failure, valid retry and installer
 handoff. The main window and app stay open during active jobs; installation
 reaches signed1.1 arm64 while three other instances retain identical bytes.
-German restart and the repaired cancellation/progress AX presentation await
-manual unlock of the native Mac; independent builds/tests/CI pass at `b59d5e9`.
+After owner unlock, current German restart/cancellation/progress AX, real503,
+diagnosis and guarded handoff/retry also pass at `c1febdc`, with signed1.1 and
+unchanged controls. The clarified diagnosis label at `557597f` is verified in
+both locales. Full VoiceOver, narrow layout, long notes and major dialogs remain
+separate open gates.
 
 The [direct native Sparkle suite](docs/headless-native-acceptance.md) now checks
 actual signed installation, archive/signature rejection and successful retry

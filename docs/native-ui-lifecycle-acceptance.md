@@ -4,6 +4,72 @@ These observations use the actual signed GUI with the shared application session
 and real Sparkle adapter. GUI interaction is separate from automated correctness
 tests, which still run without GUI automation.
 
+## Current German native run after owner unlock
+
+On 2026-10-12 the owner unlocked the Mac; fresh CUA state confirmed native
+control. The development-signed GUI at `c1febdc` ran with a private fixture
+inventory/profile and German locale, at fontScale1.6. Exact-path CUA binding and
+parent-recorded PIDs distinguish the controlled copy from the installed Latest.
+Launch arguments disable automatic host checks without changing persistent
+defaults. The existing approved certificate/trust is retained.
+
+A fresh process, PID48140, displays the exact primary1.1.0(2), Aktuell and a
+disabled Aktualisieren button. Cmd-F/search/clear and Settings/Escape pass;
+normal Cmd-Q quits. All four fixture byte maps match, no job starts, private
+preferences/journal are restored and the normal Latest defaults remain unchanged.
+Proof: `evidence/native-ui-current/de-restart-c1/` under the fixture root.
+
+The next controlled GUI process, PID49001, uses real gated HTTPS and the selected
+signed1.0 primary. Native Update, Cmd-W/Cmd-Q guards, Return and Abbrechen produce
+one cancelled terminal job, a neutral gray Abgebrochen label and no internal
+CancellationError/error sheet. Progress AX has the semantic
+Fortschritt der Aktualisierung label and update-progress/update-phase IDs.
+
+A real HTTP503 retry displays German failure text; the diagnosis action reveals
+the exact private diagnostics.log in Finder. A valid third retry uses a real
+selected fixture process PID50528, independently registered through
+NSRunningApplication at the primary bundle URL, then held with SIGSTOP. Actual
+Installieren, disabled Abbrechen and both close/quit guards pass. Parent byte/
+process checkpoints precede SIGCONT. Real installation then reaches strict
+signed1.1.0(2)/arm64, Aktuell and disabled Aktualisieren, without an error.
+
+The journal has exactly cancelled/failed/succeeded terminal jobs, primary only;
+all three nonselected controls retain identical bytes. Native quit succeeds
+after completion. The transport stops and restores feed/private preferences;
+the saved journal is restored after evidence collection. Normal Latest defaults
+remain unchanged. Proof: `evidence/native-ui-lifecycle/current-c1-de/`, including
+source-map, launch/PID, native screenshots/AX, transport/journal, independent
+cancel/failure/handoff/success checkpoints and cleanup records.
+
+The diagnosis label was misleading because the action reveals a file. At
+`557597f` it becomes Show Diagnostics in Finder / Diagnose im Finder anzeigen.
+Separate current German and English real503 interactions verify full readable
+labels and Finder selection of the same private log. Those label runs preserve
+selected/control bytes. Proof directories: `label-557-de/` and `label-557-en/`
+under the same lifecycle evidence root. The earlier c1 process still used its
+original label; the later tests verify the changed label explicitly.
+
+The current `557597f` English process PID53455 also runs real gated downloading
+and native Cancel: semantic Update Progress/update-progress and Downloading/
+update-phase AX are present; neutral gray Cancelled replaces the internal error.
+The selected1.0 bytes and controls remain unchanged. An open valid retry then
+installs strict signed1.1.0(2)/arm64; native Up to Date/disabled Update and normal
+quit pass. Its journal has failed/cancelled/succeeded primary-only terminal
+jobs. Feed/private preferences/journal are restored and normal defaults remain
+unchanged. This adds current English presentation and lifecycle proof, without
+claiming its fast retry separately held an installer process.
+
+| Criterion | Status | Current evidence |
+|---|---|---|
+| Fresh German restart/current-app view | passed | PID48140, exact primary1.1/Aktuell/disabled Update; native shortcuts and normal quit |
+| Repaired German cancellation/progress accessibility surface | passed | PID49001, real gated cancellation, neutral Abgebrochen and semantic native AX; unchanged primary1.0 bytes |
+| Close/quit guards at download and actual installer handoff | passed | Native Cmd-W/Cmd-Q/Return in both phases; stopped exact-URL fixture and independent byte checkpoints |
+| German actual error, diagnosis, retry and successful update | passed | Real503/Finder, primary-only signed installation to1.1, three terminal jobs and unchanged controls |
+| Clear diagnosis action in both locales | passed | 557597f real503 label/reveal interactions in German and English |
+| Full native UI/accessibility acceptance | open | Spoken VoiceOver, narrow/minimum layout, long notes and major consent remain distinct |
+
+The sections below retain earlier checkpoints and their then-open scopes.
+
 ## Main-window close baseline
 
 Observed on 2026-10-11, macOS 27.0.1 / Xcode 27.0 / arm64. The development-signed
@@ -91,7 +157,7 @@ progress identifiers. This improves the native AX surface; spoken VoiceOver
 acceptance remains separate and unproven. German, repaired cancellation/AX,
 new-process UI restart and Diagnostics action still require current interaction.
 
-## Current environment gate at b59d5e9
+## Historical locked environment gate at b59d5e9
 
 The development-signed repaired cancellation/progress bundle is built. A fresh
 German GUI process (PID 95757) was launched against installed primary 1.1.0 and

@@ -1,5 +1,16 @@
 # Test coverage and evidence
 
+## Current native German lifecycle after unlock
+
+The [interactive lifecycle record](native-ui-lifecycle-acceptance.md) now proves
+actual German restart1.1/current, neutral cancellation, labeled progress,
+download/install close/quit guards, real503 diagnosis and valid signed retry at
+`c1febdc`. Three primary-only terminal jobs and independently unchanged controls
+accompany the exact stopped/registered fixture handoff. Cleanup restores private
+feed/preferences/journal and preserves normal defaults. At `557597f`, clearer
+Finder diagnosis labels pass actual German/English503 interaction. Spoken
+VoiceOver, narrow layout, long notes and major dialogs remain open.
+
 ## Stable signing certificate selection
 
 [Signing identity acceptance](signing-identity-acceptance.md) at `fb17000`
