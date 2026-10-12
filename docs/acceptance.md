@@ -13,15 +13,15 @@ recorded with each evidence package. macOS27.0.1 / Xcode27 / Swift6.4 / arm64.
 Owner unlock enabled current German/English lifecycle and layout interaction;
 there is no remaining lock-screen prerequisite. The current documentation head
 may be later than a tested source revision: relevant source hashes must still
-match. [CI at93619a0](https://github.com/mpwg/Latest/actions/runs/38210387002)
+match. [CI at e915db9](https://github.com/mpwg/Latest/actions/runs/38222853545)
 passes Ubuntu and macOS; final whole-goal CI must match its final head.
 
 | Criterion | Status | Current evidence / next step |
 |---|---|---|
 | Shared startup rejects unavailable test profiles before side effects | passed | 5bff569: headless flag/ordinary-argument cases and actual Release status1; normal support remains absent/defaults unchanged |
 | Repeated selection and stable observed row projection | passed | b8bc85c: two meaningful headless gated-note/projection regressions fail before and pass after |
-| Native table reentrancy diagnostic | open | #54: controlled35-instance startup/refresh reproduces warning; bounded hypotheses reverted; obtain actual warning call stack and verify a justified fix |
-| Native backend revalidation after application observation changes | open | Prior37 maps are historical until source/test changes at b8bc85c are rerun through all current native drivers |
+| Native table reentrancy diagnostic | open | #54: controlled35-instance startup/refresh reproduces warning; actual LLDB stack retained; minimal native comparisons currently do not reproduce it; verify a justified fix |
+| Native backend revalidation after application observation changes | passed | e915db9: all nine drivers exit 0, all 37 outcomes pass and source maps match; prior results retained separately |
 | GUI-independent application core and shared future CLI API | passed | LatestApplication depends only on LatestCore; source-boundary validator; GUI forwards ID commands and renders core state |
 | Complete default workflow testing without GUI automation | passed | 38 deterministic Swift functions including four host self-update command tests, six exclusive Store workflows and malformed actual client requests; nine native opt-ins skipped by default; Xcode MCP builds current GUI without UI automation |
 | Shared host self-update entry | passed | shared-self-update-acceptance.md: native SDK ownership moved from GUI into runtime; shared capability/ownership/ordinary-job/error policy, four headless tests and portable no-Sparkle-in-GUI validator |
@@ -43,12 +43,12 @@ passes Ubuntu and macOS; final whole-goal CI must match its final head.
 | Current cancellation/progress presentation and German GUI restart | passed | native-ui-lifecycle-acceptance.md at c1febdc: owner unlock, actual German restart1.1/Aktuell/disabled Update, neutral Abgebrochen and semantic progress AX; real503/diagnosis/retry, guarded stopped-fixture handoff and signed1.1 installation; 3controls unchanged |
 | Native monotonic job progress, diagnosis and terminal quit (L24) | passed | native-ui-lifecycle-acceptance.md: actual e533 three increasing AX values and stagedbytes, one succeeded afterverifying, strictsigned1.1/controlchecks, originalframe/privateprefs/defaults restoration and nativequit; separate Store gates remain open |
 | Keyboard, VoiceOver, large text and full EN/DE view interaction | open | native-ui-acceptance.md: current e533 EN prescribed-small-frame100%/160% and DE narrow-width repairs, real40k notes END, restored frames, and both major warning/cancel scopes pass. Native sanitized-note selection and explicit Safari action pass with zero trap requests; L22 is accepted. Current e533 keyboard-only controls/settings/chooser/major/error/retry/UpdateAll and editable-search text actions pass with unchanged apps/defaults. Native long-note PageDown/PageUp reading also passes; L20 and L22 are accepted. Spoken VoiceOver remains open |
-| Immutable source export, fixed release metadata and archive rebuild | passed | source-release-acceptance.md at 66add91: fresh current-source archive/bootstrap/build, 35 regular functions,84 invariants,18 contracts,85 translations and development-signed build1520 with exact source/licence/arm64/unchanged-checkout checks; production artifact set remains open |
+| Immutable source export, fixed release metadata and archive rebuild | open | source-release-acceptance.md at 66add91 remains historical: fresh archive/bootstrap/build and development-signed build1520 passed; rebuild final changed application sources before release preparation |
 | Stable existing signing certificate selection | passed | signing-identity-acceptance.md at fb17000: exact full-name/fingerprint selection, four portable contracts, actual Unicode-name packaging and missing-identity rejection before bundle modification; all nine native broker cases rerun with the same approved certificate |
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
-| Current local build/regression checks | passed | Current layout regression: 35 regular Swift functions, nine default native skips and 18 Python contracts; warnings-as-errors/Xcode MCP build, 84 invariants, 85 translations and 37 native source maps documented with their scope-specific revisions |
+| Current local build/regression checks | passed | e915db9: 38 regular Swift functions, nine default native skips, 18 Python contracts and 84 invariants; Xcode MCP build / 85 translations and 37 native outcomes documented with source maps |
 | Portable CI on actual Ubuntu | passed | ci-platforms.md: actual Ubuntu24.04 / CPython3.14.8; 17 portable Python contracts and all85 translations/resource/source checks pass. The actual signer integration and Swift/native adapters remain on macOS |
-| Verified implementation main CI | passed | [93619a0 / 38210387002](https://github.com/mpwg/Latest/actions/runs/38210387002): Ubuntu and macOS jobs pass; final whole-goal CI must match its final head |
+| Verified implementation main CI | passed | [e915db9 / 38222853545](https://github.com/mpwg/Latest/actions/runs/38222853545): Ubuntu and macOS jobs pass; final whole-goal CI must match its final head |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following

@@ -15,10 +15,37 @@ than cancelling/refetching it. Row reference equality allows Observation to keep
 the same visible projection while individual metadata still changes. Both
 headless regressions fail before and pass after. The current default suite has
 38 regular functions and nine explicit native skips. No GUI automation is
-required. The separate native35-instance runs still reproduce the table
+required. The separate native 35-instance runs still reproduce the table
 reentrancy diagnostic tracked in [#54](https://github.com/mpwg/Latest/issues/54);
-these changes are not claimed as its fix. Earlier complete native source maps
-must be revalidated against the changed application/test sources.
+these changes are not claimed as its fix.
+
+On 2026-10-12 at `e915db993ffee903a9b3c934faa60c7f3a314ce2`, all nine
+`scripts/native_headless_{sparkle,homebrew,lifecycle,compatibility,preferences,
+major_bulk,directories,migration,broker_boundary}.py all` drivers were rerun
+sequentially on macOS27.0.1 / Xcode27 / Swift6.4 / arm64. All exit 0; all 37
+result source maps match the current application/runtime/tests. Actual provider
+installation, selected-instance rejection, cancellation, retry and fresh-process
+restart checks pass within their isolated scopes. Foreign fixture instances,
+normal defaults and saved private preferences/journal/feed are preserved; the
+existing approved certificates/trust are reused.
+
+Retained local evidence: `.build/native-e915-progress.json`, nine
+`.build/native-e915-*.log` files and `.build/native-e915-source-map-check.json`.
+Earlier evidence was copied to `.build/native-regression-history-e915/` before
+rerunning. The current headless suite has 38 regular functions, nine default
+native skips, 84 compiled invariants, 18 Python contracts and 85 translation keys.
+[Both CI jobs at e915db9](https://github.com/mpwg/Latest/actions/runs/38222853545)
+pass. These backend checks do not replace VoiceOver, privileged Store installation
+or production signing/notarization/self-update acceptance.
+
+For #54, the controlled native refresh warning was caught in LLDB on a separately
+copied Debug app signed with the existing identity and Debug-only attach
+entitlement. The actual stack reaches AppKit row-span height caching recursively
+through SwiftUI outline row diff/endUpdates. The transcript and independent
+cleanup/integrity result are retained in
+`evidence/native-ui-inventory/debugger-stack/`. This stack does not establish an
+SDK defect. Independent minimal 35-row native comparisons are retained under
+`.build/native-ui-diagnostics/`; a verified application fix is still required.
 
 
 ## Current long-note and narrow-width native checks
@@ -93,7 +120,7 @@ occurs. macOS CI compiles the opt-in harness; default CI does not alter trust.
 The [frozen-source rebuild](source-release-acceptance.md) at `66add91`, checked
 on 2026-10-12 after L20/L22 native acceptance, freshly bootstraps pinned sources
 in an exported tree without .git or prebuilt Vendor/.build. Warnings-as-errors
-Release,35 regular Swift functions with nine explicit native skips,84 invariants,
+Release,35 regular Swift functions with nine explicit native skips, 84 invariants,
 18 Python contracts,85 localized keys and actual development packaging all pass.
 Build1520 records the exact source, arm64 and unchanged licence/source bytes;
 strict signatures use the existing approved identity. The archive is993803 bytes

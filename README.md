@@ -22,11 +22,11 @@ requires its separate native/signing acceptance.
 release tests and repository/localization checks onto Ubuntu 24.04. The native
 macOS job keeps the real signing integration, Swift tests, locked adapters,
 Xcode build and packaging, and starts only after the portable checks pass.
-Both jobs pass at [4422057](https://github.com/mpwg/Latest/actions/runs/38178452561).
+Both jobs pass at [e915db9](https://github.com/mpwg/Latest/actions/runs/38222853545).
 The platform-boundary document records commands, scope, retained evidence and
 the remaining dependencies for running shared Swift application tests on Linux.
 
-The [current frozen-source rebuild](docs/source-release-acceptance.md) at
+The [earlier frozen-source rebuild](docs/source-release-acceptance.md) at
 `28d6632` passes fresh bootstrap, Release build, headless tests and controlled
 development packaging from the archive. Build1511 has exact source/licence
 metadata and reuses the existing approved signing certificate. Production
@@ -79,10 +79,10 @@ observed PageDown keys and returns with PageUp. L20 is accepted; static-note
 keyboard selection is not claimed, while editable search text actions and L22
 pointer selection pass. See the [native keyboard record](docs/native-ui-acceptance.md).
 
-The current source archive at `66add91` also rebuilds from fresh pinned sources:
-35 regular Swift functions,84 invariants,18 Python contracts and85 translations
+The source archive at `66add91` also rebuilds from fresh pinned sources:
+35 regular Swift functions,84 invariants, 18 Python contracts and 85 translations
 pass. The existing development identity signs build1520 with exact source/licence
-metadata. This prepares a verified current-source checkpoint; production
+metadata. This is a historical checkpoint after the later application changes; production
 Developer ID, notarization and self-update remain open.
 
 Release builds now reject Debug-only fixture arguments before creating GUI or
@@ -91,6 +91,11 @@ and row projections avoid redundant observation events. Their headless regressio
 pass;38 regular functions and nine explicit native skips are current. A separate
 native table reentrancy diagnostic remains open in [#54](https://github.com/mpwg/Latest/issues/54);
 no warning fix or final whole-goal acceptance is claimed.
+
+All nine isolated native backend drivers were rerun at `e915db9`: 37 outcomes
+pass with matching source hashes, actual installation/rejection/retry/restart
+and unchanged foreign fixture instances. The approved certificates are reused.
+See the [current regression record](docs/test-coverage.md).
 
 The current lifecycle record also measures three increasing native progress
 values across real staged HTTPS bytes at `e533199`, followed by exactly one
