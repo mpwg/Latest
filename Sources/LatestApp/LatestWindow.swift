@@ -52,7 +52,7 @@ struct LatestWindow: View {
             ToolbarItem { Button("Settings…", systemImage: "gear") { showSettings() }.accessibilityIdentifier("settings") }
         }
         .alert("Update Failed", isPresented: $model.showingError) {
-            Button("Open Diagnostics") { NSWorkspace.shared.activateFileViewerSelecting([model.diagnosticURL]) }
+            Button("Show Diagnostics in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.diagnosticURL]) }
             Button("OK", role: .cancel) {}
         } message: { Text(model.errorMessage) }
         .confirmationDialog("Confirm Major Upgrade", isPresented: $model.confirmingMajor, titleVisibility: .visible) {

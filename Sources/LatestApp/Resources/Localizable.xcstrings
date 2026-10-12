@@ -620,19 +620,19 @@
         }
       }
     },
-    "Open Diagnostics": {
+    "Show Diagnostics in Finder": {
       "comment": "Latest application interface text.",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Diagnostics"
+            "value": "Show Diagnostics in Finder"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diagnose öffnen"
+            "value": "Diagnose im Finder anzeigen"
           }
         }
       }
