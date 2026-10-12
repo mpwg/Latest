@@ -6,6 +6,10 @@ Homebrew or a restricted App Store helper. The modernization starts from
 upstream 0.12-beta2. This fork is an independent project; releases and support
 belong to [mpwg/Latest](https://github.com/mpwg/Latest).
 
+The [owner-requested checkpoint](docs/handoff-2026-10-12.md) records current
+passing checks, retained artifacts and concrete remaining prerequisites.
+The overall goal remains incomplete; no release is published.
+
 The [shared application core](docs/headless-architecture.md) owns discovery,
 selection, preferences, consent and update jobs independently of the GUI.
 The native interface renders shared state and forwards commands; a later CLI

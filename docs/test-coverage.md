@@ -52,6 +52,14 @@ cleanup/integrity result are retained in
 SDK defect. Independent minimal 35-row native comparisons are retained under
 `.build/native-ui-diagnostics/`; a verified application fix is still required.
 
+At the owner-requested checkpoint, thirteen independent native variants complete
+startup/refresh/quit with zero stderr. Three original-session comparisons still
+warn: one-Text row (2), static source picker (3), and fully minimal window with
+real application session/runtime (2). All diagnostic patches are reverted;
+normal Debug packaging is restored with the same certificate. The
+[handoff](handoff-2026-10-12.md) records exact flow, evidence locations, independent
+app/default/private-state integrity checks and remaining prerequisites.
+
 
 ## Current long-note and narrow-width native checks
 

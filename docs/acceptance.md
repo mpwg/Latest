@@ -13,14 +13,14 @@ recorded with each evidence package. macOS27.0.1 / Xcode27 / Swift6.4 / arm64.
 Owner unlock enabled current German/English lifecycle and layout interaction;
 there is no remaining lock-screen prerequisite. The current documentation head
 may be later than a tested source revision: relevant source hashes must still
-match. [CI at e915db9](https://github.com/mpwg/Latest/actions/runs/38222853545)
+match. [CI at bf313d0](https://github.com/mpwg/Latest/actions/runs/38227998454)
 passes Ubuntu and macOS; final whole-goal CI must match its final head.
 
 | Criterion | Status | Current evidence / next step |
 |---|---|---|
 | Shared startup rejects unavailable test profiles before side effects | passed | 5bff569: headless flag/ordinary-argument cases and actual Release status1; normal support remains absent/defaults unchanged |
 | Repeated selection and stable observed row projection | passed | b8bc85c: two meaningful headless gated-note/projection regressions fail before and pass after |
-| Native table reentrancy diagnostic | open | #54: controlled35-instance startup/refresh reproduces warning; actual LLDB stack retained; minimal native comparisons currently do not reproduce it; verify a justified fix |
+| Native table reentrancy diagnostic | open | #54: actual LLDB stack; thirteen independent minimal variants have zero warnings, while minimal window with real session/runtime still warns twice; diagnostic patches reverted, no fix claimed; handoff-2026-10-12.md |
 | Native backend revalidation after application observation changes | passed | e915db9: all nine drivers exit 0, all 37 outcomes pass and source maps match; prior results retained separately |
 | GUI-independent application core and shared future CLI API | passed | LatestApplication depends only on LatestCore; source-boundary validator; GUI forwards ID commands and renders core state |
 | Complete default workflow testing without GUI automation | passed | 38 deterministic Swift functions including four host self-update command tests, six exclusive Store workflows and malformed actual client requests; nine native opt-ins skipped by default; Xcode MCP builds current GUI without UI automation |
@@ -48,12 +48,14 @@ passes Ubuntu and macOS; final whole-goal CI must match its final head.
 | Release signing, notarization, production self-update and artifact set | not verifiable | Owner-deferred Developer ID/notarization credentials; prepared source/artifact work remains independent |
 | Current local build/regression checks | passed | e915db9: 38 regular Swift functions, nine default native skips, 18 Python contracts and 84 invariants; Xcode MCP build / 85 translations and 37 native outcomes documented with source maps |
 | Portable CI on actual Ubuntu | passed | ci-platforms.md: actual Ubuntu24.04 / CPython3.14.8; 17 portable Python contracts and all85 translations/resource/source checks pass. The actual signer integration and Swift/native adapters remain on macOS |
-| Verified implementation main CI | passed | [e915db9 / 38222853545](https://github.com/mpwg/Latest/actions/runs/38222853545): Ubuntu and macOS jobs pass; final whole-goal CI must match its final head |
+| Verified implementation main CI | passed | [bf313d0 / 38227998454](https://github.com/mpwg/Latest/actions/runs/38227998454): Ubuntu and macOS jobs pass; final whole-goal CI must match its final head |
 | Current README/test documentation/matrix | passed | Shared-core/native instructions, boundaries, certificate lifecycle and retained evidence |
 
 **Overall goal remains open.** No release has been published. The following
 baseline matrix and subsequent older sections are retained historical evidence;
 they do not supersede this current-run matrix after the application extraction.
+The owner-requested [checkpoint](handoff-2026-10-12.md) preserves the next steps;
+no further diagnostic experiments are started during this handoff.
 
 ## Historical baseline
 

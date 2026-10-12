@@ -32,6 +32,8 @@ CI at [e915db9](https://github.com/mpwg/Latest/actions/runs/38222853545) passes
 both Ubuntu and macOS. This development checkpoint does not establish final
 native UI acceptance, Developer ID signing, notarization or actual self-update.
 L30 remains open for the production artifact set; no release is published.
+The subsequent source-equivalent documentation checkpoint `bf313d0` has
+[successful Ubuntu/macOS CI](https://github.com/mpwg/Latest/actions/runs/38227998454).
 
 ## Retained source rebuild after native UI acceptance
 
