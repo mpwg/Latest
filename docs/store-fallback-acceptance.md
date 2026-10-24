@@ -21,11 +21,12 @@ Installation-time client/server validation remains independently mandatory.
 | Exact supported ownership is required for direct routing | fulfilled | `storeRoutingRequiresExactSupportedOwnership`: positive direct action plus mismatched ID/bundle/path, missing claim and out-of-range broker ID |
 | Duplicate, nonstandard, wrapped, receiptless and stale inputs cannot authorize direct routing | fulfilled | Same production policy test covers duplicate paths/bundle IDs, a different sole instance, empty inventory, nested/external paths, wrapped/receiptless snapshots and stale metadata |
 | Ownership failures retain the external update path | fulfilled | `unavailableStoreOwnershipKeepsExternalUpdate`: production provider + bounded HTTP client, controlled URLProtocol lookup, actual missing executable, failing process and malformed process output; exact Store URL, external status and bulk exclusion |
+| Cancellation never becomes an external offer | fulfilled | `cancelledStoreOwnershipDoesNotBecomeExternalOffer`: controlled metadata succeeds, an actual owned subprocess signals that lookup started and is held; task cancellation returns CancellationError without an offer |
 | Native duplicate/volume/wrapped-app inventory and visible external action | open | Requires isolated native fixtures and actual macOS UI observation; handcrafted snapshots do not establish this |
 | Native App Store target launch | open | Observe the actual external destination on macOS; the headless action/URL checks do not establish a GUI launch |
 | README matches current behavior | fulfilled | App Store boundaries describe shared policy, ownership fallback and these evidence limits |
 
-Current checks: full Swift Testing suite (49 functions discovered, nine native
+Initial patch checks: full Swift Testing suite (49 functions discovered, nine native
 opt-ins skipped), 84 compiled invariants, 18 Python release contracts, 85 EN/DE
 keys/source boundaries, warnings-as-errors Release and Xcode MCP GUI build pass.
 No GUI automation, Store-account access, broker registration, installation,
@@ -35,3 +36,8 @@ Issue #19 remains open until its native criteria are observed. The absent privat
 fixture directory and expired historical localhost certificate prevent reusing
 the old native results as current evidence. Rebuilding generic dependencies
 does not recreate or rotate the approved certificate.
+
+After the shared helper-status patch `eb50323`, the focused cancellation
+regression also passes as part of the full suite: 55 functions discovered,
+nine explicit opt-in skips, 89 EN/DE keys. The final follow-up adds test/evidence
+only; production sources retain their successful Release and Xcode build result.

@@ -54,6 +54,33 @@ private final class StoreLookupFixture: URLProtocol {
         #expect(record.status == .external)
         #expect(!Presentation.bulkEligible(offer, status: record.status))
     }
+    @Test func cancelledStoreOwnershipDoesNotBecomeExternalOffer() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let tool = root.appendingPathComponent("held-ownership")
+        try Data("#!/bin/sh\nprintf ready > \"$0.ready\"\nexec /bin/sleep 30\n".utf8).write(to: tool)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: tool.path)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StoreLookupFixture.self]
+        let transport = URLSession(configuration: configuration)
+        defer { transport.invalidateAndCancel() }
+        let provider = AppStoreProvider(http: BoundedHTTPClient(cacheDirectory: root.appendingPathComponent("cache"),
+            testSession: transport), masURL: tool)
+        let app = AppSnapshot(url: URL(fileURLWithPath: "/Applications/StoreFallback.app"),
+            bundleID: "org.example.StoreFallback", name: "StoreFallback", version: .init(display: "1"), hasReceipt: true)
+        let request = Task { try await provider.check(app, context: .init(apps: [app], preferences: .init())) }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+        let ready = tool.path + ".ready"
+        while !FileManager.default.fileExists(atPath: ready), ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        let ownershipStarted = FileManager.default.fileExists(atPath: ready)
+        request.cancel()
+        do { _ = try await request.value; Issue.record("Cancelled ownership produced an update offer.") }
+        catch is CancellationError { }
+        #expect(ownershipStarted, "Cancellation must occur during the actual owned subprocess, after metadata succeeds.")
+    }
     @Test func storeRoutingRequiresExactSupportedOwnership() throws {
         func snapshot(_ path: String = "/Applications/StoreFallback.app", receipt: Bool = true,
                       wrapped: Bool = false) -> AppSnapshot {

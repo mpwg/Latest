@@ -30,8 +30,9 @@ enabled state disables another registration command. An unavailable service may
 be retried explicitly; a native registration error is presented through the
 existing diagnostics workflow. No status check registers or unregisters a service.
 
-Default tests remain independent of GUI automation. The suite discovers 54
-functions with nine explicit native opt-ins skipped. The actual native read-only
+Default tests remain independent of GUI automation. This patch discovers 54
+functions with nine explicit native opt-ins skipped; the subsequent Store
+cancellation regression raises the total to 55. The actual native read-only
 adapter check is included; it does not execute the privileged broker. Release
 with warnings as errors, compiled invariants and repository checks remain the
 verification gates. Issue #13 stays open for the native registration criteria.

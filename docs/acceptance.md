@@ -26,7 +26,10 @@ read-only startup/settings refresh and serialized explicit activation. The
 [helper criteria](helper-status-acceptance.md) distinguish four deterministic
 workflow tests and an actual native read-only status check from the unperformed
 signed registration/approval/restart/UI criteria. #13 remains open. The current
-suite discovers 54 functions (nine opt-in skips); 89 EN/DE keys validate.
+suite including the subsequent Store ownership cancellation regression discovers
+55 functions (nine opt-in skips); 89 EN/DE keys validate. Actual subprocess
+cancellation after successful lookup metadata produces CancellationError and
+no external offer.
 
 
 ## Current run: shared core, no GUI automation
