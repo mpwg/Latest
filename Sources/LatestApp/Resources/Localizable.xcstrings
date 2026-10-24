@@ -1,6 +1,74 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Enabling Installation Helper…": {
+      "comment": "Installation helper registration status in Settings.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installationshelfer wird aktiviert …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enabling Installation Helper…"
+          }
+        }
+      }
+    },
+    "Installation Helper Enabled": {
+      "comment": "Installation helper registration status in Settings.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installationshelfer aktiviert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation Helper Enabled"
+          }
+        }
+      }
+    },
+    "Installation Helper Not Enabled": {
+      "comment": "Installation helper registration status in Settings.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installationshelfer nicht aktiviert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation Helper Not Enabled"
+          }
+        }
+      }
+    },
+    "Installation Helper Unavailable": {
+      "comment": "Installation helper registration status in Settings.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installationshelfer nicht verfügbar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation Helper Unavailable"
+          }
+        }
+      }
+    },
     "Update Progress": {
       "comment": "Accessibility label for the selected application's update progress indicator.",
       "localizations": {

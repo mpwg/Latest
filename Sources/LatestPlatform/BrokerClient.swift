@@ -1,6 +1,7 @@
 import Foundation
 import ServiceManagement
 import LatestCore
+import LatestApplication
 import LatestContracts
 import LatestTrust
 
@@ -29,6 +30,15 @@ import LatestTrust
     public init() {}
     @MainActor public static var status: SMAppService.Status {
         SMAppService.daemon(plistName: ForkIdentity.broker + ".plist").status
+    }
+    @MainActor public static var availability: InstallationHelperStatus {
+        switch status {
+        case .notRegistered: .notRegistered
+        case .requiresApproval: .requiresApproval
+        case .enabled: .enabled
+        case .notFound: .unavailable
+        @unknown default: .unavailable
+        }
     }
     @MainActor public static func register() throws {
         let service = SMAppService.daemon(plistName: ForkIdentity.broker + ".plist")

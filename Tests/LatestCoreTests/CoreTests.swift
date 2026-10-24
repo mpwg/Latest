@@ -23,6 +23,16 @@ private final class StoreLookupFixture: URLProtocol {
 }
 
 @Suite("Audit regression contracts") struct CoreTests {
+    @Test @MainActor func nativeHelperStatusQueryPreservesRegistration() async {
+        let before = BrokerClient.status
+        let expected = BrokerClient.availability
+        let runtime = LiveApplicationRuntime(cacheDirectory: FileManager.default.temporaryDirectory
+            .appendingPathComponent("Latest-read-only-status-" + UUID().uuidString))
+        #expect(await runtime.brokerStatus() == expected)
+        #expect(await runtime.brokerStatus() == expected)
+        #expect(BrokerClient.status == before)
+        print("Read-only native helper availability: \(expected); registration status unchanged.")
+    }
     @Test(arguments: ["missing", "failure", "malformed"])
     func unavailableStoreOwnershipKeepsExternalUpdate(_ mode: String) async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -333,7 +343,7 @@ private actor ExclusiveStoreTestRuntime: ApplicationRuntime {
         if verificationFailures.remove(candidate.app.id) != nil { throw LatestFailure.process("Controlled Store verification failure.") }
     }
     func releaseNotes(_ url: URL) -> String { "" }
-    func enableBroker() -> Bool { true }
+    func enableBroker() -> InstallationHelperStatus { .requiresApproval }
 }
 
 @Suite("Serialized Store workflows without GUI automation") @MainActor
@@ -463,6 +473,16 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
     var holdSelfUpdateCheck = false
     var selfUpdateConfigurationCalls = 0
     var selfUpdateChecks = 0
+    var helperStatus = InstallationHelperStatus.notRegistered
+    var brokerQueries = 0
+    var brokerRegistrations = 0
+    var holdBrokerRegistration = false
+    var failBrokerRegistration = false
+    var holdNextBrokerQuery = false
+    let brokerRegistrationStarted = CompletionGate<Void>()
+    let brokerRegistrationRelease = CompletionGate<Void>()
+    let brokerQueryStarted = CompletionGate<Void>()
+    let brokerQueryRelease = CompletionGate<Void>()
     let selfUpdateStarted = CompletionGate<Void>()
     let releaseSelfUpdate = CompletionGate<Void>()
     var holdNotes = false
@@ -478,6 +498,21 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
         self.installation = installation; self.rejectValidation = rejectValidation; self.rejectVerification = rejectVerification
     }
     func setApps(_ apps: [AppSnapshot]) { self.apps = apps }
+    func configureBroker(status: InstallationHelperStatus, hold: Bool = false, fail: Bool = false,
+                         holdNextQuery: Bool = false) {
+        helperStatus = status; holdBrokerRegistration = hold; failBrokerRegistration = fail
+        holdNextBrokerQuery = holdNextQuery
+    }
+    func brokerStatus() async -> InstallationHelperStatus {
+        brokerQueries += 1
+        let status = helperStatus
+        if holdNextBrokerQuery {
+            holdNextBrokerQuery = false
+            await brokerQueryStarted.finish(.success(()))
+            _ = try? await brokerQueryRelease.wait()
+        }
+        return status
+    }
     func setCandidate(_ candidate: UpdateCandidate) { candidates[candidate.app.id] = candidate }
     func holdProviderCheck() { holdChecks = true }
     func holdReleaseNotes() { holdNotes = true }
@@ -543,10 +578,70 @@ private actor ApplicationTestRuntime: ApplicationRuntime {
         }
         return "<script>bad()</script><p>Remote notes</p>"
     }
-    func enableBroker() -> Bool { true }
+    func enableBroker() async throws -> InstallationHelperStatus {
+        brokerRegistrations += 1
+        await brokerRegistrationStarted.finish(.success(()))
+        if holdBrokerRegistration { try await brokerRegistrationRelease.wait() }
+        if failBrokerRegistration { throw LatestFailure.process("Controlled helper registration failure.") }
+        helperStatus = .requiresApproval
+        return helperStatus
+    }
 }
 
 @MainActor @Suite("Headless application workflows") struct ApplicationTests {
+    @Test(arguments: [InstallationHelperStatus.notRegistered, .requiresApproval, .enabled, .unavailable])
+    func helperStatusAtStartupNeverRegisters(_ status: InstallationHelperStatus) async {
+        let runtime = ApplicationTestRuntime([]); await runtime.configureBroker(status: status)
+        let app = await session(runtime)
+        #expect(app.brokerStatus == status)
+        #expect(app.needsBrokerApproval == (status == .requiresApproval))
+        #expect(app.canEnableBroker == (status == .notRegistered || status == .unavailable))
+        #expect(await runtime.brokerRegistrations == 0)
+        #expect(await runtime.brokerQueries == 1)
+    }
+    @Test func helperRegistrationIsExplicitAndCannotOverlap() async throws {
+        let runtime = ApplicationTestRuntime([])
+        await runtime.configureBroker(status: .notRegistered, hold: true)
+        let app = await session(runtime)
+        let request = Task { await app.enableBroker() }
+        try await runtime.brokerRegistrationStarted.wait()
+        #expect(app.enablingBroker && !app.canEnableBroker)
+        await app.enableBroker(); await app.refreshBrokerStatus()
+        #expect(await runtime.brokerRegistrations == 1)
+        #expect(await runtime.brokerQueries == 1)
+        await runtime.brokerRegistrationRelease.finish(.success(())); await request.value
+        #expect(!app.enablingBroker && app.needsBrokerApproval && !app.canEnableBroker)
+        await app.enableBroker()
+        #expect(await runtime.brokerRegistrations == 1)
+        await runtime.configureBroker(status: .enabled)
+        await app.refreshBrokerStatus()
+        #expect(app.brokerStatus == .enabled && !app.needsBrokerApproval && !app.canEnableBroker)
+        let restarted = await session(runtime)
+        #expect(restarted.brokerStatus == .enabled)
+        #expect(await runtime.brokerRegistrations == 1)
+    }
+    @Test func helperRegistrationFailureCanRetry() async {
+        let runtime = ApplicationTestRuntime([])
+        await runtime.configureBroker(status: .notRegistered, fail: true)
+        let app = await session(runtime); await app.enableBroker()
+        #expect(app.showingError && !app.enablingBroker && app.canEnableBroker)
+        #expect(app.brokerStatus == .notRegistered)
+        await runtime.configureBroker(status: .notRegistered)
+        await app.enableBroker()
+        #expect(app.brokerStatus == .requiresApproval && !app.enablingBroker)
+        #expect(await runtime.brokerRegistrations == 2)
+    }
+    @Test func lateHelperStatusCannotOverwriteExplicitRegistration() async throws {
+        let runtime = ApplicationTestRuntime([]); let app = await session(runtime)
+        await runtime.configureBroker(status: .notRegistered, holdNextQuery: true)
+        let oldQuery = Task { await app.refreshBrokerStatus() }
+        try await runtime.brokerQueryStarted.wait()
+        await app.enableBroker()
+        #expect(app.brokerStatus == .requiresApproval)
+        await runtime.brokerQueryRelease.finish(.success(())); await oldQuery.value
+        #expect(app.brokerStatus == .requiresApproval)
+        #expect(await runtime.brokerRegistrations == 1)
+    }
     @Test func providerRefreshUpdatesRowsWithoutRepublishingTheSameProjection() async {
         let offer = candidate(); let runtime = ApplicationTestRuntime([offer])
         let app = await session(runtime)
@@ -1160,7 +1255,7 @@ private struct MigrationInventoryRuntime: ApplicationRuntime {
                  event: @escaping @MainActor @Sendable (UpdateEvent) -> Void) async throws { throw LatestFailure.rejected("Migration acceptance cannot install apps.") }
     func verify(_ candidate: UpdateCandidate, context: CheckContext) async throws { throw LatestFailure.rejected("Migration acceptance cannot install apps.") }
     func releaseNotes(_ url: URL) async throws -> String { "" }
-    func enableBroker() async throws -> Bool { throw LatestFailure.rejected("Migration acceptance cannot register a broker.") }
+    func enableBroker() async throws -> InstallationHelperStatus { throw LatestFailure.rejected("Migration acceptance cannot register a broker.") }
 }
 
 @Suite("Actual CFPreferences migration through the shared core") @MainActor

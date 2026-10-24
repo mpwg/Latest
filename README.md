@@ -288,6 +288,12 @@ and provider fixture remain unchanged. Reproduce with
   generations and one terminal update outcome.
 
 The helper is enabled explicitly in Settings and approved in System Settings.
+The shared application session reads its current registration status at startup;
+Settings refreshes that status when opened and when Latest becomes active again.
+English/German status text distinguishes disabled, approval-required, enabled
+and unavailable helpers. Activation is explicit and serialized; reading status
+does not register a helper. [Helper-state checks](docs/helper-status-acceptance.md)
+describe the headless evidence and the remaining native registration gates.
 Preflight can be cancelled; once an installer is handed off, the bounded job
 finishes safely even if the client disconnects. Closing/quitting while updates
 run is prevented by the application. Success requires checking the installed

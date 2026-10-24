@@ -1,6 +1,10 @@
 import Foundation
 import LatestCore
 
+public enum InstallationHelperStatus: Sendable, Equatable {
+    case notRegistered, requiresApproval, enabled, unavailable
+}
+
 public struct ApplicationInventory: Sendable {
     public let apps: [AppSnapshot]
     public let warnings: [String]
@@ -17,14 +21,17 @@ public protocol ApplicationRuntime: Sendable {
                  event: @escaping @MainActor @Sendable (UpdateEvent) -> Void) async throws
     func verify(_ candidate: UpdateCandidate, context: CheckContext) async throws
     func releaseNotes(_ url: URL) async throws -> String
-    /// Returns whether explicit system approval is still required.
-    func enableBroker() async throws -> Bool
+    /// Read-only registration state; this must never register or unregister a helper.
+    func brokerStatus() async -> InstallationHelperStatus
+    /// Explicit activation command, returning the resulting native registration state.
+    func enableBroker() async throws -> InstallationHelperStatus
     /// Configure the host's native self-updater, if this runtime supports it.
     func configureSelfUpdates() async throws -> Bool
     func checkSelfUpdates() async throws
 }
 
 public extension ApplicationRuntime {
+    func brokerStatus() async -> InstallationHelperStatus { .unavailable }
     func configureSelfUpdates() async throws -> Bool { false }
     func checkSelfUpdates() async throws { throw LatestFailure.rejected("Latest self-updates are unavailable in this runtime.") }
 }

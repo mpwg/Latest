@@ -34,12 +34,26 @@ private struct GeneralSettings: View {
             }
             Section("App Store Updates") {
                 Text("Direct updates require the signed installation helper. iOS apps, duplicate installations and nonstandard locations open the App Store instead.")
-                Button { model.enableBroker() } label: {
+                Button { Task { await model.enableBroker() } } label: {
                     Text("Enable Installation Helper").font(.system(size: 14 * model.preferences.fontScale))
-                }
-                if model.needsBrokerApproval { Text("Approve Latest in System Settings → General → Login Items & Extensions.").foregroundStyle(.orange) }
+                }.disabled(!model.canEnableBroker).accessibilityIdentifier("enable-helper")
+                VStack(alignment: .leading) {
+                    if model.enablingBroker { ProgressView("Enabling Installation Helper…") }
+                    else {
+                        switch model.brokerStatus {
+                        case .notRegistered: Text("Installation Helper Not Enabled")
+                        case .requiresApproval: Text("Approve Latest in System Settings → General → Login Items & Extensions.").foregroundStyle(.orange)
+                        case .enabled: Text("Installation Helper Enabled")
+                        case .unavailable: Text("Installation Helper Unavailable")
+                        }
+                    }
+                }.accessibilityIdentifier("helper-status")
             }
         }.formStyle(.grouped)
+            .task { await model.refreshBrokerStatus() }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                Task { await model.refreshBrokerStatus() }
+            }
     }
 }
 private struct DirectorySettings: View {

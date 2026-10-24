@@ -21,6 +21,13 @@ production-provider regression. Headless checks and Xcode build pass; #19 stays
 open for its native UI/inventory/destination criteria. Overall acceptance remains
 open, and no release is published.
 
+The next focused patch on `3ea1c36` adds shared helper registration state,
+read-only startup/settings refresh and serialized explicit activation. The
+[helper criteria](helper-status-acceptance.md) distinguish four deterministic
+workflow tests and an actual native read-only status check from the unperformed
+signed registration/approval/restart/UI criteria. #13 remains open. The current
+suite discovers 54 functions (nine opt-in skips); 89 EN/DE keys validate.
+
 
 ## Current run: shared core, no GUI automation
 

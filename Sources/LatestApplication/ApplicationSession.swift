@@ -71,7 +71,13 @@ import LatestCore
     public private(set) var loadingNotes = false
     public private(set) var notes = ""
     private var notesToken = UUID()
-    public private(set) var needsBrokerApproval = false
+    public private(set) var brokerStatus: InstallationHelperStatus = .unavailable
+    public private(set) var enablingBroker = false
+    public var needsBrokerApproval: Bool { brokerStatus == .requiresApproval }
+    public var canEnableBroker: Bool {
+        !enablingBroker && brokerStatus != .enabled && brokerStatus != .requiresApproval
+    }
+    private var brokerStatusGeneration: UInt64 = 0
     public var activeUpdates: Int { jobs.count }
     public var hasBulkUpdates: Bool {
         rows.contains { row in
@@ -122,6 +128,7 @@ import LatestCore
             preferences = try await store.load(legacy: legacy)
         } catch { fail(error) }
         preferencesLoaded = true
+        await refreshBrokerStatus()
         do { selfUpdatesAvailable = try await runtime.configureSelfUpdates() }
         catch { fail(error) }
         refresh()
@@ -317,8 +324,21 @@ import LatestCore
             } catch { if notesToken == token { notes = error.localizedDescription } }
         }
     }
-    public func enableBroker() {
-        Task { do { needsBrokerApproval = try await runtime.enableBroker() } catch { fail(error) } }
+    public func refreshBrokerStatus() async {
+        guard !enablingBroker else { return }
+        brokerStatusGeneration &+= 1
+        let token = brokerStatusGeneration
+        let status = await runtime.brokerStatus()
+        guard brokerStatusGeneration == token else { return }
+        brokerStatus = status
+    }
+    public func enableBroker() async {
+        guard canEnableBroker else { return }
+        brokerStatusGeneration &+= 1
+        enablingBroker = true
+        defer { enablingBroker = false }
+        do { brokerStatus = try await runtime.enableBroker() }
+        catch { fail(error) }
     }
     public func checkForLatestUpdates() async {
         guard canCheckForLatestUpdates else { return }

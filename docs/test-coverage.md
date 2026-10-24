@@ -1,5 +1,15 @@
 # Test coverage and evidence
 
+## Shared helper status checks (2026-10-24)
+
+Four application tests cover all startup states without registration, explicit
+serialized activation, error/retry, approval refresh and stale-query rejection.
+`nativeHelperStatusQueryPreservesRegistration` uses the actual macOS status
+adapter twice and verifies unchanged registration. There are 54 discovered
+functions, nine explicit native skips, and 89 EN/DE keys. These checks do not
+register a helper or establish privileged/UI acceptance; see the
+[criteria matrix](helper-status-acceptance.md).
+
 ## Resumed Store fallback checks (2026-10-24)
 
 `storeRoutingRequiresExactSupportedOwnership` checks production Core routing

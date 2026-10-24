@@ -88,8 +88,11 @@ public struct LiveApplicationRuntime: ApplicationRuntime {
         }
         return String(decoding: response.data, as: UTF8.self)
     }
-    public func enableBroker() async throws -> Bool {
-        try await MainActor.run { try BrokerClient.register(); return BrokerClient.status != .enabled }
+    public func brokerStatus() async -> InstallationHelperStatus {
+        await MainActor.run { BrokerClient.availability }
+    }
+    public func enableBroker() async throws -> InstallationHelperStatus {
+        try await MainActor.run { try BrokerClient.register(); return BrokerClient.availability }
     }
     public func configureSelfUpdates() async throws -> Bool { try await selfUpdates.configure() }
     public func checkSelfUpdates() async throws { try await selfUpdates.check() }
