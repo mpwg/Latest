@@ -13,6 +13,7 @@ from pathlib import Path
 import native_fixtures as fixtures
 from native_homebrew_acceptance import digest_app
 from native_sparkle_compatibility import sign
+from package_app import resolve_signing_identity
 
 ROOT, REPO = fixtures.ROOT, fixtures.REPO
 TEST = 'realBrokerBoundaryWithoutGUIAutomation'
@@ -27,10 +28,14 @@ def identity():
     return matches[0]
 
 
-def prepare():
-    manifest = fixtures.manifest()
-    fixtures.run(['python3', 'scripts/package_app.py', '--identity', identity(), '--team', manifest['fixtures'][0]['team'],
-                  '--public-key', manifest['publicKey']])
+def prepare(signing_identity=None, team=None):
+    if signing_identity is None:
+        manifest = fixtures.manifest()
+        arguments = ['--identity', identity(), '--team', manifest['fixtures'][0]['team'],
+                     '--public-key', manifest['publicKey']]
+    else:
+        arguments = ['--identity', signing_identity, '--team', team]
+    fixtures.run(['python3', 'scripts/package_app.py', *arguments])
     destination = ROOT / 'evidence/headless-broker-boundary/baseline/Latest.app'
     if destination.exists(): shutil.rmtree(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -64,14 +69,19 @@ def execute(case, app, evidence):
     return dict(arguments=arguments, pid=process.pid, log=str(path))
 
 
-def run_case(case, baseline):
+def run_case(case, baseline, signing_identity=None):
     evidence = ROOT / 'evidence/headless-broker-boundary' / case
     evidence.mkdir(parents=True, exist_ok=True)
     app = evidence / 'Latest.app'
     if app.exists(): shutil.rmtree(app)
     shutil.copytree(baseline, app, symlinks=True)
-    controls = [baseline, ROOT / 'applications/Latest Sparkle Fixture.app', ROOT / 'applications/Secondary/Latest Sparkle Fixture.app',
+    provider_controls = [ROOT / 'applications/Latest Sparkle Fixture.app', ROOT / 'applications/Secondary/Latest Sparkle Fixture.app',
                 ROOT / 'applications/Latest Homebrew Fixture.app', ROOT / 'applications/Unmanaged/Latest Homebrew Fixture.app']
+    if signing_identity is None:
+        controls = [baseline, *provider_controls]
+    else:
+        # This suite needs signed host/tools, not a TLS certificate or installable provider fixtures.
+        controls = [baseline, *(path for path in provider_controls if path.exists())]
     before = [digest_app(path) for path in controls]
     service = subprocess.run(['launchctl', 'print', 'system/io.github.mpwg.Latest.Broker'], capture_output=True, text=True)
     if case == 'unavailable' and (service.returncode == 0 or 'Could not find service' not in service.stderr):
@@ -83,9 +93,13 @@ def run_case(case, baseline):
             file.seek(-1, 2); byte = file.read(1); file.seek(-1, 2); file.write(bytes([byte[0] ^ 1]))
     elif case == 'pin':
         path = app / 'Contents/Info.plist'; value = plistlib.loads(path.read_bytes())
-        value['LatestMasSHA256'] = '0' * 64; path.write_bytes(plistlib.dumps(value)); sign(app)
+        value['LatestMasSHA256'] = '0' * 64; path.write_bytes(plistlib.dumps(value))
+        if signing_identity is None: sign(app)
+        else:
+            fixtures.run(['codesign', '--force', '--sign', signing_identity, '--options', 'runtime', '--timestamp=none', app])
+            fixtures.run(['codesign', '--verify', '--deep', '--strict', app])
     elif case == 'wrong-id':
-        fixtures.run(['codesign', '--force', '--sign', identity(), '--identifier', 'io.github.mpwg.Latest.NativeForeign',
+        fixtures.run(['codesign', '--force', '--sign', signing_identity or identity(), '--identifier', 'io.github.mpwg.Latest.NativeForeign',
                       '--options', 'runtime', '--timestamp=none', app])
     elif case == 'adhoc':
         fixtures.run(['codesign', '--force', '--sign', '-', '--options', 'runtime', app])
@@ -106,6 +120,9 @@ def run_case(case, baseline):
                                        xcode=fixtures.run(['xcodebuild', '-version'], capture=True), architecture=architecture, uid=os.getuid()),
                   signedBaselineRevision=info['LatestSourceRevision'], signingTeam=info['LatestSigningTeam'],
                   controlledApp=str(app), execution=outcome, GUIAutomation=False, controlsUnchanged=True,
+                  controlPaths=[str(path) for path in controls],
+                  providerFixturesPresent=all(path.exists() for path in provider_controls),
+                  standaloneSignedHost=signing_identity is not None,
                   noServiceRegistration=True, noRootToolExecution=True,
                   serviceObservation=dict(exitCode=service.returncode, stderr=service.stderr.strip()),
                   scope='Actual native static signatures, sealed tool preflight, pre-cancellation and absent-service client errors; privileged service acceptance remains open.')
@@ -116,6 +133,11 @@ def run_case(case, baseline):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('case', choices=CASES + ['all'])
+    parser.add_argument('--identity', help='Existing approved signing identity; with --team, runs without provider/TLS fixtures.')
+    parser.add_argument('--team', help='Own signing team for the standalone signed host.')
     args = parser.parse_args()
-    baseline = prepare()
-    for case in CASES if args.case == 'all' else [args.case]: run_case(case, baseline)
+    if bool(args.identity) != bool(args.team): parser.error('--identity and --team must be provided together.')
+    selected = resolve_signing_identity(args.identity) if args.identity else None
+    if selected == '-': parser.error('Native broker boundaries require an existing Apple signing identity.')
+    baseline = prepare(selected, args.team)
+    for case in CASES if args.case == 'all' else [args.case]: run_case(case, baseline, selected)

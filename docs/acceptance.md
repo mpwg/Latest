@@ -7,8 +7,9 @@ that `origin` remain untouched. Developer ID/notarization and authentic controll
 Store app/account/update/package prerequisites remain deferred by the owner.
 Those gates and their dependent issues remain open.
 
-The current checkout has no retained `.build/native-install-tests` evidence or
-fixtures. The historical localhost certificate expired on 2026-10-17; no new
+The resumed checkout had no retained historical native evidence or provider
+fixtures. Nine new read-only signed broker results are now retained separately
+in that private evidence tree. The historical localhost certificate expired on 2026-10-17; no new
 certificate or trust entry was created. Historical native checks below remain
 historical. The currently available Xcode device-interaction tool rejects macOS
 and supports only simulator destinations, so it cannot establish #54 or spoken
@@ -30,6 +31,13 @@ suite including the subsequent Store ownership cancellation regression discovers
 55 functions (nine opt-in skips); 89 EN/DE keys validate. Actual subprocess
 cancellation after successful lookup metadata produces CancellationError and
 no external offer.
+
+The [standalone broker revalidation](headless-broker-boundary-acceptance.md)
+passes all nine real signed host/tool/client cases using the existing signing
+certificate and no provider/TLS fixtures. Baseline controls remain unchanged;
+missing-service retry and pre-cancellation pass. Root-service and provider
+installation acceptance remain open. The owner requested work to conclude;
+[the current handoff](handoff-2026-10-24.md) records the paused state.
 
 
 ## Current run: shared core, no GUI automation

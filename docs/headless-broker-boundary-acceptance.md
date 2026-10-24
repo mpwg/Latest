@@ -1,5 +1,37 @@
 # Native broker client and signed resource boundaries
 
+## Standalone revalidation (2026-10-24)
+
+On source `297a93f` plus the accompanying driver patch, all nine cases pass again
+on macOS 27.0.1 / Xcode 27 / Swift 6.4 / arm64, UID 501. The existing approved
+certificate fingerprint `F2DB5A6D5AF5BAD3F219ED222128B7B09956A2FA` and team
+PZV43D6HWT are reused. The helper remains absent; actual unavailable-service
+failure/retry and pre-cancellation both pass.
+
+The driver now accepts an explicit existing `--identity` plus `--team`, so these
+read-only signature/tool/client checks do not depend on the provider manifest or
+an expired localhost TLS fixture. Both options are required together; ad-hoc
+signing is rejected. The original manifest-based mode is retained.
+
+| Criterion | Status | Current evidence |
+|---|---|---|
+| Valid signed host and sealed own tools | fulfilled | `valid/result.json`, actual signed configuration/tool preflight |
+| Changed binaries, signed wrong pin, wrong signing ID and ad-hoc host rejected | fulfilled | `mas`, `verifier`, `pin`, `wrong-id`, `adhoc` results and actual production Security API checks |
+| External tool symlink rejected | fulfilled | `symlink` result, no changed baseline/control bytes |
+| Missing service retry and pre-cancellation | fulfilled | `unavailable` and `cancelled` native results; no retained connection or registration |
+| Existing signed baseline unchanged | fulfilled | All nine results independently compare the baseline and mutated-copy hashes |
+| Provider installation controls | not verifiable | Provider fixtures are absent; every result explicitly records `providerFixturesPresent: false` and its exact `controlPaths` |
+| Privileged peer authentication, root staging and installation | open | These require the separate signed-service/Store prerequisites; read-only checks do not close #14 |
+| README/reproduction guidance | fulfilled | Standalone invocation and precise scope documented |
+
+Private evidence is retained under
+`.build/native-install-tests/evidence/headless-broker-boundary/{case}/`, including
+logs, commands/PIDs, source SHA-256 maps, environment, native signing metadata,
+service observation and actual control paths. All nine maps match their checked
+sources. No TLS certificate was created, no trust changed, no GUI process was
+started, and no service was registered. These results supersede only the matching
+read-only scope below; they do not refresh historical provider/privileged evidence.
+
 Application/runtime/driver checked again at `ead2e13`, 2026-10-11,
 macOS 27.0.1 / Xcode 27.0 / Swift 6.4 / arm64,
 UID 501. All relevant source hashes match the current files. Nine actual native

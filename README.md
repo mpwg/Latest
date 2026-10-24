@@ -294,6 +294,12 @@ English/German status text distinguishes disabled, approval-required, enabled
 and unavailable helpers. Activation is explicit and serialized; reading status
 does not register a helper. [Helper-state checks](docs/helper-status-acceptance.md)
 describe the headless evidence and the remaining native registration gates.
+Read-only signed broker/client boundaries can be checked independently of the
+installation/TLS fixtures with
+`python3 scripts/native_headless_broker_boundary.py all --identity YOUR_EXISTING_IDENTITY --team YOUR_TEAM_ID`.
+This reuses an existing signing identity and never creates a certificate,
+changes trust or registers a service. Its evidence identifies the exact controls
+present; it does not establish privileged execution or Store installation.
 Preflight can be cancelled; once an installer is handed off, the bounded job
 finishes safely even if the client disconnects. Closing/quitting while updates
 run is prevented by the application. Success requires checking the installed
