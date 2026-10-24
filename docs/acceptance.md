@@ -1,5 +1,26 @@
 # Acceptance matrix
 
+## Resumed work: 2026-10-24
+
+The owner resumed #5 with direct main commits and no PRs, and explicitly requires
+that `origin` remain untouched. Developer ID/notarization and authentic controlled
+Store app/account/update/package prerequisites remain deferred by the owner.
+Those gates and their dependent issues remain open.
+
+The current checkout has no retained `.build/native-install-tests` evidence or
+fixtures. The historical localhost certificate expired on 2026-10-17; no new
+certificate or trust entry was created. Historical native checks below remain
+historical. The currently available Xcode device-interaction tool rejects macOS
+and supports only simulator destinations, so it cannot establish #54 or spoken
+VoiceOver acceptance here.
+
+The [Store fallback matrix](store-fallback-acceptance.md) records the first
+focused patch on base `50900b6`: failed local ownership now preserves the known
+external Store action, with shared Core routing and a failing-before/passing-after
+production-provider regression. Headless checks and Xcode build pass; #19 stays
+open for its native UI/inventory/destination criteria. Overall acceptance remains
+open, and no release is published.
+
 
 ## Current run: shared core, no GUI automation
 

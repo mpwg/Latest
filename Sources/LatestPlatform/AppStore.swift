@@ -33,11 +33,18 @@ public actor AppStoreProvider: UpdateProvider {
         }
         let result = try JSONDecoder().decode(Lookup.self, from: response.data)
         guard let entry = result.results.first(where: { $0.bundleId == app.bundleID }), entry.trackId > 0 else { return nil }
-        let storeURL = URL(string: "macappstore://apps.apple.com/app/id\(entry.trackId)")!
-        var action: UpdateAction = .external(storeURL)
-        if !response.stale, !app.isWrapped, app.id.url.deletingLastPathComponent().path == "/Applications",
-           context.apps.filter({ $0.bundleID == app.bundleID }).count == 1,
-           let claim = try await claim(for: app), claim.storeID == entry.trackId { action = .appStore(entry.trackId) }
+        var ownership: AppStoreClaim?
+        if BrokerPolicy.permitsOwnershipLookup(for: app, apps: context.apps, metadataIsFresh: !response.stale) {
+            do { ownership = try await claim(for: app) }
+            catch {
+                if error is CancellationError { throw error }
+                try Task.checkCancellation()
+                // Failed local ownership cannot authorize installation; preserve the external updater.
+            }
+        }
+        try Task.checkCancellation()
+        let action = try BrokerPolicy.updateAction(for: app, apps: context.apps, storeID: entry.trackId,
+            metadataIsFresh: !response.stale, claim: ownership)
         return .init(app: app, source: .appStore, version: .init(display: entry.version), action: action,
                      authoritative: !response.stale, minimumOS: entry.minimumOsVersion,
                      releaseNotes: entry.releaseNotes, releaseDate: entry.currentVersionReleaseDate.flatMap { ISO8601DateFormatter().date(from: $0) })

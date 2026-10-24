@@ -8,7 +8,80 @@ import LatestTrust
 @testable import LatestCore
 @testable import LatestPlatform
 
+/// Controlled metadata only; never contacts Apple or simulates an installation.
+private final class StoreLookupFixture: URLProtocol {
+    override class func canInit(with request: URLRequest) -> Bool { request.url?.host == "itunes.apple.com" }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        guard let url = request.url, let client,
+              let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: [:]) else { return }
+        client.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client.urlProtocol(self, didLoad: Data(#"{"results":[{"trackId":123,"bundleId":"org.example.StoreFallback","version":"1.1"}]}"#.utf8))
+        client.urlProtocolDidFinishLoading(self)
+    }
+    override func stopLoading() {}
+}
+
 @Suite("Audit regression contracts") struct CoreTests {
+    @Test(arguments: ["missing", "failure", "malformed"])
+    func unavailableStoreOwnershipKeepsExternalUpdate(_ mode: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StoreLookupFixture.self]
+        let transport = URLSession(configuration: configuration)
+        defer { transport.invalidateAndCancel() }
+        let http = BoundedHTTPClient(cacheDirectory: root, testSession: transport)
+        let tool = mode == "missing" ? root.appendingPathComponent("missing-mas") :
+            URL(fileURLWithPath: mode == "failure" ? "/usr/bin/false" : "/bin/echo")
+        let provider = AppStoreProvider(http: http, masURL: tool)
+        let app = AppSnapshot(url: URL(fileURLWithPath: "/Applications/StoreFallback.app"),
+            bundleID: "org.example.StoreFallback", name: "StoreFallback", version: .init(display: "1"), hasReceipt: true)
+        let offer = try #require(try await provider.check(app, context: .init(apps: [app], preferences: .init())))
+        #expect(offer.action == .external(URL(string: "macappstore://apps.apple.com/app/id123")!))
+        let record = Resolution.record(app, candidate: offer, preferences: .init(),
+            operatingSystem: .init(majorVersion: 27, minorVersion: 0, patchVersion: 0), architecture: .arm64)
+        #expect(record.status == .external)
+        #expect(!Presentation.bulkEligible(offer, status: record.status))
+    }
+    @Test func storeRoutingRequiresExactSupportedOwnership() throws {
+        func snapshot(_ path: String = "/Applications/StoreFallback.app", receipt: Bool = true,
+                      wrapped: Bool = false) -> AppSnapshot {
+            .init(url: URL(fileURLWithPath: path), bundleID: "org.example.StoreFallback", name: "StoreFallback",
+                  version: .init(display: "1"), hasReceipt: receipt, isWrapped: wrapped)
+        }
+        let app = snapshot()
+        let claim = AppStoreClaim(storeID: 123, bundleID: app.bundleID, path: app.id.path)
+        let external = UpdateAction.external(URL(string: "macappstore://apps.apple.com/app/id123")!)
+        #expect(try BrokerPolicy.updateAction(for: app, apps: [app], storeID: 123,
+            metadataIsFresh: true, claim: claim) == .appStore(123))
+        for unsupported in [snapshot(wrapped: true), snapshot(receipt: false),
+                            snapshot("/Users/Shared/StoreFallback.app"), snapshot("/Applications/Subfolder/StoreFallback.app")] {
+            #expect(!BrokerPolicy.permitsOwnershipLookup(for: unsupported, apps: [unsupported], metadataIsFresh: true))
+            #expect(try BrokerPolicy.updateAction(for: unsupported, apps: [unsupported], storeID: 123,
+                metadataIsFresh: true, claim: claim) == external)
+        }
+        for inventory in [[], [snapshot("/Volumes/Fixture/StoreFallback.app")],
+                          [app, snapshot("/Volumes/Fixture/StoreFallback.app")], [app, app]] {
+            #expect(!BrokerPolicy.permitsOwnershipLookup(for: app, apps: inventory, metadataIsFresh: true))
+            #expect(try BrokerPolicy.updateAction(for: app, apps: inventory, storeID: 123,
+                metadataIsFresh: true, claim: claim) == external)
+        }
+        for ownership in [nil, AppStoreClaim(storeID: 124, bundleID: app.bundleID, path: app.id.path),
+                          .init(storeID: 123, bundleID: "org.example.Other", path: app.id.path),
+                          .init(storeID: 123, bundleID: app.bundleID, path: "/Applications/Other.app")] {
+            #expect(try BrokerPolicy.updateAction(for: app, apps: [app], storeID: 123,
+                metadataIsFresh: true, claim: ownership) == external)
+        }
+        #expect(try BrokerPolicy.updateAction(for: app, apps: [app], storeID: 123,
+            metadataIsFresh: false, claim: claim) == external)
+        #expect(throws: LatestFailure.self) {
+            try BrokerPolicy.updateAction(for: app, apps: [app], storeID: 0, metadataIsFresh: true, claim: claim)
+        }
+        #expect(try BrokerPolicy.updateAction(for: app, apps: [app], storeID: UInt64.max,
+            metadataIsFresh: true, claim: .init(storeID: .max, bundleID: app.bundleID, path: app.id.path)) ==
+            .external(URL(string: "macappstore://apps.apple.com/app/id\(UInt64.max)")!))
+    }
     @Test(.enabled(if: ProcessInfo.processInfo.environment["LATEST_HEADLESS_BROKER_BOUNDARY"] != nil,
                    "Requires a private development-signed Latest bundle and explicitly controlled mutations."))
     @MainActor func realBrokerBoundaryWithoutGUIAutomation() async throws {

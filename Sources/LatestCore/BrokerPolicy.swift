@@ -10,6 +10,24 @@ public struct AppStoreClaim: Codable, Equatable, Sendable {
 }
 
 public enum BrokerPolicy {
+    /// Ownership lookup is useful only for one supported, exact inventory instance.
+    public static func permitsOwnershipLookup(for app: AppSnapshot, apps: [AppSnapshot], metadataIsFresh: Bool) -> Bool {
+        let instances = apps.filter { $0.bundleID == app.bundleID }
+        return metadataIsFresh && app.hasReceipt && !app.isWrapped &&
+            app.id.url.deletingLastPathComponent().path == "/Applications" &&
+            instances.count == 1 && instances.first?.id == app.id
+    }
+
+    public static func updateAction(for app: AppSnapshot, apps: [AppSnapshot], storeID: UInt64,
+                                    metadataIsFresh: Bool, claim: AppStoreClaim?) throws -> UpdateAction {
+        guard storeID > 0 else { throw LatestFailure.rejected("Invalid App Store ID.") }
+        let external = UpdateAction.external(URL(string: "macappstore://apps.apple.com/app/id\(storeID)")!)
+        guard permitsOwnershipLookup(for: app, apps: apps, metadataIsFresh: metadataIsFresh),
+              let claim, claim.storeID == storeID, claim.bundleID == app.bundleID, claim.path == app.id.path,
+              (try? validateRequest(claim)) != nil else { return external }
+        return .appStore(storeID)
+    }
+
     public static func validateRequest(_ claim: AppStoreClaim) throws {
         guard claim.storeID > 0, claim.storeID <= UInt64(Int64.max), !claim.bundleID.isEmpty,
               claim.bundleID.utf8.count <= 255, claim.bundleID.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || ".-_".contains($0)) }),

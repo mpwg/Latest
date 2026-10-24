@@ -1,5 +1,18 @@
 # Test coverage and evidence
 
+## Resumed Store fallback checks (2026-10-24)
+
+`storeRoutingRequiresExactSupportedOwnership` checks production Core routing
+against exact ownership, duplicates, unsupported paths, wrapped/receiptless apps,
+stale metadata and malformed/mismatched claims.
+`unavailableStoreOwnershipKeepsExternalUpdate` drives the actual provider and
+bounded HTTP client with controlled Store metadata and three real local process
+failure modes. It reproduces the lost external offer before the patch and passes
+after it. These add two regular functions (one with three arguments); the full
+suite discovers 49 functions and skips nine explicit native opt-ins. The
+[criteria matrix](store-fallback-acceptance.md) separates them from open native
+Store/UI acceptance.
+
 ## Shared launch and observation regression follow-up
 
 At `5bff569`, unavailable Debug-only test arguments are rejected in the shared

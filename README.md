@@ -277,6 +277,11 @@ and provider fixture remain unchanged. Reproduce with
   metadata need the application's own updater.
 - App Store updates use pinned mas v7.0.0 behind a mutually authenticated broker.
   Duplicate instances, wrapped iOS apps and nonstandard locations open App Store.
+  Shared core policy requires one exact supported instance and matching local
+  ownership before offering direct installation. Missing, failed or malformed
+  ownership lookup preserves the external App Store action; it never authorizes
+  an installation. [Fallback checks and native limits](docs/store-fallback-acceptance.md)
+  record the current evidence for #19.
   Package fallback requires authenticated Apple signing, the selected bundle and
   a restricted payload; packages with scripts or unverifiable metadata are rejected.
 - HTTPS-only bounded responses, last-known-good cache with stale state, scan
